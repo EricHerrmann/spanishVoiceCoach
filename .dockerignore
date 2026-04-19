@@ -1,0 +1,53 @@
+# =============================================================================
+# duoVoiceCoach — .dockerignore
+# =============================================================================
+
+# --- Version control ---------------------------------------------------------
+.git
+.gitignore
+
+# --- Environment (never baked into image) ------------------------------------
+.env
+
+# --- Python build artifacts --------------------------------------------------
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.venv/
+
+# --- Test artifacts ----------------------------------------------------------
+.pytest_cache/
+htmlcov/
+.coverage
+tests/
+
+# --- Frontend build inputs (built inside Docker via multi-stage) -------------
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/coverage/
+
+# --- Audio session recordings (fixtures copied explicitly if needed) ---------
+sessions/
+recordings/
+*.wav
+
+# --- Whisper model cache (downloaded at runtime, not baked in) ---------------
+.whisper_cache/
+
+# --- Data volumes -------------------------------------------------------------
+data/
+
+# --- Docs / planning ---------------------------------------------------------
+docs/
+*.md
+!README.md
+
+# --- OS / editor -------------------------------------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
