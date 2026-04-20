@@ -169,6 +169,7 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 - [ ] Write unit tests for session model serialization/deserialization
 - [ ] Write unit test asserting `AbstractAIProvider.chat()` raises `NotImplementedError`
 - [ ] Verify: `uv run pytest` passes; `npm run dev` starts frontend dev server
+- [ ] Add Phase 0 procedures to `docs/manualTestPlan.md`
 
 ### Phase 0 Gate
 
@@ -195,6 +196,7 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 - [x] Write integration test: WAV fixture → `/turn` → JSON with `transcript_raw`, `transcript_norm`, `error: null`
 - [x] Write Vitest: `VoiceButton` state transitions; retry prompt renders on error response
 - [ ] Manual smoke test: speak "Hola, ¿cómo estás?" → verify `transcript_norm` accuracy → browser speaks echo back
+- [ ] Add Phase 1 procedures to `docs/manualTestPlan.md`
 
 ### Phase 1 Gate
 
@@ -222,6 +224,7 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 - [ ] Write unit test: `test_coach.py` — system prompt construction for topic/level/mode combinations
 - [ ] Write integration test: full turn → Claude → `CoachResponse` with `coach_text` and empty `corrections`
 - [ ] Manual smoke test: start session at level 5, topic "ordering food" → conduct 3-turn Spanish conversation → verify responses are contextually appropriate
+- [ ] Add Phase 2 procedures to `docs/manualTestPlan.md`
 
 ### Phase 2 Gate
 
@@ -245,6 +248,7 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 - [ ] Write unit tests: coaching mode routing for all three modes against fixture `CoachResponse` objects (empty corrections, single correction, multiple corrections)
 - [ ] Write Vitest: `CoachOverlay` renders correction fields; `SessionConfig` emits coaching mode
 - [ ] Manual smoke test: speak a sentence with a deliberate verb conjugation error → verify each coaching mode behaves as specified
+- [ ] Add Phase 3 procedures to `docs/manualTestPlan.md`
 
 ### Phase 3 Gate
 
@@ -267,6 +271,7 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 - [ ] Write unit tests for `/session/start` and `/providers` routes
 - [ ] Write Vitest: `SessionConfig` renders provider list from API; level slider labels match band table
 - [ ] Manual smoke test: configure three different sessions (different topics, levels, providers) → verify each behaves distinctly
+- [ ] Add Phase 4 procedures to `docs/manualTestPlan.md`
 
 ### Phase 4 Gate
 
@@ -289,6 +294,7 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 - [ ] Write unit tests: session save → load round-trip; correction retrieval
 - [ ] Write integration test: full session → save → load → verify turn count and corrections intact
 - [ ] Manual smoke test: complete a session, close app, reopen, verify session appears in history
+- [ ] Add Phase 5 procedures to `docs/manualTestPlan.md`
 
 ### Phase 5 Gate
 
@@ -309,6 +315,7 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 - [ ] Add `tts_provider` to session config (browser / elevenlabs)
 - [ ] Write unit test: `ElevenLabsTTSProvider` with fixture response (no live API in CI)
 - [ ] Manual smoke test: ElevenLabs voice vs. browser TTS — verify quality improvement
+- [ ] Add Phase 6 procedures to `docs/manualTestPlan.md`
 
 ### Phase 6 Gate
 
@@ -329,6 +336,7 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 - [ ] Evaluate hosting options: local network (backend on laptop, phone on same WiFi) vs. cloud deployment
 - [ ] Document Android setup in `docs/android-setup.md`
 - [ ] Manual smoke test on Android device: full session — mic capture → Whisper → coach response → TTS playback
+- [ ] Add Phase 7 procedures to `docs/manualTestPlan.md`
 
 ### Phase 7 Gate
 
