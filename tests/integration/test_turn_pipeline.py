@@ -37,6 +37,17 @@ class TestSessionStart:
         r2 = client.post("/session/start").json()
         assert r1["session_id"] != r2["session_id"]
 
+    def test_accepts_coaching_mode_in_body(self):
+        client = make_client()
+        response = client.post(
+            "/session/start",
+            json={"coaching_mode": "explicit"},
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert "session_id" in body
+        assert isinstance(body["session_id"], str)
+
 
 class TestTurnRoute:
     def test_unknown_session_id_returns_404(self):
