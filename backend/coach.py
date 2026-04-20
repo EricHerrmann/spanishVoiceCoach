@@ -1,52 +1,38 @@
 from datetime import datetime, timezone
-from backend.session import Session, Turn
+from typing import Union
+from backend.session import Session, Turn, CoachResponse, TurnError
 from backend.ai.base import AbstractAIProvider
 
 
 class CoachSession:
-    """Manages a coaching session interaction.
-
-    Phase 0: Stub implementation with no AI provider calls.
-    Handles user input and returns coach feedback (placeholder).
-    """
+    """Manages a coaching session: calls the AI provider and maintains turn history."""
 
     def __init__(self, session: Session, ai_provider: AbstractAIProvider):
-        """Initialize a CoachSession.
-
-        Args:
-            session: The Session object to manage.
-            ai_provider: An AbstractAIProvider instance (not used in Phase 0).
-        """
         self.session = session
         self.ai_provider = ai_provider
 
-    def handle_turn(self, user_text: str) -> Turn:
-        """Process a user turn and return the coach's response.
+    def handle_turn(self, user_text: str) -> Union[Turn, TurnError]:
+        """Process a user turn: call AI, append both turns to session, return coach turn.
 
-        Phase 0: Creates user and coach turns without calling the AI provider.
-
-        Args:
-            user_text: The user's input text.
-
-        Returns:
-            The coach Turn (with stub response).
+        Returns TurnError (as a value, not exception) if the AI provider fails.
         """
         now = datetime.now(timezone.utc)
 
-        # Create user turn
-        user_turn = Turn(
-            speaker="user",
-            transcript_norm=user_text,
-            timestamp=now,
-        )
+        result = self.ai_provider.chat(self.session, user_text)
+
+        user_turn = Turn(speaker="user", transcript_norm=user_text, timestamp=now)
         self.session.turns.append(user_turn)
 
-        # Create coach turn (Phase 0 stub - no AI provider call)
+        if isinstance(result, TurnError):
+            error_turn = Turn(speaker="coach", timestamp=now, error=result)
+            self.session.turns.append(error_turn)
+            return result
+
         coach_turn = Turn(
             speaker="coach",
-            coach_text="[Phase 0 stub — AI not yet connected]",
+            coach_text=result.coach_text,
+            corrections=result.corrections,
             timestamp=now,
         )
         self.session.turns.append(coach_turn)
-
         return coach_turn
