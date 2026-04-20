@@ -1,21 +1,41 @@
 import { useState, useRef, useEffect } from 'react'
 
-export function useVoice() {
+export function useVoice(coachingMode = 'on_demand') {
   const [state, setState] = useState('idle')
   const [turns, setTurns] = useState([])
+  const [corrections, setCorrections] = useState([])
   const [error, setError] = useState(null)
   const mediaRecorderRef = useRef(null)
   const chunksRef = useRef([])
   const sessionIdRef = useRef(null)
 
   useEffect(() => {
-    fetch('/session/start', { method: 'POST' })
+    const controller = new AbortController()
+    sessionIdRef.current = null
+    setTurns([])
+    setCorrections([])
+    setError(null)
+    fetch('/session/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ coaching_mode: coachingMode }),
+      signal: controller.signal,
+    })
       .then((res) => res.json())
-      .then((data) => { sessionIdRef.current = data.session_id })
-      .catch(() => {
-        setError({ stage: 'mic', message: 'Failed to start session', recoverable: false })
+      .then((data) => {
+        if (data.session_id) {
+          sessionIdRef.current = data.session_id
+        } else {
+          setError({ stage: 'mic', message: 'Failed to start session', recoverable: false })
+        }
       })
-  }, [])
+      .catch((err) => {
+        if (err.name !== 'AbortError') {
+          setError({ stage: 'mic', message: 'Failed to start session', recoverable: false })
+        }
+      })
+    return () => controller.abort()
+  }, [coachingMode])
 
   async function startRecording() {
     if (!sessionIdRef.current) {
@@ -73,6 +93,7 @@ export function useVoice() {
         { speaker: 'user', transcript_norm: data.transcript_norm, coach_text: null },
         { speaker: 'coach', transcript_norm: null, coach_text: data.coach_text },
       ])
+      setCorrections(data.corrections || [])
       setError(null)
       setState('playing')
       speakCoachText(data.coach_text)
@@ -94,5 +115,5 @@ export function useVoice() {
     speechSynthesis.speak(utt)
   }
 
-  return { state, turns, error, startRecording, stopRecording }
+  return { state, turns, corrections, error, startRecording, stopRecording }
 }
