@@ -1,28 +1,37 @@
-# STUB: WhisperSTT in Phase 0 - Placeholder for Whisper model integration
-# Phase 1 will replace this with actual Whisper model loading and transcription
-# This stub allows integration testing of the STT interface without model dependencies
+import re
+import os
+from typing import Union
+from backend.session import TurnError
+
+
+def normalize_transcript(text: str) -> str:
+    """Lowercase and strip punctuation from a Whisper transcript."""
+    text = text.lower()
+    # Remove punctuation: standard ASCII + Spanish-specific ¡¿
+    text = re.sub(r"[¡¿!\"#$%&'()*+,\-./:;<=>?@\[\\\]^_`{|}~]", "", text)
+    return text.strip()
 
 
 class WhisperSTT:
-    """Stub Speech-to-Text provider using OpenAI's Whisper model.
+    """Speech-to-Text provider using OpenAI's Whisper model (local, base variant)."""
 
-    Phase 0: Returns hardcoded Spanish phrase for integration testing.
-    Phase 1: Will integrate actual Whisper model for real transcription.
-    """
+    _model = None
 
-    def transcribe(self, audio_path: str) -> str:
-        """
-        Transcribe audio file to text.
+    def _get_model(self):
+        if WhisperSTT._model is None:
+            import whisper
+            WhisperSTT._model = whisper.load_model("base")
+        return WhisperSTT._model
 
-        Args:
-            audio_path: Path to the audio file to transcribe.
-
-        Returns:
-            Transcribed text. In Phase 0, returns hardcoded Spanish phrase.
-
-        Note:
-            Phase 0 stub - does not load actual Whisper model.
-            Replace implementation in Phase 1.
-        """
-        # Stub return for Phase 0 integration testing
-        return "hola cómo estás"
+    def transcribe(self, audio_path: str) -> Union[tuple[str, str], TurnError]:
+        """Transcribe audio file to (transcript_raw, transcript_norm) or TurnError."""
+        if not os.path.exists(audio_path):
+            return TurnError(stage="stt", message=f"Audio file not found: {audio_path}", recoverable=True)
+        try:
+            model = self._get_model()
+            result = model.transcribe(audio_path, language="es")
+            raw = result["text"].strip()
+            norm = normalize_transcript(raw)
+            return (raw, norm)
+        except Exception as exc:
+            return TurnError(stage="stt", message=f"Transcription failed: {exc}", recoverable=True)

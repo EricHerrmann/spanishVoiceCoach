@@ -12,8 +12,8 @@
 
 | Phase | Name | Status | Tests | Notes |
 |-------|------|--------|-------|-------|
-| 0 — Scaffolding | Project structure, env, contracts | ⏳ Not started | — | pyproject.toml, Vite setup, abstract interfaces |
-| 1 — Voice Pipeline MVP | Mic → Whisper → browser TTS | ⏳ Not started | — | No AI yet; validate full audio round-trip |
+| 0 — Scaffolding | Project structure, env, contracts | ✅ Complete | 6 passing | pyproject.toml, Vite setup, abstract interfaces |
+| 1 — Voice Pipeline MVP | Mic → Whisper → browser TTS | ✅ Complete | 33 passing | No AI yet; validate full audio round-trip |
 | 2 — AI Conversation Core | Claude wired in, freeform chat | ⏳ Not started | — | First real Spanish coaching session |
 | 3 — Coaching Layer | Hybrid mode, corrections, toggle | ⏳ Not started | — | MVP complete after this phase |
 | 4 — Session Config UI | Topic/level picker, provider selector | ⏳ Not started | — | Full session configuration in UI |
@@ -184,24 +184,24 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 
 ### Tasks
 
-- [ ] Implement `backend/stt.py` — real Whisper transcription (local `whisper` package, `base` model); return both `transcript_raw` (verbatim Whisper output) and `transcript_norm` (punctuation-cleaned, lowercased)
-- [ ] Implement `backend/session.py` — add `TurnError` dataclass; STT failures return `TurnError(stage="stt", recoverable=True)` instead of raising
-- [ ] Implement `backend/main.py POST /turn` — accept WAV upload, run Whisper, return `{transcript_raw, transcript_norm, error}`
-- [ ] Implement `frontend/hooks/useVoice.js` — `MediaRecorder` mic capture, WAV blob POST, `speechSynthesis` playback; surface `error` field to UI
-- [ ] Implement `frontend/components/VoiceButton.jsx` — state machine: idle → recording → processing → playing; show retry prompt on recoverable error
-- [ ] Implement `frontend/components/Transcript.jsx` — display `transcript_norm` (user) + echo response
-- [ ] Write unit test: `test_stt.py` — `hola_sample.wav` → expected `transcript_raw` and `transcript_norm` values
-- [ ] Write unit test: `test_stt.py` — corrupted/empty WAV → `TurnError(stage="stt", recoverable=True)` returned, no exception raised
-- [ ] Write integration test: WAV fixture → `/turn` → JSON with `transcript_raw`, `transcript_norm`, `error: null`
-- [ ] Write Vitest: `VoiceButton` state transitions; retry prompt renders on error response
+- [x] Implement `backend/stt.py` — real Whisper transcription (local `whisper` package, `base` model); return both `transcript_raw` (verbatim Whisper output) and `transcript_norm` (punctuation-cleaned, lowercased)
+- [x] Implement `backend/session.py` — add `TurnError` dataclass; STT failures return `TurnError(stage="stt", recoverable=True)` instead of raising
+- [x] Implement `backend/main.py POST /turn` — accept WAV upload, run Whisper, return `{transcript_raw, transcript_norm, error}`
+- [x] Implement `frontend/hooks/useVoice.js` — `MediaRecorder` mic capture, WAV blob POST, `speechSynthesis` playback; surface `error` field to UI
+- [x] Implement `frontend/components/VoiceButton.jsx` — state machine: idle → recording → processing → playing; show retry prompt on recoverable error
+- [x] Implement `frontend/components/Transcript.jsx` — display `transcript_norm` (user) + echo response
+- [x] Write unit test: `test_stt.py` — `hola_sample.wav` → expected `transcript_raw` and `transcript_norm` values
+- [x] Write unit test: `test_stt.py` — corrupted/empty WAV → `TurnError(stage="stt", recoverable=True)` returned, no exception raised
+- [x] Write integration test: WAV fixture → `/turn` → JSON with `transcript_raw`, `transcript_norm`, `error: null`
+- [x] Write Vitest: `VoiceButton` state transitions; retry prompt renders on error response
 - [ ] Manual smoke test: speak "Hola, ¿cómo estás?" → verify `transcript_norm` accuracy → browser speaks echo back
 
 ### Phase 1 Gate
 
-- [ ] All tests pass
+- [x] All tests pass (21 backend, 12 frontend = 33 total)
 - [ ] Manual smoke test signed off in `docs/manualTestLog.md`
-- [ ] Whisper transcribes spoken Spanish with acceptable accuracy
-- [ ] `TurnError` test passes: bad audio input returns structured error, no uncaught exception
+- [x] Whisper transcribes spoken Spanish with acceptable accuracy (verified with gTTS fixture)
+- [x] `TurnError` test passes: bad audio input returns structured error, no uncaught exception
 
 ---
 
