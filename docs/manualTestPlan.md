@@ -1,4 +1,4 @@
-# duoVoiceCoach — Manual Test Plan: Phases 0 & 1
+# duoVoiceCoach — Manual Test Plan: Phases 0, 1 & 2
 
 **Purpose:** Step-by-step test procedures for the Phase 0 and Phase 1 gate sign-offs. Run these after all automated tests pass. Record results in `manualTestLog.md`.
 
@@ -246,17 +246,164 @@ After a successful recording, listen to the echo playback.
 
 ---
 
+---
+
+## Phase 2 — AI Conversation Core
+
+### Prerequisites
+
+- `ANTHROPIC_API_KEY` set in your environment (real key required for this phase)
+- Backend running on port 8001, frontend on 5173
+
+### Setup
+
+Start both servers in separate terminals:
+
+```bash
+# Terminal 1 — backend
+ANTHROPIC_API_KEY=<your-key> uv run uvicorn backend.main:app --reload --port 8001
+
+# Terminal 2 — frontend
+cd frontend && npm run dev
+```
+
+Open `http://localhost:5173`.
+
+---
+
+### MT-2-1: Automated tests pass
+
+```bash
+ANTHROPIC_API_KEY=test-key uv run pytest -v
+cd frontend && npm test -- --run
+```
+
+**Pass:** 36 backend tests pass, 2 skipped (API-key gated); 12 frontend tests pass.
+**Fail:** Any failure or error.
+
+---
+
+### MT-2-2: Session initialises on page load
+
+Open `http://localhost:5173`. In the browser DevTools Network tab, verify:
+
+- [ ] A `POST /session/start` request fires immediately on page load
+- [ ] The response is `200` with body `{"session_id": "<uuid>"}`
+- [ ] No error message appears in the UI
+
+**Pass:** `/session/start` called once on load, `session_id` received silently.
+**Fail:** Network error, 500, or error message in UI.
+
+---
+
+### MT-2-3: First Spanish turn gets a real coach reply
+
+1. Click the record button.
+2. Say "Hola, me gustaría practicar español" clearly.
+3. Click Stop.
+
+**Check:**
+- [ ] Your transcript appears in the conversation panel
+- [ ] A coach reply appears below it (Spanish text, not an echo of what you said)
+- [ ] Browser speaks the coach reply aloud in Spanish
+- [ ] Button returns to idle state
+
+**Pass:** Distinct Spanish reply from Claude visible and spoken.
+**Fail:** Echo of user speech, empty reply, or error message.
+
+---
+
+### MT-2-4: Coach replies are contextually appropriate for level 5
+
+Conduct a short exchange on the default topic (general, level 5):
+
+1. Say "¿Qué puedo hacer en el mercado?"
+2. Wait for reply. Say "Quiero comprar frutas y verduras."
+3. Wait for reply.
+
+**Check:**
+- [ ] Replies are in Spanish throughout
+- [ ] Vocabulary is intermediate (not baby-talk, not academic)
+- [ ] Coach does not spontaneously correct your grammar (on_demand mode is default)
+- [ ] Each reply is contextually relevant to what you said
+
+**Pass:** Two coherent in-context Spanish replies.
+**Fail:** English reply, off-topic reply, or unsolicited grammar corrections.
+
+---
+
+### MT-2-5: Conversation history is maintained across turns
+
+Continue the session from MT-2-4 (do not refresh the page):
+
+1. Say "¿Y qué más puedo hacer allí?"
+
+**Check:**
+- [ ] The coach's reply references the conversation context (market, fruit/vegetables) rather than starting fresh
+- [ ] All prior turns still visible in the transcript
+
+**Pass:** Coach reply shows awareness of prior exchange.
+**Fail:** Coach ignores context, asks "How can I help you?" again, or transcript resets.
+
+---
+
+### MT-2-6: AI error path — `/turn` with invalid session_id via curl
+
+In a terminal (backend must be running):
+
+```bash
+curl -s -X POST http://localhost:8001/turn \
+  -F "audio=@tests/fixtures/hola_sample.wav;type=audio/wav" \
+  -F "session_id=invalid-id" | python3 -m json.tool
+```
+
+**Expected:** HTTP 404 response.
+**Pass:** Status 404 returned.
+**Fail:** 200, 500, or exception in server logs.
+
+---
+
+### MT-2-7: Full response structure via curl
+
+```bash
+# Start a session
+SESSION=$(curl -s -X POST http://localhost:8001/session/start | python3 -c "import sys,json; print(json.load(sys.stdin)['session_id'])")
+
+# Submit a turn
+curl -s -X POST http://localhost:8001/turn \
+  -F "audio=@tests/fixtures/hola_sample.wav;type=audio/wav" \
+  -F "session_id=$SESSION" | python3 -m json.tool
+```
+
+**Expected response structure:**
+```json
+{
+  "transcript_raw": "Hola, como estás?",
+  "transcript_norm": "hola como estás",
+  "coach_text": "<Spanish reply from Claude>",
+  "corrections": [],
+  "error": null
+}
+```
+
+**Pass:** All five keys present; `coach_text` is non-empty Spanish text; `error` is null.
+**Fail:** Missing keys, empty `coach_text`, or non-null `error`.
+
+---
+
 ## Sign-Off Checklist
 
 Before recording sign-off in `manualTestLog.md`, confirm:
 
 - [ ] MT-0-1 through MT-0-4 all passed (Phase 0)
 - [ ] MT-1-1 through MT-1-8 all passed (Phase 1)
+- [ ] MT-2-1 through MT-2-7 all passed (Phase 2)
 - [ ] No unexpected browser console errors observed during any test
 - [ ] No unhandled exceptions in backend terminal output during any test
 
 Record in `docs/manualTestLog.md`:
 - Date tested
-- Tester name
+- Tester name / email
 - Any observed issues or deviations (note if a test passed with caveats)
 - Whisper model version used (check: `uv run python3 -c "import whisper; print(whisper.__version__)"`)
+- Claude model used (currently `claude-sonnet-4-6`)

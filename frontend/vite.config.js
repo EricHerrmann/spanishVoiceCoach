@@ -11,6 +11,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/turn': 'http://localhost:8001',
+      '/session': 'http://localhost:8001',
     },
   },
 })
