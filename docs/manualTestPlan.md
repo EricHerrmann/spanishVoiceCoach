@@ -352,14 +352,20 @@ Continue the session from MT-2-4 (do not refresh the page):
 In a terminal (backend must be running):
 
 ```bash
-curl -s -X POST http://localhost:8001/turn \
+curl -si -X POST http://localhost:8001/turn \
   -F "audio=@tests/fixtures/hola_sample.wav;type=audio/wav" \
-  -F "session_id=invalid-id" | python3 -m json.tool
+  -F "session_id=invalid-id"
 ```
 
-**Expected:** HTTP 404 response.
-**Pass:** Status 404 returned.
-**Fail:** 200, 500, or exception in server logs.
+**Expected output includes:**
+```
+HTTP/1.1 404 Not Found
+...
+{"detail":"Session not found"}
+```
+
+**Pass:** Status line shows `404 Not Found`.
+**Fail:** 200, 500, or connection error.
 
 ---
 
