@@ -14,7 +14,7 @@
 |-------|------|--------|-------|-------|
 | 0 — Scaffolding | Project structure, env, contracts | ✅ Complete | 6 passing | pyproject.toml, Vite setup, abstract interfaces |
 | 1 — Voice Pipeline MVP | Mic → Whisper → browser TTS | ✅ Complete | 33 passing | No AI yet; validate full audio round-trip |
-| 2 — AI Conversation Core | Claude wired in, freeform chat | ⏳ Not started | — | First real Spanish coaching session |
+| 2 — AI Conversation Core | Claude wired in, freeform chat | ✅ Complete | 36 passing | First real Spanish coaching session |
 | 3 — Coaching Layer | Hybrid mode, corrections, toggle | ⏳ Not started | — | MVP complete after this phase |
 | 4 — Session Config UI | Topic/level picker, provider selector | ⏳ Not started | — | Full session configuration in UI |
 | 5 — Persistence | Session history, transcript save | ⏳ Not started | — | Review past sessions |

@@ -36,15 +36,15 @@ Each phase gate requires a smoke-test sign-off entry before the next phase begin
 ## Phase 2 — AI Conversation Core
 
 **Gate criteria:**
-- [ ] All tests pass
-- [ ] Claude responds in Spanish at the selected level
-- [ ] Conversation history is maintained across turns
-- [ ] Manual smoke: full Spanish conversation exchange completes without error
+- [x] All tests pass (36 backend, 2 skipped; 12 frontend)
+- [x] Claude responds in Spanish at the selected level
+- [x] Conversation history is maintained across turns
+- [x] Manual smoke: full Spanish conversation exchange completes without error
 
 **Sign-off:**
-- Date:
-- Tester:
-- Notes:
+- Date: 2026-04-20
+- Tester: oldhat86@gmail.com
+- Notes: PASSED. MT-2-1 through MT-2-5 all passed. Claude responds in Spanish at level 5, conversation context maintained across turns, coach does not spontaneously correct in on_demand mode. MT-2-6 and MT-2-7 (curl structure tests) skipped — covered by automated integration tests.
 
 ---
 
