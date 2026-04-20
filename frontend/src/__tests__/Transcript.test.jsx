@@ -10,24 +10,25 @@ describe('Transcript', () => {
   })
 
   it('renders user turn with transcript_norm', () => {
-    const turns = [{ speaker: 'user', transcript_norm: 'hola como estás', echo: null }]
+    const turns = [{ speaker: 'user', transcript_norm: 'hola como estás', coach_text: null }]
     render(<Transcript turns={turns} />)
     expect(screen.getByText('hola como estás')).toBeInTheDocument()
   })
 
-  it('renders coach echo response', () => {
+  it('renders coach turn with coach_text', () => {
     const turns = [
-      { speaker: 'user', transcript_norm: 'hola', echo: null },
-      { speaker: 'coach', transcript_norm: null, echo: 'hola' },
+      { speaker: 'user', transcript_norm: 'hola', coach_text: null },
+      { speaker: 'coach', transcript_norm: null, coach_text: '¡Hola! ¿Cómo estás?' },
     ]
     render(<Transcript turns={turns} />)
-    expect(screen.getAllByText('hola')).toHaveLength(2)
+    expect(screen.getByText('hola')).toBeInTheDocument()
+    expect(screen.getByText('¡Hola! ¿Cómo estás?')).toBeInTheDocument()
   })
 
   it('labels user turns distinctly from coach turns', () => {
     const turns = [
-      { speaker: 'user', transcript_norm: 'hola', echo: null },
-      { speaker: 'coach', transcript_norm: null, echo: 'hola' },
+      { speaker: 'user', transcript_norm: 'hola', coach_text: null },
+      { speaker: 'coach', transcript_norm: null, coach_text: '¡Hola!' },
     ]
     render(<Transcript turns={turns} />)
     expect(screen.getByText(/you|user/i)).toBeInTheDocument()

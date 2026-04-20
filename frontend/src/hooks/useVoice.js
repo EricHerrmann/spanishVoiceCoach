@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 export function useVoice() {
   const [state, setState] = useState('idle')
@@ -6,6 +6,16 @@ export function useVoice() {
   const [error, setError] = useState(null)
   const mediaRecorderRef = useRef(null)
   const chunksRef = useRef([])
+  const sessionIdRef = useRef(null)
+
+  useEffect(() => {
+    fetch('/session/start', { method: 'POST' })
+      .then((res) => res.json())
+      .then((data) => { sessionIdRef.current = data.session_id })
+      .catch(() => {
+        setError({ stage: 'mic', message: 'Failed to start session', recoverable: false })
+      })
+  }, [])
 
   async function startRecording() {
     setError(null)
@@ -43,6 +53,7 @@ export function useVoice() {
   async function submitAudio(blob) {
     const form = new FormData()
     form.append('audio', blob, 'recording.wav')
+    form.append('session_id', sessionIdRef.current)
     try {
       const res = await fetch('/turn', { method: 'POST', body: form })
       const data = await res.json()
@@ -55,19 +66,19 @@ export function useVoice() {
 
       setTurns((prev) => [
         ...prev,
-        { speaker: 'user', transcript_norm: data.transcript_norm, echo: null },
-        { speaker: 'coach', transcript_norm: null, echo: data.echo },
+        { speaker: 'user', transcript_norm: data.transcript_norm, coach_text: null },
+        { speaker: 'coach', transcript_norm: null, coach_text: data.coach_text },
       ])
       setError(null)
       setState('playing')
-      speakEcho(data.echo)
+      speakCoachText(data.coach_text)
     } catch (err) {
       setError({ stage: 'stt', message: 'Network error', recoverable: true })
       setState('idle')
     }
   }
 
-  function speakEcho(text) {
+  function speakCoachText(text) {
     if (!text || !window.speechSynthesis) {
       setState('idle')
       return

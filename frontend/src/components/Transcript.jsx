@@ -4,7 +4,9 @@ export default function Transcript({ turns }) {
       {turns.map((turn, i) => (
         <div key={i} className={`turn turn--${turn.speaker}`}>
           <span className="turn-label">{turn.speaker === 'user' ? 'You' : 'Coach'}</span>
-          <span className="turn-text">{turn.speaker === 'user' ? turn.transcript_norm : turn.echo}</span>
+          <span className="turn-text">
+            {turn.speaker === 'user' ? turn.transcript_norm : turn.coach_text}
+          </span>
         </div>
       ))}
     </div>
