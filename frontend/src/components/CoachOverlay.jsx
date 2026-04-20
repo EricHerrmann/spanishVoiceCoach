@@ -4,7 +4,7 @@ export default function CoachOverlay({ corrections }) {
     <div className="coach-overlay">
       <h3>Corrections</h3>
       {corrections.map((c, i) => (
-        <div key={i} className="correction">
+        <div key={`${c.original}-${c.corrected}-${i}`} className="correction">
           <span className="correction-original">{c.original}</span>
           <span className="correction-arrow"> → </span>
           <span className="correction-corrected">{c.corrected}</span>

@@ -1,5 +1,6 @@
 import os
 import tempfile
+from typing import Literal
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Body
 from pydantic import BaseModel
 from backend.session import Session, TurnError, new_session
@@ -14,7 +15,7 @@ app = FastAPI()
 
 
 class SessionStartRequest(BaseModel):
-    coaching_mode: str = "on_demand"
+    coaching_mode: Literal["on_demand", "explicit", "shadowing"] = "on_demand"
 
 
 @app.get("/health")

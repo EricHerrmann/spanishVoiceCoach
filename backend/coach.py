@@ -7,13 +7,13 @@ from backend.ai.base import AbstractAIProvider
 _CORRECTION_REQUEST_PATTERNS = [
     r"corrígeme",
     r"corrigeme",
-    r"¿cómo se dice",
+    r"cómo se dice",
     r"como se dice",
     r"was that right",
     r"is that right",
     r"correct me",
-    r"¿lo dije bien",
-    r"¿está bien",
+    r"lo dije bien",
+    r"está bien",
     r"esta bien lo que dije",
 ]
 

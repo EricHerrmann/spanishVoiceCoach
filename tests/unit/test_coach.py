@@ -18,7 +18,8 @@ class TestUserRequestedCorrection:
         assert _user_requested_correction("corrigeme") is True
 
     def test_como_se_dice_triggers(self):
-        assert _user_requested_correction("¿cómo se dice 'butter'?") is True
+        # normalized form — ¿ stripped by stt.py normalize_transcript
+        assert _user_requested_correction("cómo se dice butter") is True
 
     def test_was_that_right_triggers(self):
         assert _user_requested_correction("was that right?") is True
@@ -27,7 +28,11 @@ class TestUserRequestedCorrection:
         assert _user_requested_correction("CORRÍGEME por favor") is True
 
     def test_lo_dije_bien_triggers(self):
-        assert _user_requested_correction("¿lo dije bien?") is True
+        # normalized form — ¿ and ? stripped by normalize_transcript
+        assert _user_requested_correction("lo dije bien") is True
+
+    def test_esta_bien_triggers(self):
+        assert _user_requested_correction("está bien") is True
 
     def test_normal_sentence_does_not_trigger(self):
         assert _user_requested_correction("quiero comer tacos") is False
