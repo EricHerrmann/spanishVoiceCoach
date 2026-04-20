@@ -20,3 +20,18 @@ def test_abstract_ai_provider_raises_not_implemented():
     provider = ConcreteNoOp()
     with pytest.raises(NotImplementedError):
         provider.chat(session=None, user_text="hola")
+
+
+from backend.session import new_session
+from backend.ai.openai import OpenAIProvider
+
+
+class TestOpenAIProvider:
+    def test_chat_raises_not_implemented(self):
+        provider = OpenAIProvider()
+        session = new_session(
+            topic="ordering food", level=5,
+            ai_provider="openai", coaching_mode="on_demand"
+        )
+        with pytest.raises(NotImplementedError):
+            provider.chat(session, "hola")
