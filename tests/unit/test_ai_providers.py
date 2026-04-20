@@ -162,3 +162,12 @@ class TestClaudeProviderSystemPrompt:
                 prompt = provider._build_system_prompt(session)
                 assert "1–2" in prompt
                 assert "7–10" in prompt
+
+    def test_system_prompt_includes_coaching_mode(self):
+        with patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test-key"}):
+            with patch("backend.ai.claude.anthropic.Anthropic"):
+                provider = ClaudeProvider()
+                for mode in ("on_demand", "explicit", "shadowing"):
+                    session = new_session(topic="travel", level=5, ai_provider="claude", coaching_mode=mode)
+                    prompt = provider._build_system_prompt(session)
+                    assert mode in prompt

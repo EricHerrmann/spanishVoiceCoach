@@ -19,6 +19,7 @@ def health():
 
 @app.post("/session/start")
 def session_start():
+    # TODO Phase 4: accept topic/level/coaching_mode/ai_provider from request body
     session = new_session(
         topic="general",
         level=5,
@@ -61,6 +62,8 @@ async def post_turn(
         }
 
     transcript_raw, transcript_norm = stt_result
+    # CoachSession is re-instantiated per request; conversation history is
+    # preserved via session.turns on the Session object, not on this instance.
     coach = CoachSession(session, claude_provider)
     turn_result = coach.handle_turn(transcript_norm)
 

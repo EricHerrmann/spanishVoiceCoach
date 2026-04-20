@@ -81,6 +81,9 @@ class TestTurnRoute:
         assert response.status_code == 200
         body = response.json()
         assert body["error"] is None
+        # Expected output from Whisper `base` model on tests/fixtures/hola_sample.wav
+        # (generated via gTTS "Hola, como estás?"). Pinned to this exact string;
+        # update here if the fixture WAV or Whisper model version changes.
         assert body["transcript_raw"] == "Hola, como estás?"
         assert body["transcript_norm"] == "hola como estás"
         assert isinstance(body["coach_text"], str)
