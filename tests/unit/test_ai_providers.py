@@ -4,6 +4,7 @@ from __future__ import annotations
 import pytest
 
 from backend.ai.base import AbstractAIProvider
+from backend.session import CoachResponse, Correction
 
 
 def test_abstract_ai_provider_raises_not_implemented():

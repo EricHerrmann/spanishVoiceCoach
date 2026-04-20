@@ -15,6 +15,12 @@ class Correction:
 
 
 @dataclass
+class CoachResponse:
+    coach_text: str
+    corrections: list[Correction]
+
+
+@dataclass
 class TurnError:
     stage: str        # "mic" | "stt" | "ai" | "tts"
     message: str      # human-readable description
