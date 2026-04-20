@@ -37,7 +37,7 @@ uv run pytest -v
 
 ```bash
 # Terminal 1 — start backend
-uv run uvicorn backend.main:app --reload --port 8001
+uv run --env-file .env uvicorn backend.main:app --reload --port 8001
 
 # Terminal 2 — verify health
 curl -s http://localhost:8001/health
@@ -94,7 +94,7 @@ Start both servers in separate terminals:
 
 ```bash
 # Terminal 1 — backend
-uv run uvicorn backend.main:app --reload --port 8001
+uv run --env-file .env uvicorn backend.main:app --reload --port 8001
 
 # Terminal 2 — frontend
 cd frontend && npm run dev
@@ -261,7 +261,7 @@ Start both servers in separate terminals:
 
 ```bash
 # Terminal 1 — backend
-ANTHROPIC_API_KEY=<your-key> uv run uvicorn backend.main:app --reload --port 8001
+uv run --env-file .env uvicorn backend.main:app --reload --port 8001
 
 # Terminal 2 — frontend
 cd frontend && npm run dev
