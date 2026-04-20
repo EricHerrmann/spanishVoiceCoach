@@ -18,6 +18,10 @@ export function useVoice() {
   }, [])
 
   async function startRecording() {
+    if (!sessionIdRef.current) {
+      setError({ stage: 'mic', message: 'Session not ready, please try again.', recoverable: true })
+      return
+    }
     setError(null)
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })

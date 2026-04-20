@@ -61,7 +61,7 @@ class ClaudeProvider(AbstractAIProvider):
             f"Topic: {session.topic}. Coaching mode: {session.coaching_mode}.\n"
             f"Respond only in Spanish. "
             f"Keep vocabulary and grammar appropriate for level {session.level}.\n"
-            f"Do not correct the student unless asked (on_demand mode).\n\n"
+            f"Do not correct the student unless asked (on_demand mode).\n\n"  # Phase 3: replace with coaching_mode-aware instruction
             f"{_LEVEL_SCALE}"
         )
 

@@ -135,3 +135,30 @@ class TestClaudeProvider:
         with patch.dict("os.environ", clean_env, clear=True):
             with pytest.raises(RuntimeError, match="ANTHROPIC_API_KEY"):
                 ClaudeProvider()
+
+
+class TestClaudeProviderSystemPrompt:
+    def test_system_prompt_includes_level(self):
+        with patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test-key"}):
+            with patch("backend.ai.claude.anthropic.Anthropic"):
+                provider = ClaudeProvider()
+                session = new_session(topic="ordering food", level=7, ai_provider="claude", coaching_mode="on_demand")
+                prompt = provider._build_system_prompt(session)
+                assert "7/10" in prompt
+
+    def test_system_prompt_includes_topic(self):
+        with patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test-key"}):
+            with patch("backend.ai.claude.anthropic.Anthropic"):
+                provider = ClaudeProvider()
+                session = new_session(topic="ordering food", level=5, ai_provider="claude", coaching_mode="on_demand")
+                prompt = provider._build_system_prompt(session)
+                assert "ordering food" in prompt
+
+    def test_system_prompt_includes_level_band_table(self):
+        with patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test-key"}):
+            with patch("backend.ai.claude.anthropic.Anthropic"):
+                provider = ClaudeProvider()
+                session = new_session(topic="travel", level=3, ai_provider="claude", coaching_mode="on_demand")
+                prompt = provider._build_system_prompt(session)
+                assert "1–2" in prompt
+                assert "7–10" in prompt

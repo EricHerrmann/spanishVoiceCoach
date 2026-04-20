@@ -12,7 +12,7 @@ requires_api_key = pytest.mark.skipif(
 
 
 def make_client():
-    """Create a fresh TestClient with a fresh app instance to avoid session state leakage."""
+    """Return a TestClient for the app. The app module is cached, so sessions dict is shared."""
     os.environ.setdefault("ANTHROPIC_API_KEY", "test-key")
     from backend.main import app
     return TestClient(app)
