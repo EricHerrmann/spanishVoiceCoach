@@ -35,6 +35,22 @@ class TestUserRequestedCorrection:
     def test_empty_string_does_not_trigger(self):
         assert _user_requested_correction("") is False
 
+    def test_trigger_appends_annotation_to_call_text(self):
+        from backend.coach import CoachSession
+        from backend.session import new_session, CoachResponse
+        from unittest.mock import MagicMock
+        session = new_session(
+            topic="test", level=1, ai_provider="claude", coaching_mode="on_demand"
+        )
+        provider = MagicMock()
+        provider.chat.return_value = CoachResponse(coach_text="Bien", corrections=[])
+        coach = CoachSession(session, provider)
+
+        coach.handle_turn("corrígeme por favor")
+
+        called_text = provider.chat.call_args[0][1]
+        assert called_text == "corrígeme por favor\n[The student is explicitly asking for correction on this turn.]"
+
 
 class TestCoachSessionHandleTurn:
     def test_successful_turn_appends_user_and_coach_turns(self):

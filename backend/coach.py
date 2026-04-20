@@ -13,7 +13,6 @@ _CORRECTION_REQUEST_PATTERNS = [
     r"is that right",
     r"correct me",
     r"¿lo dije bien",
-    r"lo dije bien",
     r"¿está bien",
     r"esta bien lo que dije",
 ]
