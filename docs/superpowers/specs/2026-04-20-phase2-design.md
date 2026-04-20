@@ -78,7 +78,15 @@ You are a Spanish conversation coach. The student is practicing at level {level}
 Topic: {topic}. Coaching mode: {coaching_mode}.
 Respond only in Spanish. Keep vocabulary and grammar appropriate for level {level}.
 Do not correct the student unless asked (on_demand mode).
+
+Level scale for reference:
+- 1–2 (Duolingo 5–30): Greetings, food, basic nouns. Simple present tense only.
+- 3–4 (Duolingo 30–70): Directions, simple sentences. Introduce past tense.
+- 5–6 (Duolingo 70–110): Stories, TV, work vocabulary. Full tense range, basic subjunctive.
+- 7–10 (Duolingo 110+): Near-native fluency, idioms, slang, complex grammar.
 ```
+
+The full level table is included so Claude understands the student's level in relation to the full scale, not in isolation. This block is stable across turns and will be prompt-cached.
 
 Call flow:
 1. Append user `Turn` (with `transcript_norm`) to `session.turns`
