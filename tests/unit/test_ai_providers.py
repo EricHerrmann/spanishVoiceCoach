@@ -35,3 +35,103 @@ class TestOpenAIProvider:
         )
         with pytest.raises(NotImplementedError):
             provider.chat(session, "hola")
+
+
+from unittest.mock import MagicMock, patch
+from backend.ai.claude import ClaudeProvider
+from backend.session import TurnError
+
+
+def _make_session():
+    return new_session(
+        topic="ordering food", level=5,
+        ai_provider="claude", coaching_mode="on_demand"
+    )
+
+
+def _mock_tool_response(coach_text, corrections=None):
+    """Build a fake anthropic response containing a tool_use block."""
+    tool_block = MagicMock()
+    tool_block.type = "tool_use"
+    tool_block.input = {"coach_text": coach_text, "corrections": corrections or []}
+    response = MagicMock()
+    response.content = [tool_block]
+    return response
+
+
+class TestClaudeProvider:
+    def test_valid_response_returns_coach_response(self):
+        with patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test-key"}):
+            with patch("backend.ai.claude.anthropic.Anthropic") as MockClient:
+                mock_client = MagicMock()
+                MockClient.return_value = mock_client
+                mock_client.messages.create.return_value = _mock_tool_response(
+                    "¡Hola! ¿Qué quieres pedir hoy?"
+                )
+
+                provider = ClaudeProvider()
+                result = provider.chat(_make_session(), "hola quiero ordenar")
+
+                assert isinstance(result, CoachResponse)
+                assert result.coach_text == "¡Hola! ¿Qué quieres pedir hoy?"
+                assert result.corrections == []
+
+    def test_response_with_corrections_parses_them(self):
+        with patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test-key"}):
+            with patch("backend.ai.claude.anthropic.Anthropic") as MockClient:
+                mock_client = MagicMock()
+                MockClient.return_value = mock_client
+                mock_client.messages.create.return_value = _mock_tool_response(
+                    "¡Muy bien!",
+                    corrections=[{
+                        "original": "yo quiero ir",
+                        "corrected": "quiero ir",
+                        "explanation": "Subject pronoun 'yo' is optional in Spanish and sounds unnatural here.",
+                        "triggered_by": "auto",
+                    }],
+                )
+
+                provider = ClaudeProvider()
+                result = provider.chat(_make_session(), "yo quiero ir al mercado")
+
+                assert isinstance(result, CoachResponse)
+                assert len(result.corrections) == 1
+                assert result.corrections[0].original == "yo quiero ir"
+                assert result.corrections[0].triggered_by == "auto"
+
+    def test_response_with_no_tool_use_block_returns_turn_error(self):
+        with patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test-key"}):
+            with patch("backend.ai.claude.anthropic.Anthropic") as MockClient:
+                mock_client = MagicMock()
+                MockClient.return_value = mock_client
+                empty_response = MagicMock()
+                empty_response.content = []
+                mock_client.messages.create.return_value = empty_response
+
+                provider = ClaudeProvider()
+                result = provider.chat(_make_session(), "hola")
+
+                assert isinstance(result, TurnError)
+                assert result.stage == "ai"
+                assert result.recoverable is True
+
+    def test_api_error_returns_turn_error(self):
+        with patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test-key"}):
+            with patch("backend.ai.claude.anthropic.Anthropic") as MockClient:
+                mock_client = MagicMock()
+                MockClient.return_value = mock_client
+                mock_client.messages.create.side_effect = Exception("connection refused")
+
+                provider = ClaudeProvider()
+                result = provider.chat(_make_session(), "hola")
+
+                assert isinstance(result, TurnError)
+                assert result.stage == "ai"
+                assert result.recoverable is True
+
+    def test_missing_api_key_raises_runtime_error_at_instantiation(self):
+        import os
+        clean_env = {k: v for k, v in os.environ.items() if k != "ANTHROPIC_API_KEY"}
+        with patch.dict("os.environ", clean_env, clear=True):
+            with pytest.raises(RuntimeError, match="ANTHROPIC_API_KEY"):
+                ClaudeProvider()
