@@ -1,13 +1,141 @@
 from unittest.mock import MagicMock
 import pytest
-from backend.coach import CoachSession
-from backend.session import new_session, CoachResponse, TurnError, Turn
+from backend.coach import CoachSession, _user_requested_correction
+from backend.session import new_session, CoachResponse, TurnError, Turn, Correction
 
 
 def _mock_provider(return_value):
     provider = MagicMock()
     provider.chat.return_value = return_value
     return provider
+
+
+class TestUserRequestedCorrection:
+    def test_corrigeme_triggers(self):
+        assert _user_requested_correction("corrígeme") is True
+
+    def test_corrigeme_no_accent_triggers(self):
+        assert _user_requested_correction("corrigeme") is True
+
+    def test_como_se_dice_triggers(self):
+        # normalized form — ¿ stripped by stt.py normalize_transcript
+        assert _user_requested_correction("cómo se dice butter") is True
+
+    def test_was_that_right_triggers(self):
+        assert _user_requested_correction("was that right?") is True
+
+    def test_case_insensitive(self):
+        assert _user_requested_correction("CORRÍGEME por favor") is True
+
+    def test_lo_dije_bien_triggers(self):
+        # normalized form — ¿ and ? stripped by normalize_transcript
+        assert _user_requested_correction("lo dije bien") is True
+
+    def test_esta_bien_triggers(self):
+        assert _user_requested_correction("está bien") is True
+
+    def test_normal_sentence_does_not_trigger(self):
+        assert _user_requested_correction("quiero comer tacos") is False
+
+    def test_empty_string_does_not_trigger(self):
+        assert _user_requested_correction("") is False
+
+    def test_trigger_appends_annotation_to_call_text(self):
+        from backend.coach import CoachSession
+        from backend.session import new_session, CoachResponse
+        from unittest.mock import MagicMock
+        session = new_session(
+            topic="test", level=1, ai_provider="claude", coaching_mode="on_demand"
+        )
+        provider = MagicMock()
+        provider.chat.return_value = CoachResponse(coach_text="Bien", corrections=[])
+        coach = CoachSession(session, provider)
+
+        coach.handle_turn("corrígeme por favor")
+
+        called_text = provider.chat.call_args[0][1]
+        assert called_text == "corrígeme por favor\n[The student is explicitly asking for correction on this turn.]"
+
+
+def _correction_fixture() -> Correction:
+    return Correction(
+        original="yo fui",
+        corrected="fui",
+        explanation="'yo' is optional in Spanish",
+        triggered_by="auto",
+    )
+
+
+class TestCoachingModeRouting:
+    def test_explicit_mode_returns_corrections(self):
+        session = new_session(
+            topic="food", level=5, ai_provider="claude", coaching_mode="explicit"
+        )
+        coach_response = CoachResponse(
+            coach_text="¡Muy bien!", corrections=[_correction_fixture()]
+        )
+        coach = CoachSession(session, _mock_provider(coach_response))
+
+        result = coach.handle_turn("yo fui al mercado")
+
+        assert isinstance(result, Turn)
+        assert len(result.corrections) == 1
+        assert result.corrections[0].original == "yo fui"
+
+    def test_explicit_mode_empty_corrections_returns_empty(self):
+        session = new_session(
+            topic="food", level=5, ai_provider="claude", coaching_mode="explicit"
+        )
+        coach_response = CoachResponse(coach_text="¡Muy bien!", corrections=[])
+        coach = CoachSession(session, _mock_provider(coach_response))
+
+        result = coach.handle_turn("quiero comer tacos")
+
+        assert result.corrections == []
+
+    def test_shadowing_mode_always_suppresses_corrections(self):
+        session = new_session(
+            topic="food", level=5, ai_provider="claude", coaching_mode="shadowing"
+        )
+        coach_response = CoachResponse(
+            coach_text="Fui al mercado también.",
+            corrections=[_correction_fixture()],
+        )
+        coach = CoachSession(session, _mock_provider(coach_response))
+
+        result = coach.handle_turn("yo fui al mercado")
+
+        assert isinstance(result, Turn)
+        assert result.corrections == []
+
+    def test_on_demand_without_trigger_suppresses_corrections(self):
+        session = new_session(
+            topic="food", level=5, ai_provider="claude", coaching_mode="on_demand"
+        )
+        coach_response = CoachResponse(
+            coach_text="¡Muy bien!",
+            corrections=[_correction_fixture()],
+        )
+        coach = CoachSession(session, _mock_provider(coach_response))
+
+        result = coach.handle_turn("yo fui al mercado")  # no trigger phrase
+
+        assert result.corrections == []
+
+    def test_on_demand_with_trigger_shows_corrections(self):
+        session = new_session(
+            topic="food", level=5, ai_provider="claude", coaching_mode="on_demand"
+        )
+        coach_response = CoachResponse(
+            coach_text="¡Muy bien! Deberías decir 'fui'.",
+            corrections=[_correction_fixture()],
+        )
+        coach = CoachSession(session, _mock_provider(coach_response))
+
+        result = coach.handle_turn("corrígeme, yo fui al mercado")
+
+        assert len(result.corrections) == 1
+        assert result.corrections[0].original == "yo fui"
 
 
 class TestCoachSessionHandleTurn:

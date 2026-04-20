@@ -397,6 +397,165 @@ curl -s -X POST http://localhost:8001/turn \
 
 ---
 
+## Phase 3 — Coaching Layer
+
+### Prerequisites
+
+- `ANTHROPIC_API_KEY` set in your environment (real key required)
+- Backend running on port 8001, frontend on 5173
+
+### Setup
+
+```bash
+# Terminal 1 — backend
+uv run --env-file .env uvicorn backend.main:app --reload --port 8001
+
+# Terminal 2 — frontend
+cd frontend && npm run dev
+```
+
+Open `http://localhost:5173`.
+
+---
+
+### MT-3-1: Automated tests pass
+
+```bash
+ANTHROPIC_API_KEY=test-key uv run pytest -v
+cd frontend && npm test -- --run
+```
+
+**Pass:** ~54 backend tests pass, 2 skipped; 19 frontend tests pass.
+**Fail:** Any failure or error.
+
+---
+
+### MT-3-2: SessionConfig renders correctly
+
+Open `http://localhost:5173`.
+
+**Check:**
+- [ ] A "Coaching mode" label and dropdown are visible
+- [ ] Dropdown shows three options: "On demand", "Explicit", "Shadowing"
+- [ ] Default selected is "On demand"
+
+**Pass:** All checks satisfied.
+
+---
+
+### MT-3-3: on_demand mode — no automatic corrections
+
+1. Ensure dropdown is set to "On demand".
+2. Say "Yo quiero ir al mercado." (deliberate use of optional pronoun).
+3. Wait for the coach reply.
+
+**Check:**
+- [ ] Coach replies in Spanish
+- [ ] No correction overlay appears
+- [ ] Transcript shows user turn and coach reply normally
+
+**Pass:** No correction overlay visible.
+**Fail:** Correction overlay appears without the user asking.
+
+---
+
+### MT-3-4: on_demand mode — corrections surface on request
+
+Continuing the same session from MT-3-3:
+
+1. Say "Corrígeme, yo quiero ir al mercado."
+2. Wait for the coach reply.
+
+**Check:**
+- [ ] A correction overlay appears below the VoiceButton
+- [ ] Overlay shows at least one correction with original text, corrected text, and explanation
+- [ ] Coach reply is spoken aloud
+
+**Pass:** Overlay visible with correction fields populated.
+**Fail:** No overlay, or overlay appears with blank fields.
+
+---
+
+### MT-3-5: explicit mode — automatic corrections appear
+
+1. Change dropdown to "Explicit". Wait 2 seconds for new session to initialise.
+2. Say "Yo quiero ir al mercado."
+3. Wait for reply.
+
+**Check:**
+- [ ] Coach replies in Spanish
+- [ ] A correction overlay appears (Claude flagging the optional "yo")
+- [ ] Correction fields (original, corrected, explanation) are all populated
+
+**Pass:** Overlay visible after turn in explicit mode.
+**Fail:** No overlay despite speaking with a known error.
+
+Note: If Claude doesn't flag "yo quiero" as an error, try a clearer error like "Ayer yo come tacos" (wrong tense).
+
+---
+
+### MT-3-6: shadowing mode — no overlay, error woven into reply
+
+1. Change dropdown to "Shadowing". Wait 2 seconds for new session.
+2. Say "Yo quiero ir al mercado."
+3. Wait for reply.
+
+**Check:**
+- [ ] No correction overlay appears
+- [ ] Coach reply may naturally model the correct form ("quiero ir") in its response
+- [ ] Conversation flows naturally
+
+**Pass:** No overlay. Coach reply is natural Spanish.
+**Fail:** Overlay appears in shadowing mode.
+
+---
+
+### MT-3-7: Mode change resets session
+
+1. Set mode to "Explicit", complete one turn, note the transcript content.
+2. Change dropdown to "Shadowing".
+
+**Check:**
+- [ ] Transcript clears (new session started)
+- [ ] CoachOverlay clears
+- [ ] New turn works normally in shadowing mode (no overlay)
+
+**Pass:** Session resets on mode change; new turns work in new mode.
+**Fail:** Old transcript persists, or new session fails to start.
+
+---
+
+### MT-3-8: Full response structure via curl (explicit mode)
+
+```bash
+# Start a session in explicit mode
+SESSION=$(curl -s -X POST http://localhost:8001/session/start \
+  -H "Content-Type: application/json" \
+  -d '{"coaching_mode": "explicit"}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['session_id'])")
+
+# Submit a turn
+curl -s -X POST http://localhost:8001/turn \
+  -F "audio=@tests/fixtures/hola_sample.wav;type=audio/wav" \
+  -F "session_id=$SESSION" | python3 -m json.tool
+```
+
+**Expected response structure:**
+```json
+{
+  "transcript_raw": "Hola, como estás?",
+  "transcript_norm": "hola como estás",
+  "coach_text": "<Spanish reply from Claude>",
+  "corrections": [],
+  "error": null
+}
+```
+
+**Pass:** All five keys present; `coach_text` is non-empty; `error` is null.
+**Fail:** Missing keys or non-null error.
+
+---
+
 ## Sign-Off Checklist
 
 Before recording sign-off in `manualTestLog.md`, confirm:
@@ -404,6 +563,7 @@ Before recording sign-off in `manualTestLog.md`, confirm:
 - [ ] MT-0-1 through MT-0-4 all passed (Phase 0)
 - [ ] MT-1-1 through MT-1-8 all passed (Phase 1)
 - [ ] MT-2-1 through MT-2-7 all passed (Phase 2)
+- [ ] MT-3-1 through MT-3-8 all passed (Phase 3)
 - [ ] No unexpected browser console errors observed during any test
 - [ ] No unhandled exceptions in backend terminal output during any test
 

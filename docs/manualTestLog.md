@@ -54,7 +54,7 @@ Each phase gate requires a smoke-test sign-off entry before the next phase begin
 - [ ] All tests pass
 - [ ] Hybrid coaching mode active: auto-corrects clear errors, silent otherwise
 - [ ] On-demand correction triggered by user request works correctly
-- [ ] Coaching toggle switches modes without restarting session
+- [ ] Coaching mode change starts a new session (transcript clears; correct behavior by design)
 - [ ] Manual smoke: deliberate grammar error → correction appears; fluent turn → no interruption
 
 **Sign-off:**
