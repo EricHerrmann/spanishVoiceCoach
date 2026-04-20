@@ -44,6 +44,24 @@ _LEVEL_SCALE = (
     "- 7–10 (Duolingo 110+): Near-native fluency, idioms, slang, complex grammar."
 )
 
+_MODE_INSTRUCTIONS = {
+    "on_demand": (
+        "Provide corrections ONLY if the student explicitly asks for feedback "
+        "(e.g. 'Corrígeme', 'Was that right?', '¿Lo dije bien?', '¿Cómo se dice…?'). "
+        "When correcting, set triggered_by to 'user_request'. "
+        "Otherwise return an empty corrections list."
+    ),
+    "explicit": (
+        "Always identify and correct grammar or vocabulary errors in the student's speech. "
+        "Set triggered_by to 'auto' for each correction."
+    ),
+    "shadowing": (
+        "When you detect an error, naturally weave the correct Spanish form into your reply "
+        "without explicitly labelling it as a correction. "
+        "Always return an empty corrections list."
+    ),
+}
+
 
 class ClaudeProvider(AbstractAIProvider):
     """Anthropic Claude AI provider using tool use for structured output."""
@@ -55,13 +73,16 @@ class ClaudeProvider(AbstractAIProvider):
         self._client = anthropic.Anthropic(api_key=api_key)
 
     def _build_system_prompt(self, session: Session) -> str:
+        mode_instruction = _MODE_INSTRUCTIONS.get(
+            session.coaching_mode, _MODE_INSTRUCTIONS["on_demand"]
+        )
         return (
             f"You are a Spanish conversation coach. "
             f"The student is practicing at level {session.level}/10.\n"
             f"Topic: {session.topic}. Coaching mode: {session.coaching_mode}.\n"
             f"Respond only in Spanish. "
             f"Keep vocabulary and grammar appropriate for level {session.level}.\n"
-            f"Do not correct the student unless asked (on_demand mode).\n\n"  # Phase 3: replace with coaching_mode-aware instruction
+            f"{mode_instruction}\n\n"
             f"{_LEVEL_SCALE}"
         )
 

@@ -162,3 +162,27 @@ class TestClaudeProviderSystemPrompt:
                 prompt = provider._build_system_prompt(session)
                 assert "1–2" in prompt
                 assert "7–10" in prompt
+
+    def test_on_demand_prompt_instructs_no_auto_correction(self):
+        with patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test-key"}):
+            with patch("backend.ai.claude.anthropic.Anthropic"):
+                provider = ClaudeProvider()
+                session = new_session(topic="food", level=5, ai_provider="claude", coaching_mode="on_demand")
+                prompt = provider._build_system_prompt(session)
+                assert "explicitly" in prompt.lower() or "only if" in prompt.lower()
+
+    def test_explicit_prompt_instructs_always_correct(self):
+        with patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test-key"}):
+            with patch("backend.ai.claude.anthropic.Anthropic"):
+                provider = ClaudeProvider()
+                session = new_session(topic="food", level=5, ai_provider="claude", coaching_mode="explicit")
+                prompt = provider._build_system_prompt(session)
+                assert "always" in prompt.lower()
+
+    def test_shadowing_prompt_instructs_suppress_overlay(self):
+        with patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test-key"}):
+            with patch("backend.ai.claude.anthropic.Anthropic"):
+                provider = ClaudeProvider()
+                session = new_session(topic="food", level=5, ai_provider="claude", coaching_mode="shadowing")
+                prompt = provider._build_system_prompt(session)
+                assert "empty corrections list" in prompt.lower() or "return an empty" in prompt.lower()
