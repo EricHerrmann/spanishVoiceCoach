@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 import pytest
-from backend.coach import CoachSession
+from backend.coach import CoachSession, _user_requested_correction
 from backend.session import new_session, CoachResponse, TurnError, Turn
 
 
@@ -8,6 +8,32 @@ def _mock_provider(return_value):
     provider = MagicMock()
     provider.chat.return_value = return_value
     return provider
+
+
+class TestUserRequestedCorrection:
+    def test_corrigeme_triggers(self):
+        assert _user_requested_correction("corrígeme") is True
+
+    def test_corrigeme_no_accent_triggers(self):
+        assert _user_requested_correction("corrigeme") is True
+
+    def test_como_se_dice_triggers(self):
+        assert _user_requested_correction("¿cómo se dice 'butter'?") is True
+
+    def test_was_that_right_triggers(self):
+        assert _user_requested_correction("was that right?") is True
+
+    def test_case_insensitive(self):
+        assert _user_requested_correction("CORRÍGEME por favor") is True
+
+    def test_lo_dije_bien_triggers(self):
+        assert _user_requested_correction("¿lo dije bien?") is True
+
+    def test_normal_sentence_does_not_trigger(self):
+        assert _user_requested_correction("quiero comer tacos") is False
+
+    def test_empty_string_does_not_trigger(self):
+        assert _user_requested_correction("") is False
 
 
 class TestCoachSessionHandleTurn:
