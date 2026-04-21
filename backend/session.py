@@ -61,6 +61,8 @@ class Session:
     level: int               # 1–10
     ai_provider: str         # "claude" | "openai"
     coaching_mode: str       # "on_demand" | "explicit" | "shadowing"
+    tts_provider: str = "browser"        # "browser" | "elevenlabs"
+    tts_voice_id: Optional[str] = None   # voice ID when tts_provider == "elevenlabs"
     turns: list[Turn] = field(default_factory=list)
 
     def to_dict(self) -> dict:
@@ -190,7 +192,12 @@ def session_summary(session: Session) -> dict:
 
 
 def new_session(
-    topic: str, level: int, ai_provider: str, coaching_mode: str
+    topic: str,
+    level: int,
+    ai_provider: str,
+    coaching_mode: str,
+    tts_provider: str = "browser",
+    tts_voice_id: Optional[str] = None,
 ) -> Session:
     """Factory function to create a new Session with a fresh UUID and current timestamp."""
     return Session(
@@ -200,4 +207,6 @@ def new_session(
         level=level,
         ai_provider=ai_provider,
         coaching_mode=coaching_mode,
+        tts_provider=tts_provider,
+        tts_voice_id=tts_voice_id,
     )

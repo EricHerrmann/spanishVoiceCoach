@@ -198,3 +198,47 @@ def test_session_summary_counts_turns_and_corrections():
     assert summary["topic"] == "food"
     assert summary["turn_count"] == 2
     assert summary["correction_count"] == 1
+
+
+def test_new_session_defaults_to_browser_tts():
+    session = new_session(topic="food", level=5, ai_provider="claude", coaching_mode="on_demand")
+    assert session.tts_provider == "browser"
+    assert session.tts_voice_id is None
+
+
+def test_new_session_accepts_elevenlabs_tts():
+    session = new_session(
+        topic="food",
+        level=5,
+        ai_provider="claude",
+        coaching_mode="on_demand",
+        tts_provider="elevenlabs",
+        tts_voice_id="21m00Tcm4TlvDq8ikWAM",
+    )
+    assert session.tts_provider == "elevenlabs"
+    assert session.tts_voice_id == "21m00Tcm4TlvDq8ikWAM"
+
+
+def test_session_roundtrip_preserves_tts_config():
+    session = new_session(
+        topic="food",
+        level=5,
+        ai_provider="claude",
+        coaching_mode="on_demand",
+        tts_provider="elevenlabs",
+        tts_voice_id="21m00Tcm4TlvDq8ikWAM",
+    )
+    restored = Session.from_dict(session.to_dict())
+    assert restored.tts_provider == "elevenlabs"
+    assert restored.tts_voice_id == "21m00Tcm4TlvDq8ikWAM"
+
+
+def test_session_from_dict_defaults_tts_provider_for_old_sessions():
+    """Sessions persisted before Phase 6 (no tts_provider key) load with browser defaults."""
+    session = new_session(topic="food", level=5, ai_provider="claude", coaching_mode="on_demand")
+    data = session.to_dict()
+    del data["tts_provider"]
+    del data["tts_voice_id"]
+    restored = Session.from_dict(data)
+    assert restored.tts_provider == "browser"
+    assert restored.tts_voice_id is None
