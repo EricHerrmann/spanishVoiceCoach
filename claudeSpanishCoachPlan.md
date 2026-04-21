@@ -18,7 +18,7 @@
 | 3 — Coaching Layer | Hybrid mode, corrections, toggle | ✅ Complete | 56 backend, 2 skipped; 19 frontend | MVP complete |
 | 4 — Session Config UI | Topic/level picker, provider selector | ✅ Complete | 67 backend, 2 skipped; 33 frontend | Full session configuration in UI; signed off 2026-04-21 |
 | 5 — Persistence | Session history, transcript save | ✅ Complete | 74 backend, 2 skipped; 38 frontend | Session history and local persistence signed off 2026-04-21 |
-| 6 — ElevenLabs TTS | Swap browser TTS via tts.py | ⏳ Not started | — | Voice quality upgrade |
+| 6 — ElevenLabs TTS | Swap browser TTS via tts.py | ⏳ Implemented — awaiting manual sign-off | ≥ 92 backend, ≥ 46 frontend | Voice quality upgrade |
 | 7 — Android / PWA | PWA packaging, mobile UX | ⏳ Not started | — | Android target |
 
 **MVP = Phases 0–3.** Phase 4 adds full session configuration and Phase 5 adds local persistence and session history. Phase 6 is the next execution focus.
@@ -310,13 +310,13 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 
 ### Tasks
 
-- [ ] Implement `ElevenLabsTTSProvider` in `backend/tts.py` — calls ElevenLabs API, returns audio bytes
-- [ ] Update `backend/main.py` — if `tts_provider` returns bytes, include base64 audio in `/turn` response
-- [ ] Update `frontend/hooks/useVoice.js` — if response contains audio bytes, play via `AudioContext`; else fall back to `speechSynthesis`
-- [ ] Add `tts_provider` to session config (browser / elevenlabs)
-- [ ] Write unit test: `ElevenLabsTTSProvider` with fixture response (no live API in CI)
+- [x] Implement `ElevenLabsTTSProvider` in `backend/tts.py` — calls ElevenLabs API, returns audio bytes
+- [x] Update `backend/main.py` — if `tts_provider` returns bytes, include base64 audio in `/turn` response
+- [x] Update `frontend/hooks/useVoice.js` — if response contains audio bytes, play via `AudioContext`; else fall back to `speechSynthesis`
+- [x] Add `tts_provider` to session config (browser / elevenlabs)
+- [x] Write unit test: `ElevenLabsTTSProvider` with fixture response (no live API in CI)
 - [ ] Manual smoke test: ElevenLabs voice vs. browser TTS — verify quality improvement
-- [ ] Add Phase 6 procedures to `docs/manualTestPlan.md`
+- [x] Add Phase 6 procedures to `docs/manualTestPlan.md`
 
 ### Phase 6 Gate
 

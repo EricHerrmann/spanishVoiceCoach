@@ -938,3 +938,82 @@ Record in `docs/manualTestLog.md`:
 - Any observed issues or deviations (note if a test passed with caveats)
 - Whisper model version used (check: `uv run --env-file .env python3 -c "import whisper; print(whisper.__version__)"`)
 - Claude model used (currently `claude-sonnet-4-6`)
+
+---
+
+## Phase 6 — ElevenLabs TTS
+
+### Prerequisites (in addition to base prerequisites)
+
+- ElevenLabs account and API key obtained from https://elevenlabs.io
+- `ELEVENLABS_API_KEY` set in `.env`
+
+### Setup
+
+```bash
+uv sync
+cd frontend && npm install && cd ..
+```
+
+### MT-6-1: Automated tests pass
+
+```bash
+uv run pytest -v
+cd frontend && npm test -- --run
+```
+
+Expected: all backend tests pass; all frontend tests pass (≥ 46).
+
+### MT-6-2: `/tts-voices` route returns curated list
+
+```bash
+curl -s http://localhost:8000/tts-voices | python3 -m json.tool
+```
+
+Expected: JSON array with 4 voice objects, each with `id`, `label`, `description`.
+
+### MT-6-3: Browser TTS still works (regression)
+
+1. Start backend: `uv run --env-file .env uvicorn backend.main:app --reload`
+2. Start frontend: `cd frontend && npm run dev`
+3. Open http://localhost:5173
+4. Leave Voice set to **Browser (built-in)**
+5. Start a new conversation, speak a sentence in Spanish
+6. Verify coach response plays via browser `speechSynthesis`
+
+Expected: audio plays as before (no regression).
+
+### MT-6-4: ElevenLabs TTS — successful playback
+
+1. In `SessionConfig`, set **Voice** to **ElevenLabs** and choose **Rachel — Female, clear**
+2. Click **New Conversation**
+3. Speak a sentence in Spanish
+4. Verify coach response plays with noticeably higher voice quality than browser TTS
+5. Verify `audio_b64` field is present in the network response (browser DevTools → Network → `/turn`)
+
+Expected: ElevenLabs audio plays; `audio_b64` is a non-empty base64 string.
+
+### MT-6-5: Switch voice mid-conversation (new session required)
+
+1. Change voice to **Antoni — Male, natural** and click **New Conversation**
+2. Speak a sentence — verify different voice plays
+
+Expected: voice changes after new session is started.
+
+### MT-6-6: ElevenLabs TTS with missing API key
+
+1. Temporarily remove `ELEVENLABS_API_KEY` from `.env` and restart backend
+2. Set Voice to ElevenLabs, start a session, speak a sentence
+3. Verify coach text is still returned and displayed
+4. Verify `tts_error` is present in the network response
+5. Verify no crash — app remains usable
+
+Expected: coach text shows; `audio_b64` is null; `tts_error.stage == "tts"`.
+
+### MT-6-7: Session restore includes TTS config
+
+1. Start a session with ElevenLabs + Rachel, conduct 1 turn
+2. Find the session in **Session History** and click it
+3. Verify the Voice dropdown restores to ElevenLabs / Rachel
+
+Expected: TTS config is restored from persisted session.
