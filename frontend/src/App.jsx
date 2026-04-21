@@ -12,11 +12,14 @@ const DEFAULT_CONFIG = {
   level: 5,
   ai_provider: 'claude',
   coaching_mode: 'on_demand',
+  tts_provider: 'browser',
+  tts_voice_id: null,
 }
 
 function App() {
   const [topics, setTopics] = useState([])
   const [providers, setProviders] = useState([])
+  const [ttsVoices, setTtsVoices] = useState([])
   const [savedSessions, setSavedSessions] = useState([])
   const [selectedSessionId, setSelectedSessionId] = useState(null)
   const [config, setConfig] = useState(DEFAULT_CONFIG)
@@ -29,6 +32,7 @@ function App() {
   useEffect(() => {
     fetch('/topics').then((r) => r.json()).then(setTopics).catch(() => {})
     fetch('/providers').then((r) => r.json()).then(setProviders).catch(() => {})
+    fetch('/tts-voices').then((r) => r.json()).then(setTtsVoices).catch(() => {})
     newSession(DEFAULT_CONFIG).then((sessionId) => {
       setSelectedSessionId(sessionId)
       refreshSessions()
@@ -58,6 +62,8 @@ function App() {
           level: session.level,
           ai_provider: session.ai_provider,
           coaching_mode: session.coaching_mode,
+          tts_provider: session.tts_provider || 'browser',
+          tts_voice_id: session.tts_voice_id || null,
         })
         loadSession(session)
       })
@@ -73,6 +79,7 @@ function App() {
         onConfigChange={onConfigChange}
         topics={topics}
         providers={providers}
+        ttsVoices={ttsVoices}
         onNewSession={onNewSession}
         state={state}
       />
