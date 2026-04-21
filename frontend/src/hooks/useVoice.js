@@ -11,6 +11,10 @@ export function useVoice() {
   const abortControllerRef = useRef(null)
 
   function newSession(config) {
+    // Stop any active recording before resetting session state
+    if (mediaRecorderRef.current?.state === 'recording') {
+      mediaRecorderRef.current.stop()
+    }
     if (abortControllerRef.current) {
       abortControllerRef.current.abort()
     }
@@ -36,12 +40,12 @@ export function useVoice() {
         if (data.session_id) {
           sessionIdRef.current = data.session_id
         } else {
-          setError({ stage: 'mic', message: 'Failed to start session', recoverable: false })
+          setError({ stage: 'session', message: 'Failed to start session', recoverable: false })
         }
       })
       .catch((err) => {
         if (err.name !== 'AbortError') {
-          setError({ stage: 'mic', message: 'Failed to start session', recoverable: false })
+          setError({ stage: 'session', message: 'Failed to start session', recoverable: false })
         }
       })
   }
