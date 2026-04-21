@@ -48,6 +48,35 @@ class TestSessionStart:
         assert "session_id" in body
         assert isinstance(body["session_id"], str)
 
+    def test_accepts_full_config_body(self):
+        client = make_client()
+        response = client.post(
+            "/session/start",
+            json={
+                "topic": "ordering_food",
+                "level": 3,
+                "ai_provider": "claude",
+                "coaching_mode": "explicit",
+            },
+        )
+        assert response.status_code == 200
+        assert "session_id" in response.json()
+
+    def test_level_zero_returns_422(self):
+        client = make_client()
+        response = client.post("/session/start", json={"level": 0})
+        assert response.status_code == 422
+
+    def test_level_eleven_returns_422(self):
+        client = make_client()
+        response = client.post("/session/start", json={"level": 11})
+        assert response.status_code == 422
+
+    def test_invalid_ai_provider_returns_422(self):
+        client = make_client()
+        response = client.post("/session/start", json={"ai_provider": "openai"})
+        assert response.status_code == 422
+
 
 class TestTurnRoute:
     def test_unknown_session_id_returns_404(self):

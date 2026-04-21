@@ -2,7 +2,7 @@ import os
 import tempfile
 from typing import Literal
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Body
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from backend.session import Session, TurnError, new_session
 from backend.stt import WhisperSTT
 from backend.coach import CoachSession
@@ -28,6 +28,9 @@ app = FastAPI()
 
 
 class SessionStartRequest(BaseModel):
+    topic: str = "general"
+    level: int = Field(default=5, ge=1, le=10)
+    ai_provider: Literal["claude"] = "claude"
     coaching_mode: Literal["on_demand", "explicit", "shadowing"] = "on_demand"
 
 
@@ -48,13 +51,12 @@ def get_providers():
 
 @app.post("/session/start")
 def session_start(body: SessionStartRequest | None = Body(default=None)):
-    # TODO Phase 4: accept topic/level/ai_provider from request body
-    coaching_mode = body.coaching_mode if body is not None else "on_demand"
+    req = body or SessionStartRequest()
     session = new_session(
-        topic="general",
-        level=5,
-        ai_provider="claude",
-        coaching_mode=coaching_mode,
+        topic=req.topic,
+        level=req.level,
+        ai_provider=req.ai_provider,
+        coaching_mode=req.coaching_mode,
     )
     sessions[session.id] = session
     return {"session_id": session.id}
