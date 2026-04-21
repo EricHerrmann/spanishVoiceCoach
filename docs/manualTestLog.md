@@ -79,3 +79,20 @@ Each phase gate requires a smoke-test sign-off entry before the next phase begin
 - Date: 2026-04-21
 - Tester: oldhat86@gmail.com
 - Notes: PASSED. MT-4-1 through MT-4-8 all passed. Phase 4 session configuration UI verified, including preset starter phrase display and Custom topic behavior. Ready to proceed to Phase 5.
+
+---
+
+## Phase 5 — Persistence & Session History
+
+**Gate criteria:**
+- [x] All required tests pass (74 backend, 38 frontend — verified 2026-04-21; live API-key-gated checks excluded from the required gate)
+- [x] Session JSON is persisted on `/session/start`
+- [x] `GET /sessions` lists saved session summaries
+- [x] Full session transcript survives backend restart when using the same `DVC_DATA_DIR`
+- [x] Frontend session history can review a saved session
+- [x] Audio retention is opt-in with `DVC_SAVE_AUDIO=true`
+
+**Sign-off:**
+- Date: 2026-04-21
+- Tester: oldhat86@gmail.com
+- Notes: PASSED. MT-5-1 through MT-5-6 all passed. Phase 5 persistence and session history verified with explicit manual test `DVC_DATA_DIR`. Ready to proceed to Phase 6.

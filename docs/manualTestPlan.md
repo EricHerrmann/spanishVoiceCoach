@@ -1,6 +1,6 @@
 # duoVoiceCoach — Manual Test Plan: Phases 0–5
 
-**Purpose:** Step-by-step test procedures for phase gate sign-offs. Phases 0–4 are complete and passed; Phase 5 manual smoke testing is pending. Record results in `manualTestLog.md`.
+**Purpose:** Step-by-step test procedures for phase gate sign-offs. Phases 0–5 are complete and passed. Record results in `manualTestLog.md`.
 
 **Prerequisites:**
 - `uv` installed, Python 3.12+ available
@@ -25,7 +25,7 @@ cd frontend && npm install && cd ..
 ### MT-0-1: Automated tests pass
 
 ```bash
-uv run pytest -v
+uv run --env-file .env pytest -v
 ```
 
 **Pass:** All 6 tests collected and pass. Output ends with `X passed`.
@@ -107,7 +107,7 @@ Open `http://localhost:5173` in a browser.
 ### MT-1-1: Automated tests pass
 
 ```bash
-uv run pytest -v
+uv run --env-file .env pytest -v
 cd frontend && npm test
 ```
 
@@ -252,7 +252,7 @@ After a successful recording, listen to the echo playback.
 
 ### Prerequisites
 
-- `ANTHROPIC_API_KEY` set in your environment (real key required for this phase)
+- `.env` contains `ANTHROPIC_API_KEY` (real key required for live Claude checks)
 - Backend running on port 8001, frontend on 5173
 
 ### Setup
@@ -274,11 +274,11 @@ Open `http://localhost:5173`.
 ### MT-2-1: Automated tests pass
 
 ```bash
-ANTHROPIC_API_KEY=test-key uv run pytest -v
+uv run --env-file .env pytest -v
 cd frontend && npm test -- --run
 ```
 
-**Pass:** 36 backend tests pass; 12 frontend tests pass. Live API-key-gated checks are excluded from the required gate.
+**Pass:** Backend and frontend suites pass. The backend reads `ANTHROPIC_API_KEY` from `.env`; live API-key-gated checks run when the key is real and are skipped only when the key is absent or dummy.
 **Fail:** Any failure or error.
 
 ---
@@ -374,14 +374,31 @@ HTTP/1.1 404 Not Found
 > **Run from the repo root** (`duoVoiceCoach/`) — the fixture path is relative to the project root.
 
 ```bash
-# Start a session
-SESSION=$(curl -s -X POST http://localhost:8001/session/start | python3 -c "import sys,json; print(json.load(sys.stdin)['session_id'])")
+# Capture and inspect session-start JSON
+START_RESPONSE=$(curl -s -X POST http://localhost:8001/session/start)
+printf '%s\n' "$START_RESPONSE" | python3 -m json.tool
+
+# Parse the session id from the inspected response
+SESSION=$(printf '%s\n' "$START_RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin)['session_id'])")
+echo "$SESSION"
+
+# Inspect the captured session JSON
+curl -s "http://localhost:8001/sessions/$SESSION" | python3 -m json.tool
 
 # Submit a turn
 curl -s -X POST http://localhost:8001/turn \
   -F "audio=@tests/fixtures/hola_sample.wav;type=audio/wav" \
   -F "session_id=$SESSION" | python3 -m json.tool
 ```
+
+**Expected session-start response:**
+```json
+{
+  "session_id": "<uuid>"
+}
+```
+
+**Expected captured session fields before submitting a turn:** `id` equals `$SESSION`; `topic`, `level`, `ai_provider`, and `coaching_mode` are present; `turns` is an empty array.
 
 **Expected response structure:**
 ```json
@@ -403,7 +420,7 @@ curl -s -X POST http://localhost:8001/turn \
 
 ### Prerequisites
 
-- `ANTHROPIC_API_KEY` set in your environment (real key required)
+- `.env` contains `ANTHROPIC_API_KEY` (real key required for live Claude checks)
 - Backend running on port 8001, frontend on 5173
 
 ### Setup
@@ -423,11 +440,11 @@ Open `http://localhost:5173`.
 ### MT-3-1: Automated tests pass
 
 ```bash
-ANTHROPIC_API_KEY=test-key uv run pytest -v
+uv run --env-file .env pytest -v
 cd frontend && npm test -- --run
 ```
 
-**Pass:** 56 backend tests pass; 19 frontend tests pass. Live API-key-gated checks are excluded from the required gate.
+**Pass:** Backend and frontend suites pass. The backend reads `ANTHROPIC_API_KEY` from `.env`; live API-key-gated checks run when the key is real and are skipped only when the key is absent or dummy.
 **Fail:** Any failure or error.
 
 ---
@@ -532,17 +549,33 @@ Note: If Claude doesn't flag "yo quiero" as an error, try a clearer error like "
 > **Run from the repo root** (`duoVoiceCoach/`) — the fixture path is relative to the project root.
 
 ```bash
-# Start a session in explicit mode
-SESSION=$(curl -s -X POST http://localhost:8001/session/start \
+# Capture and inspect session-start JSON
+START_RESPONSE=$(curl -s -X POST http://localhost:8001/session/start \
   -H "Content-Type: application/json" \
-  -d '{"coaching_mode": "explicit"}' \
-  | python3 -c "import sys,json; print(json.load(sys.stdin)['session_id'])")
+  -d '{"coaching_mode": "explicit"}')
+printf '%s\n' "$START_RESPONSE" | python3 -m json.tool
+
+# Parse the session id from the inspected response
+SESSION=$(printf '%s\n' "$START_RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin)['session_id'])")
+echo "$SESSION"
+
+# Inspect the captured session JSON
+curl -s "http://localhost:8001/sessions/$SESSION" | python3 -m json.tool
 
 # Submit a turn
 curl -s -X POST http://localhost:8001/turn \
   -F "audio=@tests/fixtures/hola_sample.wav;type=audio/wav" \
   -F "session_id=$SESSION" | python3 -m json.tool
 ```
+
+**Expected session-start response:**
+```json
+{
+  "session_id": "<uuid>"
+}
+```
+
+**Expected captured session fields before submitting a turn:** `id` equals `$SESSION`; `coaching_mode` is `"explicit"`; `turns` is an empty array.
 
 **Expected response structure:**
 ```json
@@ -564,7 +597,7 @@ curl -s -X POST http://localhost:8001/turn \
 
 ### Prerequisites
 
-- `ANTHROPIC_API_KEY` set in your environment
+- `.env` contains `ANTHROPIC_API_KEY`
 - Backend running on port 8001, frontend on 5173
 - Run from the repo root (`duoVoiceCoach/`) for all curl commands
 
@@ -585,11 +618,11 @@ Open `http://localhost:5173`.
 ### MT-4-1: Automated tests pass
 
 ```bash
-ANTHROPIC_API_KEY=test-key uv run pytest -v
+uv run --env-file .env pytest -v
 cd frontend && npm test -- --run
 ```
 
-**Pass:** 67 backend tests pass; 33 frontend tests pass. Live API-key-gated checks are excluded from the required gate.
+**Pass:** Backend and frontend suites pass. The backend reads `ANTHROPIC_API_KEY` from `.env`; live API-key-gated checks run when the key is real and are skipped only when the key is absent or dummy.
 **Fail:** Any failure or error.
 
 ---
@@ -687,19 +720,25 @@ curl -s http://localhost:8001/providers | python3 -m json.tool
 > **Run from the repo root** (`duoVoiceCoach/`).
 
 ```bash
-SESSION=$(curl -s -X POST http://localhost:8001/session/start \
+START_RESPONSE=$(curl -s -X POST http://localhost:8001/session/start \
   -H "Content-Type: application/json" \
-  -d '{"topic": "ordering_food", "level": 3, "ai_provider": "claude", "coaching_mode": "explicit"}' \
-  | python3 -c "import sys,json; print(json.load(sys.stdin)['session_id'])")
+  -d '{"topic": "ordering_food", "level": 3, "ai_provider": "claude", "coaching_mode": "explicit"}')
+printf '%s\n' "$START_RESPONSE" | python3 -m json.tool
 
-echo $SESSION
+SESSION=$(printf '%s\n' "$START_RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin)['session_id'])")
+
+echo "$SESSION"
+curl -s "http://localhost:8001/sessions/$SESSION" | python3 -m json.tool
 
 curl -s -X POST http://localhost:8001/turn \
   -F "audio=@tests/fixtures/hola_sample.wav;type=audio/wav" \
   -F "session_id=$SESSION" | python3 -m json.tool
 ```
 
-**Pass:** `$SESSION` is a UUID; turn response has all five keys (`transcript_raw`, `transcript_norm`, `coach_text`, `corrections`, `error: null`).
+**Expected session-start response:** JSON object with `session_id`.
+**Expected captured session fields before submitting a turn:** `id` equals `$SESSION`; `topic` is `"ordering_food"`; `level` is `3`; `ai_provider` is `"claude"`; `coaching_mode` is `"explicit"`; `turns` is an empty array.
+
+**Pass:** `$SESSION` is a UUID; captured session fields match the request; turn response has all five keys (`transcript_raw`, `transcript_norm`, `coach_text`, `corrections`, `error: null`).
 **Fail:** Empty `$SESSION`, missing keys, or non-null error.
 
 ---
@@ -708,18 +747,40 @@ curl -s -X POST http://localhost:8001/turn \
 
 ### Prerequisites
 
-- `ANTHROPIC_API_KEY` set in your environment
+- `.env` contains `ANTHROPIC_API_KEY`
 - Backend running on port 8001, frontend on 5173
 - Run from the repo root (`duoVoiceCoach/`) for all curl commands
-- Optional for isolated manual testing: set `DVC_DATA_DIR=/tmp/duoVoiceCoach-manual`
+- Phase 5 uses an explicit test persistence directory: `/tmp/duoVoiceCoach-manual`. Use the same `DVC_DATA_DIR` every time you start or restart the backend during this phase.
 
 ### Setup
 
+Run these from the repo root unless noted.
+
 ```bash
 # Terminal 1 — backend
+export DVC_DATA_DIR=/tmp/duoVoiceCoach-manual
+mkdir -p "$DVC_DATA_DIR"
+echo "$DVC_DATA_DIR"
 uv run --env-file .env uvicorn backend.main:app --reload --port 8001
+```
 
-# Terminal 2 — frontend
+The `echo "$DVC_DATA_DIR"` command should print:
+
+```text
+/tmp/duoVoiceCoach-manual
+```
+
+Keep Terminal 1 open. In Terminal 2, use the same directory variable for curl/file checks:
+
+```bash
+cd ~/projects/duoVoiceCoach
+export DVC_DATA_DIR=/tmp/duoVoiceCoach-manual
+echo "$DVC_DATA_DIR"
+```
+
+From Terminal 2, start the frontend:
+
+```bash
 cd frontend && npm run dev
 ```
 
@@ -730,11 +791,11 @@ Open `http://localhost:5173`.
 ### MT-5-1: Automated tests pass
 
 ```bash
-ANTHROPIC_API_KEY=test-key uv run pytest -v
+uv run --env-file .env pytest -v
 cd frontend && npm test -- --run
 ```
 
-**Pass:** 74 backend tests pass, 2 skipped; 38 frontend tests pass.
+**Pass:** Backend and frontend suites pass. The backend reads `ANTHROPIC_API_KEY` from `.env`; live API-key-gated checks run when the key is real and are skipped only when the key is absent or dummy.
 **Fail:** Any failure or error.
 
 ---
@@ -744,17 +805,28 @@ cd frontend && npm test -- --run
 Start a session through the backend:
 
 ```bash
-SESSION=$(curl -s -X POST http://localhost:8001/session/start \
+START_RESPONSE=$(curl -s -X POST http://localhost:8001/session/start \
   -H "Content-Type: application/json" \
-  -d '{"topic": "general", "level": 5, "ai_provider": "claude", "coaching_mode": "on_demand"}' \
-  | python3 -c "import sys,json; print(json.load(sys.stdin)['session_id'])")
+  -d '{"topic": "general", "level": 5, "ai_provider": "claude", "coaching_mode": "on_demand"}')
+printf '%s\n' "$START_RESPONSE" | python3 -m json.tool
 
-echo $SESSION
+SESSION=$(printf '%s\n' "$START_RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin)['session_id'])")
+
+echo "$SESSION"
+curl -s "http://localhost:8001/sessions/$SESSION" | python3 -m json.tool
 ```
 
 **Check:**
-- [ ] `$SESSION` is a UUID
-- [ ] A JSON file exists at `${DVC_DATA_DIR:-~/.duoVoiceCoach}/sessions/$SESSION.json`
+- [x] `$SESSION` is a UUID
+- [x] Session-start inspection returns a JSON object with `session_id`
+- [x] Captured session inspection shows `id` equal to `$SESSION`
+- [x] Captured session inspection shows `topic: "general"`, `level: 5`, `ai_provider: "claude"`, `coaching_mode: "on_demand"`, and `turns: []`
+- [x] `echo "$DVC_DATA_DIR"` prints `/tmp/duoVoiceCoach-manual`
+- [x] A JSON file exists:
+
+```bash
+test -f "$DVC_DATA_DIR/sessions/$SESSION.json" && echo "session file exists"
+```
 
 **Pass:** Session file exists immediately after `/session/start`.
 
@@ -776,7 +848,14 @@ curl -s http://localhost:8001/sessions | python3 -m json.tool
 
 1. Complete one spoken turn in the browser.
 2. Stop the backend server.
-3. Restart the backend server with the same `DVC_DATA_DIR`.
+3. Restart the backend server with the same `DVC_DATA_DIR`:
+
+```bash
+export DVC_DATA_DIR=/tmp/duoVoiceCoach-manual
+echo "$DVC_DATA_DIR"
+uv run --env-file .env uvicorn backend.main:app --reload --port 8001
+```
+
 4. Load the saved session:
 
 ```bash
@@ -784,10 +863,11 @@ curl -s http://localhost:8001/sessions/$SESSION | python3 -m json.tool
 ```
 
 **Check:**
-- [ ] Response has the same `id`
-- [ ] `turns` contains the user and coach turns
-- [ ] User turn includes `transcript_raw` and `transcript_norm`
-- [ ] Coach turn includes `coach_text`
+- [x] Response has the same `id`
+- [x] `turns` contains the user and coach turns
+- [x] User turn includes `transcript_raw` and `transcript_norm`
+- [x] Coach turn includes `coach_text`
+- [x] `echo "$DVC_DATA_DIR"` still prints `/tmp/duoVoiceCoach-manual`
 
 **Pass:** Transcript data remains after restart.
 
@@ -801,9 +881,9 @@ curl -s http://localhost:8001/sessions/$SESSION | python3 -m json.tool
 4. Click the saved session row.
 
 **Check:**
-- [ ] Session history shows topic, level, mode, turn count, and correction count
-- [ ] Clicking a saved session restores its transcript
-- [ ] Session config updates to match the saved session
+- [x] Session history shows topic, level, mode, turn count, and correction count
+- [x] Clicking a saved session restores its transcript
+- [x] Session config updates to match the saved session
 
 **Pass:** Past session can be reviewed from the UI.
 
@@ -818,13 +898,20 @@ curl -s http://localhost:8001/sessions/$SESSION | python3 -m json.tool
 ```
 
 **Check:**
-- [ ] User turn `audio_file` is `null`
+- [x] User turn `audio_file` is `null`
 
-Restart backend with `DVC_SAVE_AUDIO=true`, complete a new turn, then reload that session.
+Restart backend with `DVC_SAVE_AUDIO=true` and the same `DVC_DATA_DIR`, complete a new turn, then reload that session.
+
+```bash
+export DVC_DATA_DIR=/tmp/duoVoiceCoach-manual
+export DVC_SAVE_AUDIO=true
+echo "$DVC_DATA_DIR"
+uv run --env-file .env uvicorn backend.main:app --reload --port 8001
+```
 
 **Check:**
-- [ ] User turn `audio_file` contains a path under `${DVC_DATA_DIR:-~/.duoVoiceCoach}/audio/`
-- [ ] The referenced WAV file exists
+- [x] User turn `audio_file` contains a path under `/tmp/duoVoiceCoach-manual/audio/`
+- [x] The referenced WAV file exists
 
 **Pass:** Audio files are saved only when explicitly enabled.
 
@@ -839,15 +926,15 @@ Before recording sign-off in `manualTestLog.md`, confirm:
 - [x] MT-2-1 through MT-2-7 all passed (Phase 2)
 - [x] MT-3-1 through MT-3-8 all passed (Phase 3)
 - [x] MT-4-1 through MT-4-8 all passed (Phase 4)
-- [ ] MT-5-1 through MT-5-6 all passed (Phase 5)
+- [x] MT-5-1 through MT-5-6 all passed (Phase 5)
 - [x] No unexpected browser console errors observed during any test
 - [x] No unhandled exceptions in backend terminal output during any test
 
-**Current sign-off status:** Phase 4 passed on 2026-04-21 and is recorded in `docs/manualTestLog.md`. Phase 5 automated tests pass; manual smoke sign-off is pending.
+**Current sign-off status:** Phases 0–5 passed on 2026-04-21 and are recorded in `docs/manualTestLog.md`. Ready to proceed to Phase 6.
 
 Record in `docs/manualTestLog.md`:
 - Date tested
 - Tester name / email
 - Any observed issues or deviations (note if a test passed with caveats)
-- Whisper model version used (check: `uv run python3 -c "import whisper; print(whisper.__version__)"`)
+- Whisper model version used (check: `uv run --env-file .env python3 -c "import whisper; print(whisper.__version__)"`)
 - Claude model used (currently `claude-sonnet-4-6`)

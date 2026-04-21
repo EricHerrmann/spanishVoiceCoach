@@ -6,9 +6,9 @@
 
 ## Executive Summary
 
-**Last updated:** 2026-04-21 (Phase 4 signed off; ready for Phase 5)
+**Last updated:** 2026-04-21 (Phase 5 signed off; ready for Phase 6)
 
-**Current state:** Phases 0–4 complete. Phase 4 session configuration UI is implemented and signed off; ready to proceed to Phase 5 persistence and session history.
+**Current state:** Phases 0–5 complete. Phase 5 persistence and session history is implemented and signed off; ready to proceed to Phase 6 ElevenLabs TTS.
 
 | Phase | Name | Status | Tests | Notes |
 |-------|------|--------|-------|-------|
@@ -17,11 +17,11 @@
 | 2 — AI Conversation Core | Claude wired in, freeform chat | ✅ Complete | 36 backend, 2 skipped; 12 frontend | First real Spanish coaching session |
 | 3 — Coaching Layer | Hybrid mode, corrections, toggle | ✅ Complete | 56 backend, 2 skipped; 19 frontend | MVP complete |
 | 4 — Session Config UI | Topic/level picker, provider selector | ✅ Complete | 67 backend, 2 skipped; 33 frontend | Full session configuration in UI; signed off 2026-04-21 |
-| 5 — Persistence | Session history, transcript save | 🚧 In progress | 74 backend, 2 skipped; 38 frontend | Implementation complete; manual smoke pending |
+| 5 — Persistence | Session history, transcript save | ✅ Complete | 74 backend, 2 skipped; 38 frontend | Session history and local persistence signed off 2026-04-21 |
 | 6 — ElevenLabs TTS | Swap browser TTS via tts.py | ⏳ Not started | — | Voice quality upgrade |
 | 7 — Android / PWA | PWA packaging, mobile UX | ⏳ Not started | — | Android target |
 
-**MVP = Phases 0–3.** Phase 4 adds full session configuration and is complete. Phase 5 is the next execution focus.
+**MVP = Phases 0–3.** Phase 4 adds full session configuration and Phase 5 adds local persistence and session history. Phase 6 is the next execution focus.
 
 **Phase gate rule:** Each phase ends with a passing test suite and a manual smoke-test sign-off in `docs/manualTestLog.md` before the next phase begins.
 
@@ -294,13 +294,13 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 - [x] Implement session history view in frontend — list past sessions, tap to review transcript + corrections
 - [x] Write unit tests: session save → load round-trip; correction retrieval
 - [x] Write integration test: full session → save → load → verify turn count and corrections intact
-- [ ] Manual smoke test: complete a session, close app, reopen, verify session appears in history
+- [x] Manual smoke test: complete a session, close app, reopen, verify session appears in history
 - [x] Add Phase 5 procedures to `docs/manualTestPlan.md`
 
 ### Phase 5 Gate
 
 - [x] All tests pass (74 backend, 2 skipped; 38 frontend — 2026-04-21)
-- [ ] Manual smoke test signed off
+- [x] Manual smoke test signed off (2026-04-21)
 
 ---
 
