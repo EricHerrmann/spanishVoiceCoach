@@ -115,3 +115,56 @@ class TestTurnRoute:
             body = response.json()
             assert body["error"] is None
             assert isinstance(body["coach_text"], str)
+
+
+class TestGetTopics:
+    def test_returns_list(self):
+        client = make_client()
+        response = client.get("/topics")
+        assert response.status_code == 200
+        body = response.json()
+        assert isinstance(body, list)
+        assert len(body) > 0
+
+    def test_each_topic_has_required_fields(self):
+        client = make_client()
+        body = client.get("/topics").json()
+        for topic in body:
+            assert "id" in topic
+            assert "label" in topic
+            assert "starter" in topic
+
+    def test_general_topic_present(self):
+        client = make_client()
+        body = client.get("/topics").json()
+        ids = [t["id"] for t in body]
+        assert "general" in ids
+
+
+class TestGetProviders:
+    def test_returns_list(self):
+        client = make_client()
+        response = client.get("/providers")
+        assert response.status_code == 200
+        body = response.json()
+        assert isinstance(body, list)
+        assert len(body) > 0
+
+    def test_claude_present(self):
+        client = make_client()
+        body = client.get("/providers").json()
+        ids = [p["id"] for p in body]
+        assert "claude" in ids
+
+    def test_openai_not_present(self):
+        client = make_client()
+        body = client.get("/providers").json()
+        ids = [p["id"] for p in body]
+        assert "openai" not in ids
+
+    def test_each_provider_has_id_and_label(self):
+        client = make_client()
+        body = client.get("/providers").json()
+        for provider in body:
+            assert "id" in provider
+            assert "label" in provider

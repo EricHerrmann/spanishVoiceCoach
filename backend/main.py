@@ -8,6 +8,19 @@ from backend.stt import WhisperSTT
 from backend.coach import CoachSession
 from backend.ai.claude import ClaudeProvider
 
+_TOPICS = [
+    {"id": "general", "label": "General conversation", "starter": "Hola, ¿de qué quieres hablar hoy?"},
+    {"id": "ordering_food", "label": "Ordering food", "starter": "Hola, ¿qué me recomiendas del menú?"},
+    {"id": "directions_transport", "label": "Directions & transport", "starter": "Disculpe, ¿cómo llego a la estación de metro?"},
+    {"id": "shopping_markets", "label": "Shopping & markets", "starter": "Buenas, estoy buscando algo de temporada."},
+    {"id": "work_daily_routine", "label": "Work & daily routine", "starter": "¿Cómo fue tu día en el trabajo?"},
+    {"id": "travel_tourism", "label": "Travel & tourism", "starter": "¿Qué lugares me recomiendas visitar aquí?"},
+]
+
+_PROVIDERS = [
+    {"id": "claude", "label": "Claude (Anthropic)"},
+]
+
 stt_provider = WhisperSTT()
 claude_provider = ClaudeProvider()
 sessions: dict[str, Session] = {}
@@ -21,6 +34,16 @@ class SessionStartRequest(BaseModel):
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/topics")
+def get_topics():
+    return _TOPICS
+
+
+@app.get("/providers")
+def get_providers():
+    return _PROVIDERS
 
 
 @app.post("/session/start")
