@@ -22,7 +22,7 @@ class CoachResponse:
 
 @dataclass
 class TurnError:
-    stage: str        # "mic" | "stt" | "ai" | "tts"
+    stage: str        # "mic" | "stt" | "ai" | "tts" | "session"
     message: str      # human-readable description
     recoverable: bool # True = prompt retry; False = session-ending
 

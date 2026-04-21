@@ -18,6 +18,7 @@ export function useVoice() {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort()
     }
+    setState('idle')
     const controller = new AbortController()
     abortControllerRef.current = controller
     sessionIdRef.current = null
