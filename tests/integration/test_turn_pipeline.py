@@ -363,3 +363,121 @@ class TestGetTtsVoices:
             json={"tts_provider": "google"},
         )
         assert response.status_code == 422
+
+
+class TestTurnTtsIntegration:
+    def test_turn_with_browser_tts_has_no_audio_b64(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("DVC_DATA_DIR", str(tmp_path))
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+        from backend import main
+        from backend.session import CoachResponse
+
+        class FakeSTT:
+            def transcribe(self, _path):
+                return ("Hola", "hola")
+
+        class FakeAIProvider:
+            def chat(self, _session, _user_text):
+                return CoachResponse(coach_text="¡Hola!", corrections=[])
+
+        main.sessions.clear()
+        monkeypatch.setattr(main, "stt_provider", FakeSTT())
+        monkeypatch.setattr(main, "claude_provider", FakeAIProvider())
+        client = TestClient(main.app)
+        session_id = client.post("/session/start", json={"tts_provider": "browser"}).json()["session_id"]
+
+        with open(FIXTURE_WAV, "rb") as f:
+            response = client.post(
+                "/turn",
+                files={"audio": ("hola_sample.wav", f, "audio/wav")},
+                data={"session_id": session_id},
+            )
+
+        body = response.json()
+        assert body["error"] is None
+        assert body["audio_b64"] is None
+        assert body["tts_error"] is None
+
+    def test_turn_with_elevenlabs_tts_returns_audio_b64(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("DVC_DATA_DIR", str(tmp_path))
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+        monkeypatch.setenv("ELEVENLABS_API_KEY", "test-elevenlabs-key")
+        from backend import main
+        from backend.session import CoachResponse
+        from unittest.mock import MagicMock, patch
+
+        class FakeSTT:
+            def transcribe(self, _path):
+                return ("Hola", "hola")
+
+        class FakeAIProvider:
+            def chat(self, _session, _user_text):
+                return CoachResponse(coach_text="¡Hola!", corrections=[])
+
+        fake_tts_response = MagicMock()
+        fake_tts_response.content = b"fake-mp3-bytes"
+        fake_tts_response.raise_for_status = MagicMock()
+
+        main.sessions.clear()
+        monkeypatch.setattr(main, "stt_provider", FakeSTT())
+        monkeypatch.setattr(main, "claude_provider", FakeAIProvider())
+        client = TestClient(main.app)
+        session_id = client.post(
+            "/session/start",
+            json={"tts_provider": "elevenlabs", "tts_voice_id": "21m00Tcm4TlvDq8ikWAM"},
+        ).json()["session_id"]
+
+        with patch("backend.tts.httpx.post", return_value=fake_tts_response):
+            with open(FIXTURE_WAV, "rb") as f:
+                response = client.post(
+                    "/turn",
+                    files={"audio": ("hola_sample.wav", f, "audio/wav")},
+                    data={"session_id": session_id},
+                )
+
+        body = response.json()
+        assert body["error"] is None
+        assert body["tts_error"] is None
+        import base64
+        assert base64.b64decode(body["audio_b64"]) == b"fake-mp3-bytes"
+
+    def test_turn_with_elevenlabs_tts_api_failure_returns_tts_error(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("DVC_DATA_DIR", str(tmp_path))
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+        monkeypatch.setenv("ELEVENLABS_API_KEY", "test-elevenlabs-key")
+        from backend import main
+        from backend.session import CoachResponse
+        from unittest.mock import patch
+
+        class FakeSTT:
+            def transcribe(self, _path):
+                return ("Hola", "hola")
+
+        class FakeAIProvider:
+            def chat(self, _session, _user_text):
+                return CoachResponse(coach_text="¡Hola!", corrections=[])
+
+        main.sessions.clear()
+        monkeypatch.setattr(main, "stt_provider", FakeSTT())
+        monkeypatch.setattr(main, "claude_provider", FakeAIProvider())
+        client = TestClient(main.app)
+        session_id = client.post(
+            "/session/start",
+            json={"tts_provider": "elevenlabs", "tts_voice_id": "21m00Tcm4TlvDq8ikWAM"},
+        ).json()["session_id"]
+
+        with patch("backend.tts.httpx.post", side_effect=Exception("connection refused")):
+            with open(FIXTURE_WAV, "rb") as f:
+                response = client.post(
+                    "/turn",
+                    files={"audio": ("hola_sample.wav", f, "audio/wav")},
+                    data={"session_id": session_id},
+                )
+
+        body = response.json()
+        assert body["error"] is None           # main pipeline succeeded
+        assert body["coach_text"] == "¡Hola!"  # coach text still returned
+        assert body["audio_b64"] is None       # no audio
+        assert body["tts_error"] is not None
+        assert body["tts_error"]["stage"] == "tts"
+        assert body["tts_error"]["recoverable"] is True

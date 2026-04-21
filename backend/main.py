@@ -1,3 +1,4 @@
+import base64
 import os
 import tempfile
 from typing import Literal
@@ -146,6 +147,8 @@ async def post_turn(
             "transcript_norm": None,
             "coach_text": None,
             "corrections": [],
+            "audio_b64": None,
+            "tts_error": None,
             "error": {
                 "stage": stt_result.stage,
                 "message": stt_result.message,
@@ -169,12 +172,32 @@ async def post_turn(
             "transcript_norm": transcript_norm,
             "coach_text": None,
             "corrections": [],
+            "audio_b64": None,
+            "tts_error": None,
             "error": {
                 "stage": turn_result.stage,
                 "message": turn_result.message,
                 "recoverable": turn_result.recoverable,
             },
         }
+
+    # --- TTS ---
+    audio_b64 = None
+    tts_error = None
+    if session.tts_provider == "elevenlabs" and session.tts_voice_id:
+        try:
+            tts = ElevenLabsTTSProvider(session.tts_voice_id)
+            tts_result = tts.synthesize(turn_result.coach_text)
+            if isinstance(tts_result, bytes):
+                audio_b64 = base64.b64encode(tts_result).decode("ascii")
+            elif isinstance(tts_result, TurnError):
+                tts_error = {
+                    "stage": tts_result.stage,
+                    "message": tts_result.message,
+                    "recoverable": tts_result.recoverable,
+                }
+        except RuntimeError as exc:
+            tts_error = {"stage": "tts", "message": str(exc), "recoverable": False}
 
     return {
         "transcript_raw": transcript_raw,
@@ -189,5 +212,7 @@ async def post_turn(
             }
             for c in turn_result.corrections
         ],
+        "audio_b64": audio_b64,
+        "tts_error": tts_error,
         "error": None,
     }
