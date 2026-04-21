@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 
-export function useVoice(coachingMode = 'on_demand') {
+export function useVoice() {
   const [state, setState] = useState('idle')
   const [turns, setTurns] = useState([])
   const [corrections, setCorrections] = useState([])
@@ -8,9 +8,14 @@ export function useVoice(coachingMode = 'on_demand') {
   const mediaRecorderRef = useRef(null)
   const chunksRef = useRef([])
   const sessionIdRef = useRef(null)
+  const abortControllerRef = useRef(null)
 
-  useEffect(() => {
+  function newSession(config) {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
     const controller = new AbortController()
+    abortControllerRef.current = controller
     sessionIdRef.current = null
     setTurns([])
     setCorrections([])
@@ -18,7 +23,12 @@ export function useVoice(coachingMode = 'on_demand') {
     fetch('/session/start', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ coaching_mode: coachingMode }),
+      body: JSON.stringify({
+        topic: config.topic,
+        level: config.level,
+        ai_provider: config.ai_provider,
+        coaching_mode: config.coaching_mode,
+      }),
       signal: controller.signal,
     })
       .then((res) => res.json())
@@ -34,8 +44,7 @@ export function useVoice(coachingMode = 'on_demand') {
           setError({ stage: 'mic', message: 'Failed to start session', recoverable: false })
         }
       })
-    return () => controller.abort()
-  }, [coachingMode])
+  }
 
   async function startRecording() {
     if (!sessionIdRef.current) {
@@ -115,5 +124,5 @@ export function useVoice(coachingMode = 'on_demand') {
     speechSynthesis.speak(utt)
   }
 
-  return { state, turns, corrections, error, startRecording, stopRecording }
+  return { state, turns, corrections, error, startRecording, stopRecording, newSession }
 }
