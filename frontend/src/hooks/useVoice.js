@@ -9,6 +9,7 @@ export function useVoice() {
   const chunksRef = useRef([])
   const sessionIdRef = useRef(null)
   const abortControllerRef = useRef(null)
+  const audioCtxRef = useRef(null)
 
   function newSession(config) {
     if (mediaRecorderRef.current?.state === 'recording') {
@@ -134,14 +135,22 @@ export function useVoice() {
     }
   }
 
+  function getAudioCtx() {
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = new AudioContext()
+    }
+    return audioCtxRef.current
+  }
+
   async function playAudioB64(b64) {
     const binary = atob(b64)
     const bytes = new Uint8Array(binary.length)
     for (let i = 0; i < binary.length; i++) {
       bytes[i] = binary.charCodeAt(i)
     }
-    const audioCtx = new AudioContext()
+    const audioCtx = getAudioCtx()
     try {
+      await audioCtx.resume()
       const buffer = await audioCtx.decodeAudioData(bytes.buffer)
       const source = audioCtx.createBufferSource()
       source.buffer = buffer
@@ -153,7 +162,6 @@ export function useVoice() {
     } catch {
       // decodeAudioData failure — fall through to idle
     } finally {
-      audioCtx.close()
       setState('idle')
     }
   }
