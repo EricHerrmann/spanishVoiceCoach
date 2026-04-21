@@ -7,11 +7,17 @@ const TOPICS = [
   { id: 'ordering_food', label: 'Ordering food', starter: 'Hola menú' },
 ]
 const PROVIDERS = [{ id: 'claude', label: 'Claude (Anthropic)' }]
+const TTS_VOICES = [
+  { id: '21m00Tcm4TlvDq8ikWAM', label: 'Rachel — Female, clear (multilingual)' },
+  { id: 'ErXwobaYiN019PkySvjV', label: 'Antoni — Male, natural (multilingual)' },
+]
 const DEFAULT_CONFIG = {
   topic: 'general',
   level: 5,
   ai_provider: 'claude',
   coaching_mode: 'on_demand',
+  tts_provider: 'browser',
+  tts_voice_id: null,
 }
 
 function renderConfig(overrides = {}) {
@@ -20,6 +26,7 @@ function renderConfig(overrides = {}) {
     onConfigChange: vi.fn(),
     topics: TOPICS,
     providers: PROVIDERS,
+    ttsVoices: TTS_VOICES,
     onNewSession: vi.fn(),
     state: 'idle',
     ...overrides,
@@ -117,7 +124,7 @@ describe('SessionConfig — provider select', () => {
 
   it('calls onConfigChange when provider changes', () => {
     const { onConfigChange } = renderConfig()
-    fireEvent.change(screen.getByLabelText(/provider/i), { target: { value: 'claude' } })
+    fireEvent.change(screen.getByLabelText(/ai provider/i), { target: { value: 'claude' } })
     expect(onConfigChange).toHaveBeenCalledWith({ ai_provider: 'claude' })
   })
 })
@@ -137,5 +144,68 @@ describe('SessionConfig — New Conversation button', () => {
   it('is enabled when state is idle', () => {
     renderConfig({ state: 'idle' })
     expect(screen.getByRole('button', { name: /new conversation/i })).not.toBeDisabled()
+  })
+})
+
+describe('SessionConfig — TTS provider', () => {
+  it('renders voice select with browser and elevenlabs options', () => {
+    renderConfig()
+    expect(screen.getByRole('option', { name: /browser/i })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: /elevenlabs/i })).toBeInTheDocument()
+  })
+
+  it('shows browser as default selected voice provider', () => {
+    renderConfig()
+    expect(screen.getByLabelText(/^voice$/i).value).toBe('browser')
+  })
+
+  it('hides voice dropdown when browser is selected', () => {
+    renderConfig()
+    expect(screen.queryByLabelText(/elevenlabs voice/i)).not.toBeInTheDocument()
+  })
+
+  it('shows voice dropdown when elevenlabs is selected', () => {
+    renderConfig({
+      config: { ...DEFAULT_CONFIG, tts_provider: 'elevenlabs', tts_voice_id: TTS_VOICES[0].id },
+    })
+    expect(screen.getByLabelText(/elevenlabs voice/i)).toBeInTheDocument()
+  })
+
+  it('voice dropdown lists all curated voices', () => {
+    renderConfig({
+      config: { ...DEFAULT_CONFIG, tts_provider: 'elevenlabs', tts_voice_id: TTS_VOICES[0].id },
+    })
+    expect(screen.getByRole('option', { name: /rachel/i })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: /antoni/i })).toBeInTheDocument()
+  })
+
+  it('calls onConfigChange with tts_provider and first voice when switching to elevenlabs', () => {
+    const { onConfigChange } = renderConfig()
+    fireEvent.change(screen.getByLabelText(/^voice$/i), { target: { value: 'elevenlabs' } })
+    expect(onConfigChange).toHaveBeenCalledWith({
+      tts_provider: 'elevenlabs',
+      tts_voice_id: TTS_VOICES[0].id,
+    })
+  })
+
+  it('calls onConfigChange with null voice_id when switching back to browser', () => {
+    const { onConfigChange } = renderConfig({
+      config: { ...DEFAULT_CONFIG, tts_provider: 'elevenlabs', tts_voice_id: TTS_VOICES[0].id },
+    })
+    fireEvent.change(screen.getByLabelText(/^voice$/i), { target: { value: 'browser' } })
+    expect(onConfigChange).toHaveBeenCalledWith({
+      tts_provider: 'browser',
+      tts_voice_id: null,
+    })
+  })
+
+  it('calls onConfigChange with tts_voice_id when voice changes', () => {
+    const { onConfigChange } = renderConfig({
+      config: { ...DEFAULT_CONFIG, tts_provider: 'elevenlabs', tts_voice_id: TTS_VOICES[0].id },
+    })
+    fireEvent.change(screen.getByLabelText(/elevenlabs voice/i), {
+      target: { value: TTS_VOICES[1].id },
+    })
+    expect(onConfigChange).toHaveBeenCalledWith({ tts_voice_id: TTS_VOICES[1].id })
   })
 })
