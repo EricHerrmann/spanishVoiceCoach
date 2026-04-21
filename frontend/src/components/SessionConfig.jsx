@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-export default function SessionConfig({ config, onConfigChange, topics, providers, onNewSession, state }) {
+export default function SessionConfig({ config, onConfigChange, topics, providers, ttsVoices, onNewSession, state }) {
   const isKnownTopic = topics.some((t) => t.id === config.topic)
   const [customSelected, setCustomSelected] = useState(false)
   const showCustomInput = customSelected || (topics.length > 0 && !isKnownTopic && config.topic !== '')
@@ -16,6 +16,14 @@ export default function SessionConfig({ config, onConfigChange, topics, provider
       setCustomSelected(false)
       onConfigChange({ topic: e.target.value })
     }
+  }
+
+  function handleTtsProviderChange(e) {
+    const newProvider = e.target.value
+    onConfigChange({
+      tts_provider: newProvider,
+      tts_voice_id: newProvider === 'elevenlabs' ? (ttsVoices[0]?.id || null) : null,
+    })
   }
 
   return (
@@ -64,7 +72,7 @@ export default function SessionConfig({ config, onConfigChange, topics, provider
       </div>
 
       <div className="session-config-field">
-        <label htmlFor="ai-provider">Provider</label>
+        <label htmlFor="ai-provider">AI Provider</label>
         <select
           id="ai-provider"
           value={config.ai_provider}
@@ -88,6 +96,33 @@ export default function SessionConfig({ config, onConfigChange, topics, provider
           <option value="shadowing">Shadowing</option>
         </select>
       </div>
+
+      <div className="session-config-field">
+        <label htmlFor="tts-provider">Voice</label>
+        <select
+          id="tts-provider"
+          value={config.tts_provider}
+          onChange={handleTtsProviderChange}
+        >
+          <option value="browser">Browser (built-in)</option>
+          <option value="elevenlabs">ElevenLabs</option>
+        </select>
+      </div>
+
+      {config.tts_provider === 'elevenlabs' && (
+        <div className="session-config-field">
+          <label htmlFor="tts-voice">ElevenLabs voice</label>
+          <select
+            id="tts-voice"
+            value={config.tts_voice_id || ''}
+            onChange={(e) => onConfigChange({ tts_voice_id: e.target.value })}
+          >
+            {ttsVoices.map((v) => (
+              <option key={v.id} value={v.id}>{v.label}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <button
         onClick={onNewSession}
