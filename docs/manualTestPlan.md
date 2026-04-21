@@ -371,6 +371,8 @@ HTTP/1.1 404 Not Found
 
 ### MT-2-7: Full response structure via curl
 
+> **Run from the repo root** (`duoVoiceCoach/`) — the fixture path is relative to the project root.
+
 ```bash
 # Start a session
 SESSION=$(curl -s -X POST http://localhost:8001/session/start | python3 -c "import sys,json; print(json.load(sys.stdin)['session_id'])")
@@ -425,7 +427,7 @@ ANTHROPIC_API_KEY=test-key uv run pytest -v
 cd frontend && npm test -- --run
 ```
 
-**Pass:** ~54 backend tests pass, 2 skipped; 19 frontend tests pass.
+**Pass:** 56 backend tests pass, 2 skipped; 19 frontend tests pass.
 **Fail:** Any failure or error.
 
 ---
@@ -527,6 +529,8 @@ Note: If Claude doesn't flag "yo quiero" as an error, try a clearer error like "
 
 ### MT-3-8: Full response structure via curl (explicit mode)
 
+> **Run from the repo root** (`duoVoiceCoach/`) — the fixture path is relative to the project root.
+
 ```bash
 # Start a session in explicit mode
 SESSION=$(curl -s -X POST http://localhost:8001/session/start \
@@ -556,6 +560,147 @@ curl -s -X POST http://localhost:8001/turn \
 
 ---
 
+## Phase 4 — Session Config UI
+
+### Prerequisites
+
+- `ANTHROPIC_API_KEY` set in your environment
+- Backend running on port 8001, frontend on 5173
+- Run from the repo root (`duoVoiceCoach/`) for all curl commands
+
+### Setup
+
+```bash
+# Terminal 1 — backend
+uv run --env-file .env uvicorn backend.main:app --reload --port 8001
+
+# Terminal 2 — frontend
+cd frontend && npm run dev
+```
+
+Open `http://localhost:5173`.
+
+---
+
+### MT-4-1: Automated tests pass
+
+```bash
+ANTHROPIC_API_KEY=test-key uv run pytest -v
+cd frontend && npm test -- --run
+```
+
+**Pass:** 67 backend tests pass, 2 skipped; 29 frontend tests pass.
+**Fail:** Any failure or error.
+
+---
+
+### MT-4-2: SessionConfig renders all controls
+
+Open `http://localhost:5173`.
+
+**Check:**
+- [ ] "Topic" label and dropdown visible; preset options present; last option is "Custom…"
+- [ ] "Level: 5" label and slider visible; slider moves between 1 and 10
+- [ ] "Provider" label and dropdown visible; shows "Claude (Anthropic)" only
+- [ ] "Coaching mode" label and dropdown visible; three options present
+- [ ] "New Conversation" button visible and enabled
+
+**Pass:** All controls visible and interactive.
+
+---
+
+### MT-4-3: Topic picker — preset and custom
+
+1. Open the Topic dropdown and select "Ordering food".
+
+**Check:**
+- [ ] Dropdown shows "Ordering food" selected
+- [ ] No text input appears beneath the dropdown
+
+2. Select "Custom…".
+
+**Check:**
+- [ ] A text input appears beneath the dropdown
+- [ ] Type "cooking at home" into the input
+
+**Pass:** Preset selection is clean; Custom reveals text input.
+
+---
+
+### MT-4-4: Level slider
+
+1. Drag the Level slider to position 8.
+
+**Check:**
+- [ ] Label updates to "Level: 8"
+- [ ] Band labels beneath the slider are visible (Beginner · Elementary · Intermediate · Advanced)
+
+**Pass:** Slider moves and label updates.
+
+---
+
+### MT-4-5: Provider dropdown shows only Claude
+
+**Check:**
+- [ ] "Claude (Anthropic)" is the only option in the Provider dropdown
+
+**Pass:** No other providers visible.
+
+---
+
+### MT-4-6: New Conversation starts a fresh session with selected config
+
+1. Complete one turn in the default session (say anything in Spanish).
+2. Change Topic to "Ordering food", Level to 3, Coaching mode to "Explicit".
+3. Click "New Conversation".
+
+**Check:**
+- [ ] Transcript clears
+- [ ] CoachOverlay clears
+- [ ] New turn uses the selected topic and level (coach should respond with simpler vocabulary appropriate for level 3)
+
+**Pass:** Session resets; new config takes effect.
+
+---
+
+### MT-4-7: `/topics` and `/providers` via curl
+
+> **Run from the repo root** (`duoVoiceCoach/`).
+
+```bash
+curl -s http://localhost:8001/topics | python3 -m json.tool
+curl -s http://localhost:8001/providers | python3 -m json.tool
+```
+
+**Expected for /topics:** Array of objects each with `id`, `label`, `starter`. `general` entry present.
+**Expected for /providers:** `[{"id": "claude", "label": "Claude (Anthropic)"}]`
+
+**Pass:** Both responses are valid JSON matching the above structure.
+
+---
+
+### MT-4-8: Full `/session/start` with config via curl
+
+> **Run from the repo root** (`duoVoiceCoach/`).
+
+```bash
+SESSION=$(curl -s -X POST http://localhost:8001/session/start \
+  -H "Content-Type: application/json" \
+  -d '{"topic": "ordering_food", "level": 3, "ai_provider": "claude", "coaching_mode": "explicit"}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['session_id'])")
+
+echo $SESSION
+
+curl -s -X POST http://localhost:8001/turn \
+  -F "audio=@tests/fixtures/hola_sample.wav;type=audio/wav" \
+  -F "session_id=$SESSION" | python3 -m json.tool
+```
+
+**Pass:** `$SESSION` is a UUID; turn response has all five keys (`transcript_raw`, `transcript_norm`, `coach_text`, `corrections`, `error: null`).
+**Fail:** Empty `$SESSION`, missing keys, or non-null error.
+
+---
+
 ## Sign-Off Checklist
 
 Before recording sign-off in `manualTestLog.md`, confirm:
@@ -564,6 +709,7 @@ Before recording sign-off in `manualTestLog.md`, confirm:
 - [ ] MT-1-1 through MT-1-8 all passed (Phase 1)
 - [ ] MT-2-1 through MT-2-7 all passed (Phase 2)
 - [ ] MT-3-1 through MT-3-8 all passed (Phase 3)
+- [ ] MT-4-1 through MT-4-8 all passed (Phase 4)
 - [ ] No unexpected browser console errors observed during any test
 - [ ] No unhandled exceptions in backend terminal output during any test
 
