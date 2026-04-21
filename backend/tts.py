@@ -35,7 +35,7 @@ class AbstractTTSProvider(ABC):
     """Abstract base class for Text-to-Speech providers."""
 
     @abstractmethod
-    def synthesize(self, text: str) -> bytes | None:
+    def synthesize(self, text: str) -> bytes | None | TurnError:
         """
         Synthesize speech from text.
 
@@ -48,7 +48,7 @@ class AbstractTTSProvider(ABC):
 class BrowserTTSProvider(AbstractTTSProvider):
     """Passthrough provider — TTS is handled client-side by browser speechSynthesis."""
 
-    def synthesize(self, text: str) -> bytes | None:
+    def synthesize(self, text: str) -> bytes | None | TurnError:
         return None
 
 
@@ -65,7 +65,7 @@ class ElevenLabsTTSProvider(AbstractTTSProvider):
         self._api_key = api_key
         self._voice_id = voice_id
 
-    def synthesize(self, text: str) -> bytes | None:
+    def synthesize(self, text: str) -> bytes | None | TurnError:
         url = f"{self._BASE_URL}/v1/text-to-speech/{self._voice_id}"
         headers = {
             "xi-api-key": self._api_key,
