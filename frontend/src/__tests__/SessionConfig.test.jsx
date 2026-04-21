@@ -59,9 +59,10 @@ describe('SessionConfig — topic picker', () => {
   })
 
   it('selecting Custom reveals a text input', () => {
-    renderConfig()
+    const props = renderConfig()
     fireEvent.change(screen.getByLabelText(/topic/i), { target: { value: 'custom' } })
     expect(screen.getByPlaceholderText(/enter a topic/i)).toBeInTheDocument()
+    expect(props.onConfigChange).toHaveBeenCalledWith({ topic: '' })
   })
 
   it('calls onConfigChange when a preset topic is selected', () => {
