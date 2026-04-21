@@ -22,6 +22,8 @@ Expose full session configuration in the UI: topic picker (preset + freeform), l
 
 A "Custom…" option at the end of the topic select reveals a freeform text input. When custom is active, `topic` is whatever the user typed.
 
+The selected preset topic's Spanish starter phrase must be displayed directly with the topic control so the learner can see a natural opening line before starting a new conversation. For custom topics, show no preset starter phrase.
+
 ---
 
 ## Backend
@@ -90,7 +92,7 @@ const { state, turns, corrections, error, startRecording, stopRecording, newSess
 
 **Controls (top to bottom):**
 
-1. **Topic select** — options from `topics` prop + a final "Custom…" option (`value="custom"`). Selecting custom reveals a text input beneath the select. `onConfigChange({ topic })` fires on change.
+1. **Topic select + starter phrase** — options from `topics` prop + a final "Custom…" option (`value="custom"`). Selecting a preset displays that topic's `starter` phrase immediately beneath the select as the suggested opening line. Selecting custom reveals a text input beneath the select and hides the preset starter phrase. `onConfigChange({ topic })` fires on change. If the custom input is empty when "New Conversation" is clicked, `topic` falls back to `"general"`.
 2. **Level slider** — `<input type="range" min="1" max="10">`. Band labels row beneath: *1–2 Beginner · 3–4 Elementary · 5–6 Intermediate · 7–10 Advanced*. `onConfigChange({ level: Number(e.target.value) })` fires on change.
 3. **Provider select** — options from `providers` prop (Claude only for now).
 4. **Coaching mode select** — existing three options, unchanged.
@@ -130,6 +132,8 @@ const { state, turns, corrections, error, startRecording, stopRecording, newSess
 
 New `SessionConfig` tests:
 - Topic select renders all preset options plus "Custom…".
+- Selected preset topic's Spanish starter phrase is visible with the topic control and updates when the selected topic changes.
+- Selecting "Custom…" hides the preset starter phrase.
 - Selecting "Custom…" reveals a text input.
 - Level slider renders with `min="1"` and `max="10"`.
 - Provider select renders with Claude option.

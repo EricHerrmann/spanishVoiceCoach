@@ -1,6 +1,6 @@
-# duoVoiceCoach — Manual Test Plan: Phases 0, 1 & 2
+# duoVoiceCoach — Manual Test Plan: Phases 0–5
 
-**Purpose:** Step-by-step test procedures for the Phase 0 and Phase 1 gate sign-offs. Run these after all automated tests pass. Record results in `manualTestLog.md`.
+**Purpose:** Step-by-step test procedures for phase gate sign-offs. Phases 0–4 are complete and passed; Phase 5 manual smoke testing is pending. Record results in `manualTestLog.md`.
 
 **Prerequisites:**
 - `uv` installed, Python 3.12+ available
@@ -121,11 +121,11 @@ cd frontend && npm test
 Open `http://localhost:5173`.
 
 **Check:**
-- [ ] Page title "duoVoiceCoach" is visible
-- [ ] A button is present with text indicating it starts recording ("Start Speaking" or similar)
-- [ ] Transcript area is present and empty
-- [ ] No error messages visible
-- [ ] No browser console errors
+- [x] Page title "duoVoiceCoach" is visible
+- [x] A button is present with text indicating it starts recording ("Start Speaking" or similar)
+- [x] Transcript area is present and empty
+- [x] No error messages visible
+- [x] No browser console errors
 
 **Pass:** All checks above satisfied.
 
@@ -136,21 +136,21 @@ Open `http://localhost:5173`.
 1. Click the record button.
 
 **Check during recording:**
-- [ ] Button text changes to "Stop Recording" (or similar)
-- [ ] Browser prompts for mic permission (first time only)
+- [x] Button text changes to "Stop Recording" (or similar)
+- [x] Browser prompts for mic permission (first time only)
 
 2. Say "Hola, ¿cómo estás?" clearly into the microphone.
 3. Click "Stop Recording".
 
 **Check during processing:**
-- [ ] Button becomes disabled with "Processing..." text
+- [x] Button becomes disabled with "Processing..." text
 
 **Check after completion:**
-- [ ] Button returns to idle state ("Start Speaking")
-- [ ] Your transcription appears in the transcript area
-- [ ] `transcript_norm` displayed is lowercase with punctuation removed (e.g., `hola ¿cómo estás?` → `hola cómo estás` or similar)
-- [ ] A coach echo entry appears in the transcript (coach repeating back what was said)
-- [ ] Browser speaks the echo aloud via `speechSynthesis`
+- [x] Button returns to idle state ("Start Speaking")
+- [x] Your transcription appears in the transcript area
+- [x] `transcript_norm` displayed is lowercase with punctuation removed (e.g., `hola ¿cómo estás?` → `hola cómo estás` or similar)
+- [x] A coach echo entry appears in the transcript (coach repeating back what was said)
+- [x] Browser speaks the echo aloud via `speechSynthesis`
 
 **Pass:** All checks above satisfied.
 **Fail:** Button never returns to idle, transcript missing, or browser doesn't speak.
@@ -177,9 +177,9 @@ Speak each phrase and verify the transcript contains the expected words (exact p
 Complete three recording→stop cycles with different phrases.
 
 **Check:**
-- [ ] All three user turns appear in the transcript, oldest first
-- [ ] Each user turn is followed by a coach echo entry
-- [ ] Transcript does not reset between turns
+- [x] All three user turns appear in the transcript, oldest first
+- [x] Each user turn is followed by a coach echo entry
+- [x] Transcript does not reset between turns
 
 **Pass:** 6 entries total (3 user, 3 coach) visible in correct order.
 
@@ -191,9 +191,9 @@ Complete three recording→stop cycles with different phrases.
 2. Click the record button.
 
 **Check:**
-- [ ] Button returns to idle state (does not stay in recording or processing)
-- [ ] A retry/error message appears in the UI (e.g., "try again" or similar)
-- [ ] No unhandled exceptions in browser console
+- [x] Button returns to idle state (does not stay in recording or processing)
+- [x] A retry/error message appears in the UI (e.g., "try again" or similar)
+- [x] No unhandled exceptions in browser console
 
 3. Re-grant mic permission and verify a normal recording still works afterward.
 
@@ -237,9 +237,9 @@ curl -s -X POST http://localhost:8001/turn \
 After a successful recording, listen to the echo playback.
 
 **Check:**
-- [ ] Browser speaks the text (any voice — quality may be robotic)
-- [ ] Language sounds Spanish (or at least not English gibberish)
-- [ ] Playback completes and button returns to idle state
+- [x] Browser speaks the text (any voice — quality may be robotic)
+- [x] Language sounds Spanish (or at least not English gibberish)
+- [x] Playback completes and button returns to idle state
 
 **Pass:** Audio plays and button recovers.
 **Fail:** Silent, button stuck in "Playing..." state.
@@ -278,7 +278,7 @@ ANTHROPIC_API_KEY=test-key uv run pytest -v
 cd frontend && npm test -- --run
 ```
 
-**Pass:** 36 backend tests pass, 2 skipped (API-key gated); 12 frontend tests pass.
+**Pass:** 36 backend tests pass; 12 frontend tests pass. Live API-key-gated checks are excluded from the required gate.
 **Fail:** Any failure or error.
 
 ---
@@ -287,9 +287,9 @@ cd frontend && npm test -- --run
 
 Open `http://localhost:5173`. In the browser DevTools Network tab, verify:
 
-- [ ] A `POST /session/start` request fires immediately on page load
-- [ ] The response is `200` with body `{"session_id": "<uuid>"}`
-- [ ] No error message appears in the UI
+- [x] A `POST /session/start` request fires immediately on page load
+- [x] The response is `200` with body `{"session_id": "<uuid>"}`
+- [x] No error message appears in the UI
 
 **Pass:** `/session/start` called once on load, `session_id` received silently.
 **Fail:** Network error, 500, or error message in UI.
@@ -303,10 +303,10 @@ Open `http://localhost:5173`. In the browser DevTools Network tab, verify:
 3. Click Stop.
 
 **Check:**
-- [ ] Your transcript appears in the conversation panel
-- [ ] A coach reply appears below it (Spanish text, not an echo of what you said)
-- [ ] Browser speaks the coach reply aloud in Spanish
-- [ ] Button returns to idle state
+- [x] Your transcript appears in the conversation panel
+- [x] A coach reply appears below it (Spanish text, not an echo of what you said)
+- [x] Browser speaks the coach reply aloud in Spanish
+- [x] Button returns to idle state
 
 **Pass:** Distinct Spanish reply from Claude visible and spoken.
 **Fail:** Echo of user speech, empty reply, or error message.
@@ -322,10 +322,10 @@ Conduct a short exchange on the default topic (general, level 5):
 3. Wait for reply.
 
 **Check:**
-- [ ] Replies are in Spanish throughout
-- [ ] Vocabulary is intermediate (not baby-talk, not academic)
-- [ ] Coach does not spontaneously correct your grammar (on_demand mode is default)
-- [ ] Each reply is contextually relevant to what you said
+- [x] Replies are in Spanish throughout
+- [x] Vocabulary is intermediate (not baby-talk, not academic)
+- [x] Coach does not spontaneously correct your grammar (on_demand mode is default)
+- [x] Each reply is contextually relevant to what you said
 
 **Pass:** Two coherent in-context Spanish replies.
 **Fail:** English reply, off-topic reply, or unsolicited grammar corrections.
@@ -339,8 +339,8 @@ Continue the session from MT-2-4 (do not refresh the page):
 1. Say "¿Y qué más puedo hacer allí?"
 
 **Check:**
-- [ ] The coach's reply references the conversation context (market, fruit/vegetables) rather than starting fresh
-- [ ] All prior turns still visible in the transcript
+- [x] The coach's reply references the conversation context (market, fruit/vegetables) rather than starting fresh
+- [x] All prior turns still visible in the transcript
 
 **Pass:** Coach reply shows awareness of prior exchange.
 **Fail:** Coach ignores context, asks "How can I help you?" again, or transcript resets.
@@ -427,7 +427,7 @@ ANTHROPIC_API_KEY=test-key uv run pytest -v
 cd frontend && npm test -- --run
 ```
 
-**Pass:** 56 backend tests pass, 2 skipped; 19 frontend tests pass.
+**Pass:** 56 backend tests pass; 19 frontend tests pass. Live API-key-gated checks are excluded from the required gate.
 **Fail:** Any failure or error.
 
 ---
@@ -437,9 +437,9 @@ cd frontend && npm test -- --run
 Open `http://localhost:5173`.
 
 **Check:**
-- [ ] A "Coaching mode" label and dropdown are visible
-- [ ] Dropdown shows three options: "On demand", "Explicit", "Shadowing"
-- [ ] Default selected is "On demand"
+- [x] A "Coaching mode" label and dropdown are visible
+- [x] Dropdown shows three options: "On demand", "Explicit", "Shadowing"
+- [x] Default selected is "On demand"
 
 **Pass:** All checks satisfied.
 
@@ -452,9 +452,9 @@ Open `http://localhost:5173`.
 3. Wait for the coach reply.
 
 **Check:**
-- [ ] Coach replies in Spanish
-- [ ] No correction overlay appears
-- [ ] Transcript shows user turn and coach reply normally
+- [x] Coach replies in Spanish
+- [x] No correction overlay appears
+- [x] Transcript shows user turn and coach reply normally
 
 **Pass:** No correction overlay visible.
 **Fail:** Correction overlay appears without the user asking.
@@ -469,9 +469,9 @@ Continuing the same session from MT-3-3:
 2. Wait for the coach reply.
 
 **Check:**
-- [ ] A correction overlay appears below the VoiceButton
-- [ ] Overlay shows at least one correction with original text, corrected text, and explanation
-- [ ] Coach reply is spoken aloud
+- [x] A correction overlay appears below the VoiceButton
+- [x] Overlay shows at least one correction with original text, corrected text, and explanation
+- [x] Coach reply is spoken aloud
 
 **Pass:** Overlay visible with correction fields populated.
 **Fail:** No overlay, or overlay appears with blank fields.
@@ -485,9 +485,9 @@ Continuing the same session from MT-3-3:
 3. Wait for reply.
 
 **Check:**
-- [ ] Coach replies in Spanish
-- [ ] A correction overlay appears (Claude flagging the optional "yo")
-- [ ] Correction fields (original, corrected, explanation) are all populated
+- [x] Coach replies in Spanish
+- [x] A correction overlay appears (Claude flagging the optional "yo")
+- [x] Correction fields (original, corrected, explanation) are all populated
 
 **Pass:** Overlay visible after turn in explicit mode.
 **Fail:** No overlay despite speaking with a known error.
@@ -503,9 +503,9 @@ Note: If Claude doesn't flag "yo quiero" as an error, try a clearer error like "
 3. Wait for reply.
 
 **Check:**
-- [ ] No correction overlay appears
-- [ ] Coach reply may naturally model the correct form ("quiero ir") in its response
-- [ ] Conversation flows naturally
+- [x] No correction overlay appears
+- [x] Coach reply may naturally model the correct form ("quiero ir") in its response
+- [x] Conversation flows naturally
 
 **Pass:** No overlay. Coach reply is natural Spanish.
 **Fail:** Overlay appears in shadowing mode.
@@ -518,9 +518,9 @@ Note: If Claude doesn't flag "yo quiero" as an error, try a clearer error like "
 2. Change dropdown to "Shadowing".
 
 **Check:**
-- [ ] Transcript clears (new session started)
-- [ ] CoachOverlay clears
-- [ ] New turn works normally in shadowing mode (no overlay)
+- [x] Transcript clears (new session started)
+- [x] CoachOverlay clears
+- [x] New turn works normally in shadowing mode (no overlay)
 
 **Pass:** Session resets on mode change; new turns work in new mode.
 **Fail:** Old transcript persists, or new session fails to start.
@@ -589,7 +589,7 @@ ANTHROPIC_API_KEY=test-key uv run pytest -v
 cd frontend && npm test -- --run
 ```
 
-**Pass:** 67 backend tests pass, 2 skipped; 29 frontend tests pass.
+**Pass:** 67 backend tests pass; 33 frontend tests pass. Live API-key-gated checks are excluded from the required gate.
 **Fail:** Any failure or error.
 
 ---
@@ -599,11 +599,12 @@ cd frontend && npm test -- --run
 Open `http://localhost:5173`.
 
 **Check:**
-- [ ] "Topic" label and dropdown visible; preset options present; last option is "Custom…"
-- [ ] "Level: 5" label and slider visible; slider moves between 1 and 10
-- [ ] "Provider" label and dropdown visible; shows "Claude (Anthropic)" only
-- [ ] "Coaching mode" label and dropdown visible; three options present
-- [ ] "New Conversation" button visible and enabled
+- [x] "Topic" label and dropdown visible; preset options present; last option is "Custom…"
+- [x] Selected preset topic's Spanish starter phrase is visible beneath the topic dropdown
+- [x] "Level: 5" label and slider visible; slider moves between 1 and 10
+- [x] "Provider" label and dropdown visible; shows "Claude (Anthropic)" only
+- [x] "Coaching mode" label and dropdown visible; three options present
+- [x] "New Conversation" button visible and enabled
 
 **Pass:** All controls visible and interactive.
 
@@ -614,14 +615,16 @@ Open `http://localhost:5173`.
 1. Open the Topic dropdown and select "Ordering food".
 
 **Check:**
-- [ ] Dropdown shows "Ordering food" selected
-- [ ] No text input appears beneath the dropdown
+- [x] Dropdown shows "Ordering food" selected
+- [x] Starter phrase updates to "Hola, ¿qué me recomiendas del menú?"
+- [x] No text input appears beneath the dropdown
 
 2. Select "Custom…".
 
 **Check:**
-- [ ] A text input appears beneath the dropdown
-- [ ] Type "cooking at home" into the input
+- [x] A text input appears beneath the dropdown
+- [x] Preset starter phrase is hidden
+- [x] Type "cooking at home" into the input
 
 **Pass:** Preset selection is clean; Custom reveals text input.
 
@@ -632,8 +635,8 @@ Open `http://localhost:5173`.
 1. Drag the Level slider to position 8.
 
 **Check:**
-- [ ] Label updates to "Level: 8"
-- [ ] Band labels beneath the slider are visible (Beginner · Elementary · Intermediate · Advanced)
+- [x] Label updates to "Level: 8"
+- [x] Band labels beneath the slider are visible (Beginner · Elementary · Intermediate · Advanced)
 
 **Pass:** Slider moves and label updates.
 
@@ -642,7 +645,7 @@ Open `http://localhost:5173`.
 ### MT-4-5: Provider dropdown shows only Claude
 
 **Check:**
-- [ ] "Claude (Anthropic)" is the only option in the Provider dropdown
+- [x] "Claude (Anthropic)" is the only option in the Provider dropdown
 
 **Pass:** No other providers visible.
 
@@ -655,9 +658,9 @@ Open `http://localhost:5173`.
 3. Click "New Conversation".
 
 **Check:**
-- [ ] Transcript clears
-- [ ] CoachOverlay clears
-- [ ] New turn uses the selected topic and level (coach should respond with simpler vocabulary appropriate for level 3)
+- [x] Transcript clears
+- [x] CoachOverlay clears
+- [x] New turn uses the selected topic and level (coach should respond with simpler vocabulary appropriate for level 3)
 
 **Pass:** Session resets; new config takes effect.
 
@@ -701,17 +704,146 @@ curl -s -X POST http://localhost:8001/turn \
 
 ---
 
+## Phase 5 — Persistence & Session History
+
+### Prerequisites
+
+- `ANTHROPIC_API_KEY` set in your environment
+- Backend running on port 8001, frontend on 5173
+- Run from the repo root (`duoVoiceCoach/`) for all curl commands
+- Optional for isolated manual testing: set `DVC_DATA_DIR=/tmp/duoVoiceCoach-manual`
+
+### Setup
+
+```bash
+# Terminal 1 — backend
+uv run --env-file .env uvicorn backend.main:app --reload --port 8001
+
+# Terminal 2 — frontend
+cd frontend && npm run dev
+```
+
+Open `http://localhost:5173`.
+
+---
+
+### MT-5-1: Automated tests pass
+
+```bash
+ANTHROPIC_API_KEY=test-key uv run pytest -v
+cd frontend && npm test -- --run
+```
+
+**Pass:** 74 backend tests pass, 2 skipped; 38 frontend tests pass.
+**Fail:** Any failure or error.
+
+---
+
+### MT-5-2: Session JSON is persisted on start
+
+Start a session through the backend:
+
+```bash
+SESSION=$(curl -s -X POST http://localhost:8001/session/start \
+  -H "Content-Type: application/json" \
+  -d '{"topic": "general", "level": 5, "ai_provider": "claude", "coaching_mode": "on_demand"}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['session_id'])")
+
+echo $SESSION
+```
+
+**Check:**
+- [ ] `$SESSION` is a UUID
+- [ ] A JSON file exists at `${DVC_DATA_DIR:-~/.duoVoiceCoach}/sessions/$SESSION.json`
+
+**Pass:** Session file exists immediately after `/session/start`.
+
+---
+
+### MT-5-3: `/sessions` lists saved session summaries
+
+```bash
+curl -s http://localhost:8001/sessions | python3 -m json.tool
+```
+
+**Expected:** Array of summaries with `id`, `started_at`, `topic`, `level`, `ai_provider`, `coaching_mode`, `turn_count`, and `correction_count`.
+
+**Pass:** Newly created session appears in the list.
+
+---
+
+### MT-5-4: Full session survives backend restart
+
+1. Complete one spoken turn in the browser.
+2. Stop the backend server.
+3. Restart the backend server with the same `DVC_DATA_DIR`.
+4. Load the saved session:
+
+```bash
+curl -s http://localhost:8001/sessions/$SESSION | python3 -m json.tool
+```
+
+**Check:**
+- [ ] Response has the same `id`
+- [ ] `turns` contains the user and coach turns
+- [ ] User turn includes `transcript_raw` and `transcript_norm`
+- [ ] Coach turn includes `coach_text`
+
+**Pass:** Transcript data remains after restart.
+
+---
+
+### MT-5-5: Frontend session history can review a saved session
+
+1. Open `http://localhost:5173`.
+2. Complete one spoken turn.
+3. Click "Refresh" in Session history if needed.
+4. Click the saved session row.
+
+**Check:**
+- [ ] Session history shows topic, level, mode, turn count, and correction count
+- [ ] Clicking a saved session restores its transcript
+- [ ] Session config updates to match the saved session
+
+**Pass:** Past session can be reviewed from the UI.
+
+---
+
+### MT-5-6: Audio retention is opt-in
+
+With default config (`DVC_SAVE_AUDIO` unset or false):
+
+```bash
+curl -s http://localhost:8001/sessions/$SESSION | python3 -m json.tool
+```
+
+**Check:**
+- [ ] User turn `audio_file` is `null`
+
+Restart backend with `DVC_SAVE_AUDIO=true`, complete a new turn, then reload that session.
+
+**Check:**
+- [ ] User turn `audio_file` contains a path under `${DVC_DATA_DIR:-~/.duoVoiceCoach}/audio/`
+- [ ] The referenced WAV file exists
+
+**Pass:** Audio files are saved only when explicitly enabled.
+
+---
+
 ## Sign-Off Checklist
 
 Before recording sign-off in `manualTestLog.md`, confirm:
 
-- [ ] MT-0-1 through MT-0-4 all passed (Phase 0)
-- [ ] MT-1-1 through MT-1-8 all passed (Phase 1)
-- [ ] MT-2-1 through MT-2-7 all passed (Phase 2)
-- [ ] MT-3-1 through MT-3-8 all passed (Phase 3)
-- [ ] MT-4-1 through MT-4-8 all passed (Phase 4)
-- [ ] No unexpected browser console errors observed during any test
-- [ ] No unhandled exceptions in backend terminal output during any test
+- [x] MT-0-1 through MT-0-4 all passed (Phase 0)
+- [x] MT-1-1 through MT-1-8 all passed (Phase 1)
+- [x] MT-2-1 through MT-2-7 all passed (Phase 2)
+- [x] MT-3-1 through MT-3-8 all passed (Phase 3)
+- [x] MT-4-1 through MT-4-8 all passed (Phase 4)
+- [ ] MT-5-1 through MT-5-6 all passed (Phase 5)
+- [x] No unexpected browser console errors observed during any test
+- [x] No unhandled exceptions in backend terminal output during any test
+
+**Current sign-off status:** Phase 4 passed on 2026-04-21 and is recorded in `docs/manualTestLog.md`. Phase 5 automated tests pass; manual smoke sign-off is pending.
 
 Record in `docs/manualTestLog.md`:
 - Date tested

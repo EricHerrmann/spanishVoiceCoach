@@ -1,6 +1,7 @@
 import os
 import pytest
 from fastapi.testclient import TestClient
+from backend.session import CoachResponse
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 
@@ -14,6 +15,7 @@ requires_api_key = pytest.mark.skipif(
 def make_client():
     """Return a TestClient for the app. The app module is cached, so sessions dict is shared."""
     os.environ.setdefault("ANTHROPIC_API_KEY", "test-key")
+    os.environ.setdefault("DVC_DATA_DIR", "/tmp/duoVoiceCoach-test-data")
     from backend.main import app
     return TestClient(app)
 
@@ -197,3 +199,124 @@ class TestGetProviders:
         for provider in body:
             assert "id" in provider
             assert "label" in provider
+
+
+class TestSessionPersistence:
+    def test_session_start_persists_session_and_lists_summary(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("DVC_DATA_DIR", str(tmp_path))
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+        from backend import main
+
+        main.sessions.clear()
+        client = TestClient(main.app)
+
+        response = client.post(
+            "/session/start",
+            json={
+                "topic": "travel_tourism",
+                "level": 7,
+                "ai_provider": "claude",
+                "coaching_mode": "shadowing",
+            },
+        )
+
+        assert response.status_code == 200
+        session_id = response.json()["session_id"]
+        assert (tmp_path / "sessions" / f"{session_id}.json").exists()
+
+        list_response = client.get("/sessions")
+        assert list_response.status_code == 200
+        summaries = list_response.json()
+        assert summaries[0]["id"] == session_id
+        assert summaries[0]["topic"] == "travel_tourism"
+        assert summaries[0]["level"] == 7
+        assert summaries[0]["turn_count"] == 0
+
+    def test_get_session_loads_persisted_session_after_memory_clear(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("DVC_DATA_DIR", str(tmp_path))
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+        from backend import main
+
+        main.sessions.clear()
+        client = TestClient(main.app)
+        session_id = client.post("/session/start", json={"topic": "general"}).json()["session_id"]
+        main.sessions.clear()
+
+        response = client.get(f"/sessions/{session_id}")
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["id"] == session_id
+        assert body["topic"] == "general"
+        assert body["turns"] == []
+
+    def test_full_turn_updates_persisted_session(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("DVC_DATA_DIR", str(tmp_path))
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+        from backend import main
+
+        class FakeSTT:
+            def transcribe(self, _path):
+                return ("Hola", "hola")
+
+        class FakeAIProvider:
+            def chat(self, _session, _user_text):
+                return CoachResponse(coach_text="¡Hola!", corrections=[])
+
+        main.sessions.clear()
+        monkeypatch.setattr(main, "stt_provider", FakeSTT())
+        monkeypatch.setattr(main, "claude_provider", FakeAIProvider())
+        client = TestClient(main.app)
+        session_id = client.post("/session/start").json()["session_id"]
+
+        with open(FIXTURE_WAV, "rb") as f:
+            response = client.post(
+                "/turn",
+                files={"audio": ("hola_sample.wav", f, "audio/wav")},
+                data={"session_id": session_id},
+            )
+
+        assert response.status_code == 200
+        assert response.json()["error"] is None
+        main.sessions.clear()
+        persisted = client.get(f"/sessions/{session_id}").json()
+        assert len(persisted["turns"]) == 2
+        assert persisted["turns"][0]["speaker"] == "user"
+        assert persisted["turns"][0]["transcript_raw"] == "Hola"
+        assert persisted["turns"][0]["transcript_norm"] == "hola"
+        assert persisted["turns"][0]["audio_file"] is None
+        assert persisted["turns"][1]["speaker"] == "coach"
+        assert persisted["turns"][1]["coach_text"] == "¡Hola!"
+
+    def test_audio_file_saved_only_when_opted_in(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("DVC_DATA_DIR", str(tmp_path))
+        monkeypatch.setenv("DVC_SAVE_AUDIO", "true")
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+        from backend import main
+
+        class FakeSTT:
+            def transcribe(self, _path):
+                return ("Hola", "hola")
+
+        class FakeAIProvider:
+            def chat(self, _session, _user_text):
+                return CoachResponse(coach_text="¡Hola!", corrections=[])
+
+        main.sessions.clear()
+        monkeypatch.setattr(main, "stt_provider", FakeSTT())
+        monkeypatch.setattr(main, "claude_provider", FakeAIProvider())
+        client = TestClient(main.app)
+        session_id = client.post("/session/start").json()["session_id"]
+
+        with open(FIXTURE_WAV, "rb") as f:
+            response = client.post(
+                "/turn",
+                files={"audio": ("hola_sample.wav", f, "audio/wav")},
+                data={"session_id": session_id},
+            )
+
+        assert response.status_code == 200
+        persisted = client.get(f"/sessions/{session_id}").json()
+        audio_file = persisted["turns"][0]["audio_file"]
+        assert audio_file is not None
+        assert os.path.exists(audio_file)

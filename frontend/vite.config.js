@@ -12,6 +12,9 @@ export default defineConfig({
     proxy: {
       '/turn': 'http://localhost:8001',
       '/session': 'http://localhost:8001',
+      '/sessions': 'http://localhost:8001',
+      '/topics': 'http://localhost:8001',
+      '/providers': 'http://localhost:8001',
     },
   },
 })

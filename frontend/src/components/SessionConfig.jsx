@@ -2,16 +2,18 @@ import { useState } from 'react'
 
 export default function SessionConfig({ config, onConfigChange, topics, providers, onNewSession, state }) {
   const isKnownTopic = topics.some((t) => t.id === config.topic)
-  const [showCustomInput, setShowCustomInput] = useState(!isKnownTopic && config.topic !== '')
+  const [customSelected, setCustomSelected] = useState(false)
+  const showCustomInput = customSelected || (topics.length > 0 && !isKnownTopic && config.topic !== '')
+  const selectedTopic = topics.find((t) => t.id === config.topic)
 
   const topicSelectValue = showCustomInput ? 'custom' : config.topic
 
   function handleTopicChange(e) {
     if (e.target.value === 'custom') {
-      setShowCustomInput(true)
+      setCustomSelected(true)
       onConfigChange({ topic: '' })
     } else {
-      setShowCustomInput(false)
+      setCustomSelected(false)
       onConfigChange({ topic: e.target.value })
     }
   }
@@ -37,6 +39,9 @@ export default function SessionConfig({ config, onConfigChange, topics, provider
             value={config.topic}
             onChange={(e) => onConfigChange({ topic: e.target.value })}
           />
+        )}
+        {!showCustomInput && selectedTopic?.starter && (
+          <p className="topic-starter">{selectedTopic.starter}</p>
         )}
       </div>
 

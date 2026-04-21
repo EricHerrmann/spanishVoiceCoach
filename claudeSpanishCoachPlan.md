@@ -6,22 +6,22 @@
 
 ## Executive Summary
 
-**Last updated:** 2026-04-15 (rev 2 — Issue 3 & 4 narrowed fixes applied)
+**Last updated:** 2026-04-21 (Phase 4 signed off; ready for Phase 5)
 
-**Current state:** Pre-implementation. Design approved. Phase 0 not yet started.
+**Current state:** Phases 0–4 complete. Phase 4 session configuration UI is implemented and signed off; ready to proceed to Phase 5 persistence and session history.
 
 | Phase | Name | Status | Tests | Notes |
 |-------|------|--------|-------|-------|
 | 0 — Scaffolding | Project structure, env, contracts | ✅ Complete | 6 passing | pyproject.toml, Vite setup, abstract interfaces |
 | 1 — Voice Pipeline MVP | Mic → Whisper → browser TTS | ✅ Complete | 33 passing | No AI yet; validate full audio round-trip |
-| 2 — AI Conversation Core | Claude wired in, freeform chat | ✅ Complete | 36 passing | First real Spanish coaching session |
-| 3 — Coaching Layer | Hybrid mode, corrections, toggle | ⏳ Not started | — | MVP complete after this phase |
-| 4 — Session Config UI | Topic/level picker, provider selector | ⏳ Not started | — | Full session configuration in UI |
-| 5 — Persistence | Session history, transcript save | ⏳ Not started | — | Review past sessions |
+| 2 — AI Conversation Core | Claude wired in, freeform chat | ✅ Complete | 36 backend, 2 skipped; 12 frontend | First real Spanish coaching session |
+| 3 — Coaching Layer | Hybrid mode, corrections, toggle | ✅ Complete | 56 backend, 2 skipped; 19 frontend | MVP complete |
+| 4 — Session Config UI | Topic/level picker, provider selector | ✅ Complete | 67 backend, 2 skipped; 33 frontend | Full session configuration in UI; signed off 2026-04-21 |
+| 5 — Persistence | Session history, transcript save | 🚧 In progress | 74 backend, 2 skipped; 38 frontend | Implementation complete; manual smoke pending |
 | 6 — ElevenLabs TTS | Swap browser TTS via tts.py | ⏳ Not started | — | Voice quality upgrade |
 | 7 — Android / PWA | PWA packaging, mobile UX | ⏳ Not started | — | Android target |
 
-**MVP = Phases 0–3.** A working desktop Spanish voice coach exists after Phase 3.
+**MVP = Phases 0–3.** Phase 4 adds full session configuration and is complete. Phase 5 is the next execution focus.
 
 **Phase gate rule:** Each phase ends with a passing test suite and a manual smoke-test sign-off in `docs/manualTestLog.md` before the next phase begins.
 
@@ -157,25 +157,25 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 
 ### Tasks
 
-- [ ] Initialize Python project: `pyproject.toml` with `uv`, FastAPI, openai-whisper, anthropic dependencies
-- [ ] Initialize React frontend: `npm create vite@latest frontend -- --template react`
-- [ ] Create `backend/ai/base.py` — `AbstractAIProvider` with `chat()` signature
-- [ ] Create `backend/tts.py` — `AbstractTTSProvider` with `synthesize()` returning `None` (passthrough)
-- [ ] Create `backend/stt.py` — `WhisperSTT` stub returning fixture transcript
-- [ ] Create `backend/session.py` — `Session`, `Turn`, `Correction` dataclasses
-- [ ] Create `backend/coach.py` — `CoachSession` stub (accepts messages, returns placeholder)
-- [ ] Create `backend/main.py` — FastAPI app with `POST /turn` route (wired to stubs)
-- [ ] Create `tests/fixtures/hola_sample.wav` — short deterministic Spanish audio clip
-- [ ] Write unit tests for session model serialization/deserialization
-- [ ] Write unit test asserting `AbstractAIProvider.chat()` raises `NotImplementedError`
-- [ ] Verify: `uv run pytest` passes; `npm run dev` starts frontend dev server
-- [ ] Add Phase 0 procedures to `docs/manualTestPlan.md`
+- [x] Initialize Python project: `pyproject.toml` with `uv`, FastAPI, openai-whisper, anthropic dependencies
+- [x] Initialize React frontend: `npm create vite@latest frontend -- --template react`
+- [x] Create `backend/ai/base.py` — `AbstractAIProvider` with `chat()` signature
+- [x] Create `backend/tts.py` — `AbstractTTSProvider` with `synthesize()` returning `None` (passthrough)
+- [x] Create `backend/stt.py` — `WhisperSTT` stub returning fixture transcript
+- [x] Create `backend/session.py` — `Session`, `Turn`, `Correction` dataclasses
+- [x] Create `backend/coach.py` — `CoachSession` stub (accepts messages, returns placeholder)
+- [x] Create `backend/main.py` — FastAPI app with `POST /turn` route (wired to stubs)
+- [x] Create `tests/fixtures/hola_sample.wav` — short deterministic Spanish audio clip
+- [x] Write unit tests for session model serialization/deserialization
+- [x] Write unit test asserting `AbstractAIProvider.chat()` raises `NotImplementedError`
+- [x] Verify: `uv run pytest` passes; `npm run dev` starts frontend dev server
+- [x] Add Phase 0 procedures to `docs/manualTestPlan.md`
 
 ### Phase 0 Gate
 
-- [ ] All unit tests pass
-- [ ] `POST /turn` returns a structured JSON response (stub data)
-- [ ] Manual: frontend dev server loads in browser without errors
+- [x] All unit tests pass
+- [x] `POST /turn` returns a structured JSON response (stub data)
+- [x] Manual: frontend dev server loads in browser without errors (signed off 2026-04-19)
 
 ---
 
@@ -195,13 +195,13 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 - [x] Write unit test: `test_stt.py` — corrupted/empty WAV → `TurnError(stage="stt", recoverable=True)` returned, no exception raised
 - [x] Write integration test: WAV fixture → `/turn` → JSON with `transcript_raw`, `transcript_norm`, `error: null`
 - [x] Write Vitest: `VoiceButton` state transitions; retry prompt renders on error response
-- [ ] Manual smoke test: speak "Hola, ¿cómo estás?" → verify `transcript_norm` accuracy → browser speaks echo back
-- [ ] Add Phase 1 procedures to `docs/manualTestPlan.md`
+- [x] Manual smoke test: speak "Hola, ¿cómo estás?" → verify `transcript_norm` accuracy → browser speaks echo back
+- [x] Add Phase 1 procedures to `docs/manualTestPlan.md`
 
 ### Phase 1 Gate
 
 - [x] All tests pass (21 backend, 12 frontend = 33 total)
-- [ ] Manual smoke test signed off in `docs/manualTestLog.md`
+- [x] Manual smoke test signed off in `docs/manualTestLog.md` (2026-04-19)
 - [x] Whisper transcribes spoken Spanish with acceptable accuracy (verified with gTTS fixture)
 - [x] `TurnError` test passes: bad audio input returns structured error, no uncaught exception
 
@@ -213,24 +213,24 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 
 ### Tasks
 
-- [ ] Add `CoachResponse` dataclass to `backend/session.py` — `{coach_text: str, corrections: list[Correction]}`
-- [ ] Update `backend/ai/base.py` — `AbstractAIProvider.chat()` return type is `CoachResponse` (not free text)
-- [ ] Implement `backend/ai/claude.py` — `ClaudeProvider(AbstractAIProvider)` using `anthropic` SDK with prompt caching; use Claude structured output (tool use / JSON mode) so corrections arrive as structured data, not parsed text; validate response into `CoachResponse` before returning
-- [ ] Implement `backend/ai/openai.py` — `OpenAIProvider` stub (raises `NotImplementedError`, wires up interface)
-- [ ] Implement `backend/coach.py` — `CoachSession` builds system prompt (topic, level, coaching mode), maintains message history, calls `ai_provider.chat()`, consumes `CoachResponse`
-- [ ] Update `backend/main.py` — instantiate `ClaudeProvider` as default, pass to `CoachSession`
-- [ ] Update `backend/session.py` — wire `ai_provider` field to provider registry; store `coach_text` on coach turns
-- [ ] Write unit test: `test_ai_providers.py` — `ClaudeProvider` with valid fixture response → `CoachResponse` returned; malformed fixture response → `TurnError(stage="ai", recoverable=True)` returned, no exception raised; `OpenAIProvider` raises `NotImplementedError`
-- [ ] Write unit test: `test_coach.py` — system prompt construction for topic/level/mode combinations
-- [ ] Write integration test: full turn → Claude → `CoachResponse` with `coach_text` and empty `corrections`
-- [ ] Manual smoke test: start session at level 5, topic "ordering food" → conduct 3-turn Spanish conversation → verify responses are contextually appropriate
-- [ ] Add Phase 2 procedures to `docs/manualTestPlan.md`
+- [x] Add `CoachResponse` dataclass to `backend/session.py` — `{coach_text: str, corrections: list[Correction]}`
+- [x] Update `backend/ai/base.py` — `AbstractAIProvider.chat()` return type is `CoachResponse` (not free text)
+- [x] Implement `backend/ai/claude.py` — `ClaudeProvider(AbstractAIProvider)` using `anthropic` SDK with prompt caching; use Claude structured output (tool use / JSON mode) so corrections arrive as structured data, not parsed text; validate response into `CoachResponse` before returning
+- [x] Implement `backend/ai/openai.py` — `OpenAIProvider` stub (raises `NotImplementedError`, wires up interface)
+- [x] Implement `backend/coach.py` — `CoachSession` builds system prompt (topic, level, coaching mode), maintains message history, calls `ai_provider.chat()`, consumes `CoachResponse`
+- [x] Update `backend/main.py` — instantiate `ClaudeProvider` as default, pass to `CoachSession`
+- [x] Update `backend/session.py` — wire `ai_provider` field to provider registry; store `coach_text` on coach turns
+- [x] Write unit test: `test_ai_providers.py` — `ClaudeProvider` with valid fixture response → `CoachResponse` returned; malformed fixture response → `TurnError(stage="ai", recoverable=True)` returned, no exception raised; `OpenAIProvider` raises `NotImplementedError`
+- [x] Write unit test: `test_coach.py` — system prompt construction for topic/level/mode combinations
+- [x] Write integration test: full turn → Claude → `CoachResponse` with `coach_text` and empty `corrections`
+- [x] Manual smoke test: start session at level 5, topic "ordering food" → conduct 3-turn Spanish conversation → verify responses are contextually appropriate
+- [x] Add Phase 2 procedures to `docs/manualTestPlan.md`
 
 ### Phase 2 Gate
 
-- [ ] All tests pass
-- [ ] Manual smoke test signed off
-- [ ] Claude responds in Spanish at the requested level
+- [x] All tests pass (36 backend, 2 skipped; 12 frontend — at time of sign-off)
+- [x] Manual smoke test signed off in `docs/manualTestLog.md` (2026-04-20)
+- [x] Claude responds in Spanish at the requested level
 
 ---
 
@@ -240,21 +240,21 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 
 ### Tasks
 
-- [ ] Implement coaching mode routing in `backend/coach.py` — consume `CoachResponse.corrections` (already validated); route by mode: `on_demand` (surface corrections only if user asked), `explicit` (always surface non-empty corrections), `shadowing` (pass corrections to prompt so AI weaves correct form into reply, suppress overlay)
-- [ ] Implement user-request trigger detection in `backend/coach.py` — detect phrases like "¿Cómo se dice...?", "Was that right?", "Corrígeme" in `transcript_norm`; set `triggered_by="user_request"` on resulting corrections
-- [ ] Update `backend/main.py` — return `corrections[]` from `CoachResponse` in `/turn` response
-- [ ] Implement `frontend/components/CoachOverlay.jsx` — display corrections: original → corrected + explanation
-- [ ] Implement `frontend/components/SessionConfig.jsx` — coaching mode toggle (on_demand / explicit / shadowing)
-- [ ] Write unit tests: coaching mode routing for all three modes against fixture `CoachResponse` objects (empty corrections, single correction, multiple corrections)
-- [ ] Write Vitest: `CoachOverlay` renders correction fields; `SessionConfig` emits coaching mode
-- [ ] Manual smoke test: speak a sentence with a deliberate verb conjugation error → verify each coaching mode behaves as specified
-- [ ] Add Phase 3 procedures to `docs/manualTestPlan.md`
+- [x] Implement coaching mode routing in `backend/coach.py` — consume `CoachResponse.corrections` (already validated); route by mode: `on_demand` (surface corrections only if user asked), `explicit` (always surface non-empty corrections), `shadowing` (pass corrections to prompt so AI weaves correct form into reply, suppress overlay)
+- [x] Implement user-request trigger detection in `backend/coach.py` — detect phrases like "¿Cómo se dice...?", "Was that right?", "Corrígeme" in `transcript_norm`; set `triggered_by="user_request"` on resulting corrections
+- [x] Update `backend/main.py` — return `corrections[]` from `CoachResponse` in `/turn` response; accept `coaching_mode` in `/session/start` JSON body
+- [x] Implement `frontend/components/CoachOverlay.jsx` — display corrections: original → corrected + explanation
+- [x] Implement `frontend/components/SessionConfig.jsx` — coaching mode toggle (on_demand / explicit / shadowing)
+- [x] Write unit tests: coaching mode routing for all three modes against fixture `CoachResponse` objects (empty corrections, single correction, multiple corrections)
+- [x] Write Vitest: `CoachOverlay` renders correction fields; `SessionConfig` emits coaching mode
+- [x] Add Phase 3 procedures to `docs/manualTestPlan.md`
+- [x] Manual smoke test: speak a sentence with a deliberate verb conjugation error → verify each coaching mode behaves as specified
 
 ### Phase 3 Gate
 
-- [ ] All tests pass
-- [ ] Manual smoke test signed off for all three coaching modes
-- [ ] **MVP declared complete** — desktop Spanish voice coach is usable
+- [x] All tests pass (56 backend, 2 skipped; 19 frontend — 2026-04-21)
+- [x] Manual smoke test signed off for all three coaching modes (2026-04-21)
+- [x] **MVP declared complete** — desktop Spanish voice coach is usable
 
 ---
 
@@ -264,19 +264,20 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 
 ### Tasks
 
-- [ ] Expand `frontend/components/SessionConfig.jsx` — topic picker (preset list + freeform text input), level slider (1–10 with band labels), AI provider dropdown
-- [ ] Update `backend/session.py` — accept full config from `POST /session/start`; return `session_id`
-- [ ] Add `GET /providers` route — returns list of registered AI providers
-- [ ] Add `GET /topics` route — returns preset topic list with level recommendations
-- [ ] Write unit tests for `/session/start` and `/providers` routes
-- [ ] Write Vitest: `SessionConfig` renders provider list from API; level slider labels match band table
-- [ ] Manual smoke test: configure three different sessions (different topics, levels, providers) → verify each behaves distinctly
-- [ ] Add Phase 4 procedures to `docs/manualTestPlan.md`
+- [x] Expand `frontend/components/SessionConfig.jsx` — topic picker (preset list + freeform text input), selected preset starter phrase, level slider (1–10 with band labels), AI provider dropdown
+- [x] Update `backend/main.py` — accept full config from `POST /session/start`; return `session_id`
+- [x] Add `GET /providers` route — returns list of registered AI providers
+- [x] Add `GET /topics` route — returns preset topic list with Spanish starter phrases
+- [x] Write tests for `/topics`, `/providers`, and `/session/start` config validation
+- [x] Write Vitest: `SessionConfig` renders provider list from API, starter phrase behavior, level slider labels, and New Conversation controls
+- [x] Manual smoke test: configure sessions with different topics, levels, provider, and coaching modes; verify session reset and config behavior
+- [x] Add Phase 4 procedures to `docs/manualTestPlan.md`
 
 ### Phase 4 Gate
 
-- [ ] All tests pass
-- [ ] Manual smoke test signed off
+- [x] All tests pass (67 backend, 2 skipped; 33 frontend — 2026-04-21)
+- [x] Manual smoke test signed off in `docs/manualTestLog.md` (2026-04-21)
+- [x] Ready to proceed to Phase 5
 
 ---
 
@@ -286,19 +287,19 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 
 ### Tasks
 
-- [ ] Implement local JSON persistence in `backend/session.py` — save/load sessions to `~/.duoVoiceCoach/sessions/`
-- [ ] Add `GET /sessions` route — list past sessions with metadata
-- [ ] Add `GET /sessions/{id}` route — full session transcript and corrections
-- [ ] Save user audio WAV files per turn in `audio_file` field (opt-in, Phase 5+)
-- [ ] Implement session history view in frontend — list past sessions, tap to review transcript + corrections
-- [ ] Write unit tests: session save → load round-trip; correction retrieval
-- [ ] Write integration test: full session → save → load → verify turn count and corrections intact
+- [x] Implement local JSON persistence in `backend/session.py` — save/load sessions to `~/.duoVoiceCoach/sessions/` by default, overrideable with `DVC_DATA_DIR`
+- [x] Add `GET /sessions` route — list past sessions with metadata
+- [x] Add `GET /sessions/{id}` route — full session transcript and corrections
+- [x] Save user audio WAV files per turn in `audio_file` field when `DVC_SAVE_AUDIO=true`; default is transcript-only persistence
+- [x] Implement session history view in frontend — list past sessions, tap to review transcript + corrections
+- [x] Write unit tests: session save → load round-trip; correction retrieval
+- [x] Write integration test: full session → save → load → verify turn count and corrections intact
 - [ ] Manual smoke test: complete a session, close app, reopen, verify session appears in history
-- [ ] Add Phase 5 procedures to `docs/manualTestPlan.md`
+- [x] Add Phase 5 procedures to `docs/manualTestPlan.md`
 
 ### Phase 5 Gate
 
-- [ ] All tests pass
+- [x] All tests pass (74 backend, 2 skipped; 38 frontend — 2026-04-21)
 - [ ] Manual smoke test signed off
 
 ---

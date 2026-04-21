@@ -4,6 +4,7 @@ import VoiceButton from './components/VoiceButton'
 import Transcript from './components/Transcript'
 import CoachOverlay from './components/CoachOverlay'
 import SessionConfig from './components/SessionConfig'
+import SessionHistory from './components/SessionHistory'
 import './App.css'
 
 const DEFAULT_CONFIG = {
@@ -16,13 +17,23 @@ const DEFAULT_CONFIG = {
 function App() {
   const [topics, setTopics] = useState([])
   const [providers, setProviders] = useState([])
+  const [savedSessions, setSavedSessions] = useState([])
+  const [selectedSessionId, setSelectedSessionId] = useState(null)
   const [config, setConfig] = useState(DEFAULT_CONFIG)
-  const { state, turns, corrections, error, startRecording, stopRecording, newSession } = useVoice()
+  const { state, turns, corrections, error, startRecording, stopRecording, newSession, loadSession } = useVoice()
+
+  function refreshSessions() {
+    return fetch('/sessions').then((r) => r.json()).then(setSavedSessions).catch(() => {})
+  }
 
   useEffect(() => {
     fetch('/topics').then((r) => r.json()).then(setTopics).catch(() => {})
     fetch('/providers').then((r) => r.json()).then(setProviders).catch(() => {})
-    newSession(DEFAULT_CONFIG)
+    newSession(DEFAULT_CONFIG).then((sessionId) => {
+      setSelectedSessionId(sessionId)
+      refreshSessions()
+    })
+    refreshSessions()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   function onConfigChange(patch) {
@@ -31,7 +42,26 @@ function App() {
 
   function onNewSession() {
     const topic = config.topic.trim() || 'general'
-    newSession({ ...config, topic })
+    newSession({ ...config, topic }).then((sessionId) => {
+      setSelectedSessionId(sessionId)
+      refreshSessions()
+    })
+  }
+
+  function onSelectSession(sessionId) {
+    fetch(`/sessions/${sessionId}`)
+      .then((r) => r.json())
+      .then((session) => {
+        setSelectedSessionId(session.id)
+        setConfig({
+          topic: session.topic,
+          level: session.level,
+          ai_provider: session.ai_provider,
+          coaching_mode: session.coaching_mode,
+        })
+        loadSession(session)
+      })
+      .catch(() => {})
   }
 
   return (
@@ -54,6 +84,12 @@ function App() {
       />
       <CoachOverlay corrections={corrections} />
       <Transcript turns={turns} />
+      <SessionHistory
+        sessions={savedSessions}
+        selectedSessionId={selectedSessionId}
+        onSelectSession={onSelectSession}
+        onRefresh={refreshSessions}
+      />
     </div>
   )
 }

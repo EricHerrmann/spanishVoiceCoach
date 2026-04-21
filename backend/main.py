@@ -3,7 +3,16 @@ import tempfile
 from typing import Literal
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Body
 from pydantic import BaseModel, Field
-from backend.session import Session, TurnError, new_session
+from backend.session import (
+    Session,
+    TurnError,
+    get_audio_store_dir,
+    list_sessions,
+    load_session,
+    new_session,
+    save_session,
+    should_save_audio,
+)
 from backend.stt import WhisperSTT
 from backend.coach import CoachSession
 from backend.ai.claude import ClaudeProvider
@@ -59,7 +68,48 @@ def session_start(body: SessionStartRequest | None = Body(default=None)):
         coaching_mode=req.coaching_mode,
     )
     sessions[session.id] = session
+    save_session(session)
     return {"session_id": session.id}
+
+
+@app.get("/sessions")
+def get_sessions():
+    return list_sessions()
+
+
+@app.get("/sessions/{session_id}")
+def get_session(session_id: str):
+    session = sessions.get(session_id)
+    if session is None:
+        try:
+            session = load_session(session_id)
+        except FileNotFoundError:
+            raise HTTPException(status_code=404, detail="Session not found")
+        sessions[session.id] = session
+    return session.to_dict()
+
+
+def _get_session(session_id: str) -> Session:
+    session = sessions.get(session_id)
+    if session is not None:
+        return session
+    try:
+        session = load_session(session_id)
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Session not found")
+    sessions[session.id] = session
+    return session
+
+
+def _save_audio_file(session_id: str, audio_bytes: bytes, turn_index: int) -> str | None:
+    if not should_save_audio():
+        return None
+
+    audio_dir = get_audio_store_dir() / session_id
+    audio_dir.mkdir(parents=True, exist_ok=True)
+    path = audio_dir / f"turn-{turn_index:04d}.wav"
+    path.write_bytes(audio_bytes)
+    return str(path)
 
 
 @app.post("/turn")
@@ -67,12 +117,12 @@ async def post_turn(
     audio: UploadFile = File(...),
     session_id: str = Form(...),
 ):
-    session = sessions.get(session_id)
-    if session is None:
-        raise HTTPException(status_code=404, detail="Session not found")
+    session = _get_session(session_id)
+    audio_bytes = await audio.read()
+    audio_file = _save_audio_file(session_id, audio_bytes, len(session.turns) + 1)
 
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
-        tmp.write(await audio.read())
+        tmp.write(audio_bytes)
         tmp_path = tmp.name
 
     try:
@@ -98,6 +148,10 @@ async def post_turn(
     # preserved via session.turns on the Session object, not on this instance.
     coach = CoachSession(session, claude_provider)
     turn_result = coach.handle_turn(transcript_norm)
+    if session.turns and session.turns[-2].speaker == "user":
+        session.turns[-2].transcript_raw = transcript_raw
+        session.turns[-2].audio_file = audio_file
+    save_session(session)
 
     if isinstance(turn_result, TurnError):
         return {

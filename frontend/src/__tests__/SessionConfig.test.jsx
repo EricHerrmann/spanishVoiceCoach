@@ -58,11 +58,32 @@ describe('SessionConfig — topic picker', () => {
     expect(screen.getByRole('option', { name: /custom/i })).toBeInTheDocument()
   })
 
+  it('shows the selected preset starter phrase', () => {
+    renderConfig()
+    expect(screen.getByText('Hola')).toBeInTheDocument()
+  })
+
+  it('updates the starter phrase when a different preset topic is selected', () => {
+    renderConfig({ config: { ...DEFAULT_CONFIG, topic: 'ordering_food' } })
+    expect(screen.getByText('Hola menú')).toBeInTheDocument()
+  })
+
   it('selecting Custom reveals a text input', () => {
     const props = renderConfig()
     fireEvent.change(screen.getByLabelText(/topic/i), { target: { value: 'custom' } })
     expect(screen.getByPlaceholderText(/enter a topic/i)).toBeInTheDocument()
     expect(props.onConfigChange).toHaveBeenCalledWith({ topic: '' })
+  })
+
+  it('selecting Custom hides the preset starter phrase', () => {
+    renderConfig()
+    fireEvent.change(screen.getByLabelText(/topic/i), { target: { value: 'custom' } })
+    expect(screen.queryByText('Hola')).not.toBeInTheDocument()
+  })
+
+  it('does not treat the default topic as custom while topics are loading', () => {
+    renderConfig({ topics: [] })
+    expect(screen.queryByPlaceholderText(/enter a topic/i)).not.toBeInTheDocument()
   })
 
   it('calls onConfigChange when a preset topic is selected', () => {

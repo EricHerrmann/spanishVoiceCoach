@@ -1,8 +1,10 @@
 # Phase 4 — Session Config UI Implementation Plan
 
+**Status:** Complete — all Phase 4 automated and manual tests passed on 2026-04-21. Ready to proceed to Phase 5.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Expose full session configuration in the UI — topic picker (preset + freeform), level slider, AI provider dropdown, coaching mode — with an explicit "New Conversation" button that starts a fresh session using the selected config.
+**Goal:** Expose full session configuration in the UI — topic picker (preset + freeform) with the selected preset's Spanish starter phrase, level slider, AI provider dropdown, coaching mode — with an explicit "New Conversation" button that starts a fresh session using the selected config.
 
 **Architecture:** Backend gains `GET /topics`, `GET /providers`, and an expanded `POST /session/start` that accepts topic, level, ai_provider, and coaching_mode. Frontend refactors `useVoice` from a config-reactive hook into a zero-parameter hook that exposes `newSession(config)`. `SessionConfig` is expanded with the new controls; `App` holds a single config state and calls `newSession` on mount and on button click.
 
@@ -20,7 +22,7 @@
 
 **Modify — frontend:**
 - `frontend/src/hooks/useVoice.js` — remove `coachingMode` param; add `newSession(config)` function; remove session-start `useEffect`.
-- `frontend/src/components/SessionConfig.jsx` — expand with topic select, level slider, provider select, "New Conversation" button.
+- `frontend/src/components/SessionConfig.jsx` — expand with topic select, selected preset starter phrase, level slider, provider select, "New Conversation" button.
 - `frontend/src/__tests__/SessionConfig.test.jsx` — replace with updated tests for all controls.
 - `frontend/src/App.jsx` — fetch `/topics` and `/providers` on mount; hold single `config` state; call `newSession` on mount and on button click.
 
@@ -35,7 +37,7 @@
 - Modify: `backend/main.py`
 - Modify: `tests/integration/test_turn_pipeline.py`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Add to `tests/integration/test_turn_pipeline.py` after `TestSessionStart`:
 
@@ -93,7 +95,7 @@ class TestGetProviders:
             assert "label" in provider
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 ```bash
 uv run pytest tests/integration/test_turn_pipeline.py::TestGetTopics tests/integration/test_turn_pipeline.py::TestGetProviders -v
@@ -101,7 +103,7 @@ uv run pytest tests/integration/test_turn_pipeline.py::TestGetTopics tests/integ
 
 Expected: All 7 tests FAIL with 404 (routes don't exist yet).
 
-- [ ] **Step 3: Add constants and routes to `backend/main.py`**
+- [x] **Step 3: Add constants and routes to `backend/main.py`**
 
 Add the following directly after the `import` block (before `stt_provider = WhisperSTT()`):
 
@@ -133,7 +135,7 @@ def get_providers():
     return _PROVIDERS
 ```
 
-- [ ] **Step 4: Run the new tests**
+- [x] **Step 4: Run the new tests**
 
 ```bash
 uv run pytest tests/integration/test_turn_pipeline.py::TestGetTopics tests/integration/test_turn_pipeline.py::TestGetProviders -v
@@ -141,7 +143,7 @@ uv run pytest tests/integration/test_turn_pipeline.py::TestGetTopics tests/integ
 
 Expected: All 7 tests pass.
 
-- [ ] **Step 5: Run full backend test suite to confirm no regressions**
+- [x] **Step 5: Run full backend test suite to confirm no regressions**
 
 ```bash
 ANTHROPIC_API_KEY=test-key uv run pytest tests/ -q
@@ -149,7 +151,7 @@ ANTHROPIC_API_KEY=test-key uv run pytest tests/ -q
 
 Expected: 56 passed, 2 skipped (same as before + 7 new = 63 passed, 2 skipped).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add backend/main.py tests/integration/test_turn_pipeline.py
@@ -164,7 +166,7 @@ git commit -m "feat: add GET /topics and GET /providers routes"
 - Modify: `backend/main.py`
 - Modify: `tests/integration/test_turn_pipeline.py`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Add inside the existing `TestSessionStart` class in `tests/integration/test_turn_pipeline.py`:
 
@@ -199,7 +201,7 @@ Add inside the existing `TestSessionStart` class in `tests/integration/test_turn
         assert response.status_code == 422
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 ```bash
 uv run pytest tests/integration/test_turn_pipeline.py::TestSessionStart -v
@@ -207,7 +209,7 @@ uv run pytest tests/integration/test_turn_pipeline.py::TestSessionStart -v
 
 Expected: 3 existing tests pass; 4 new tests FAIL (SessionStartRequest doesn't accept topic/level/ai_provider yet; level validation not present).
 
-- [ ] **Step 3: Update `SessionStartRequest` and `session_start` in `backend/main.py`**
+- [x] **Step 3: Update `SessionStartRequest` and `session_start` in `backend/main.py`**
 
 Add `Field` to the pydantic import at the top of `main.py`:
 
@@ -241,7 +243,7 @@ def session_start(body: SessionStartRequest | None = Body(default=None)):
     return {"session_id": session.id}
 ```
 
-- [ ] **Step 4: Run all session/start tests**
+- [x] **Step 4: Run all session/start tests**
 
 ```bash
 uv run pytest tests/integration/test_turn_pipeline.py::TestSessionStart -v
@@ -249,7 +251,7 @@ uv run pytest tests/integration/test_turn_pipeline.py::TestSessionStart -v
 
 Expected: All 7 tests pass (3 existing + 4 new).
 
-- [ ] **Step 5: Run full backend suite**
+- [x] **Step 5: Run full backend suite**
 
 ```bash
 ANTHROPIC_API_KEY=test-key uv run pytest tests/ -q
@@ -257,7 +259,7 @@ ANTHROPIC_API_KEY=test-key uv run pytest tests/ -q
 
 Expected: 67 passed, 2 skipped.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add backend/main.py tests/integration/test_turn_pipeline.py
@@ -273,7 +275,7 @@ git commit -m "feat: expand /session/start to accept topic, level, ai_provider"
 
 No new tests for this task — the hook behaviour is verified through the App wiring (Task 5) and the manual smoke test. Existing frontend tests must continue to pass.
 
-- [ ] **Step 1: Replace `frontend/src/hooks/useVoice.js`**
+- [x] **Step 1: Replace `frontend/src/hooks/useVoice.js`**
 
 ```js
 import { useState, useRef } from 'react'
@@ -406,7 +408,7 @@ export function useVoice() {
 }
 ```
 
-- [ ] **Step 2: Run existing frontend tests to confirm no regressions**
+- [x] **Step 2: Run existing frontend tests to confirm no regressions**
 
 ```bash
 cd frontend && npm test -- --run
@@ -414,7 +416,7 @@ cd frontend && npm test -- --run
 
 Expected: 19 tests pass (all existing tests — none of them test the session-start path directly).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add frontend/src/hooks/useVoice.js
@@ -429,7 +431,7 @@ git commit -m "feat: useVoice exposes newSession(config) instead of reacting to 
 - Modify: `frontend/src/components/SessionConfig.jsx`
 - Modify: `frontend/src/__tests__/SessionConfig.test.jsx`
 
-- [ ] **Step 1: Replace the test file**
+- [x] **Step 1: Replace the test file**
 
 Replace the full contents of `frontend/src/__tests__/SessionConfig.test.jsx`:
 
@@ -494,10 +496,25 @@ describe('SessionConfig — topic picker', () => {
     expect(screen.getByRole('option', { name: /custom/i })).toBeInTheDocument()
   })
 
+  it('shows the selected preset starter phrase', () => {
+    renderConfig()
+    expect(screen.getByText('Hola')).toBeInTheDocument()
+  })
+
+  it('updates the starter phrase when a different preset topic is selected', () => {
+    renderConfig({ config: { ...DEFAULT_CONFIG, topic: 'ordering_food' } })
+    expect(screen.getByText('Hola menú')).toBeInTheDocument()
+  })
+
   it('selecting Custom reveals a text input', () => {
     renderConfig()
     fireEvent.change(screen.getByLabelText(/topic/i), { target: { value: 'custom' } })
     expect(screen.getByPlaceholderText(/enter a topic/i)).toBeInTheDocument()
+  })
+
+  it('hides the preset starter phrase for custom topics', () => {
+    renderConfig({ config: { ...DEFAULT_CONFIG, topic: 'cooking at home' } })
+    expect(screen.queryByText('Hola')).not.toBeInTheDocument()
   })
 
   it('calls onConfigChange when a preset topic is selected', () => {
@@ -555,7 +572,7 @@ describe('SessionConfig — New Conversation button', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 ```bash
 cd frontend && npm test -- --run 2>&1 | tail -20
@@ -563,11 +580,12 @@ cd frontend && npm test -- --run 2>&1 | tail -20
 
 Expected: Most new tests FAIL — `SessionConfig` doesn't accept the new props yet.
 
-- [ ] **Step 3: Replace `frontend/src/components/SessionConfig.jsx`**
+- [x] **Step 3: Replace `frontend/src/components/SessionConfig.jsx`**
 
 ```jsx
 export default function SessionConfig({ config, onConfigChange, topics, providers, onNewSession, state }) {
   const isCustomTopic = topics.length > 0 && !topics.some((t) => t.id === config.topic)
+  const selectedTopic = topics.find((t) => t.id === config.topic)
 
   return (
     <div className="session-config">
@@ -596,6 +614,9 @@ export default function SessionConfig({ config, onConfigChange, topics, provider
             value={config.topic}
             onChange={(e) => onConfigChange({ topic: e.target.value })}
           />
+        )}
+        {!isCustomTopic && selectedTopic?.starter && (
+          <p className="topic-starter">{selectedTopic.starter}</p>
         )}
       </div>
 
@@ -654,15 +675,15 @@ export default function SessionConfig({ config, onConfigChange, topics, provider
 }
 ```
 
-- [ ] **Step 4: Run SessionConfig tests**
+- [x] **Step 4: Run SessionConfig tests**
 
 ```bash
 cd frontend && npm test -- --run 2>&1 | tail -20
 ```
 
-Expected: All tests pass. Total frontend count increases from 19 to 28 (9 new SessionConfig tests replacing 3 old ones — net +6 across 4 describe blocks + 3 carried over).
+Expected: All tests pass. The starter-phrase requirement adds three `SessionConfig` tests over the prior Phase 4 plan.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/components/SessionConfig.jsx frontend/src/__tests__/SessionConfig.test.jsx
@@ -678,7 +699,7 @@ git commit -m "feat: expand SessionConfig with topic picker, level slider, provi
 
 No new tests — App wiring is covered by SessionConfig component tests and the manual smoke test. All existing tests must continue to pass.
 
-- [ ] **Step 1: Replace `frontend/src/App.jsx`**
+- [x] **Step 1: Replace `frontend/src/App.jsx`**
 
 ```jsx
 import { useState, useEffect } from 'react'
@@ -744,7 +765,7 @@ function App() {
 export default App
 ```
 
-- [ ] **Step 2: Run all frontend tests**
+- [x] **Step 2: Run all frontend tests**
 
 ```bash
 cd frontend && npm test -- --run
@@ -752,7 +773,7 @@ cd frontend && npm test -- --run
 
 Expected: All tests pass (same count as after Task 4).
 
-- [ ] **Step 3: Run all backend tests**
+- [x] **Step 3: Run all backend tests**
 
 ```bash
 ANTHROPIC_API_KEY=test-key uv run pytest tests/ -q
@@ -760,7 +781,7 @@ ANTHROPIC_API_KEY=test-key uv run pytest tests/ -q
 
 Expected: 67 passed, 2 skipped.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add frontend/src/App.jsx
@@ -774,7 +795,7 @@ git commit -m "feat: wire SessionConfig and newSession into App for Phase 4 conf
 **Files:**
 - Modify: `docs/manualTestPlan.md`
 
-- [ ] **Step 1: Append Phase 4 section to `docs/manualTestPlan.md`**
+- [x] **Step 1: Append Phase 4 section to `docs/manualTestPlan.md`**
 
 Add the following before the Sign-Off Checklist:
 
@@ -821,6 +842,7 @@ Open `http://localhost:5173`.
 
 **Check:**
 - [ ] "Topic" label and dropdown visible; preset options present; last option is "Custom…"
+- [ ] Selected preset topic's Spanish starter phrase is visible beneath the topic dropdown
 - [ ] "Level: 5" label and slider visible; slider moves between 1 and 10
 - [ ] "Provider" label and dropdown visible; shows "Claude (Anthropic)" only
 - [ ] "Coaching mode" label and dropdown visible; three options present
@@ -836,12 +858,14 @@ Open `http://localhost:5173`.
 
 **Check:**
 - [ ] Dropdown shows "Ordering food" selected
+- [ ] Starter phrase updates to "Hola, ¿qué me recomiendas del menú?"
 - [ ] No text input appears beneath the dropdown
 
 2. Select "Custom…".
 
 **Check:**
 - [ ] A text input appears beneath the dropdown
+- [ ] Preset starter phrase is hidden
 - [ ] Type "cooking at home" into the input
 
 **Pass:** Preset selection is clean; Custom reveals text input.
@@ -922,7 +946,7 @@ curl -s -X POST http://localhost:8001/turn \
 **Fail:** Empty `$SESSION`, missing keys, or non-null error.
 ````
 
-- [ ] **Step 2: Update the Sign-Off Checklist in `docs/manualTestPlan.md`**
+- [x] **Step 2: Update the Sign-Off Checklist in `docs/manualTestPlan.md`**
 
 Add to the existing checklist:
 
@@ -930,7 +954,7 @@ Add to the existing checklist:
 - [ ] MT-4-1 through MT-4-8 all passed (Phase 4)
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add docs/manualTestPlan.md
@@ -952,6 +976,7 @@ git commit -m "docs: add Phase 4 manual test plan (MT-4-1 through MT-4-8)"
 | invalid ai_provider returns 422 | Task 2 |
 | `useVoice` zero-param, exposes `newSession(config)` | Task 3 |
 | `SessionConfig` topic picker with preset + Custom option | Task 4 |
+| Selected preset topic starter phrase displayed and hidden for Custom | Task 4 |
 | Custom topic reveals text input | Task 4 |
 | Level slider min=1 max=10 with band labels | Task 4 |
 | Provider select from props | Task 4 |

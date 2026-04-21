@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import json
+import os
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
+from pathlib import Path
 from uuid import uuid4
 from typing import Optional, Any
 
@@ -106,6 +109,84 @@ class Session:
         data_copy["turns"] = reconstructed_turns
 
         return cls(**data_copy)
+
+
+def get_data_dir() -> Path:
+    """Return the base local data directory for persisted app state."""
+    return Path(os.environ.get("DVC_DATA_DIR", "~/.duoVoiceCoach")).expanduser()
+
+
+def get_session_store_dir() -> Path:
+    """Return the directory containing session JSON documents."""
+    return get_data_dir() / "sessions"
+
+
+def get_audio_store_dir() -> Path:
+    """Return the directory containing optional retained user audio files."""
+    return get_data_dir() / "audio"
+
+
+def should_save_audio() -> bool:
+    """Whether uploaded user audio should be retained on disk."""
+    return os.environ.get("DVC_SAVE_AUDIO", "").lower() in {"1", "true", "yes", "on"}
+
+
+def session_path(session_id: str, store_dir: Path | None = None) -> Path:
+    base_dir = store_dir or get_session_store_dir()
+    return base_dir / f"{session_id}.json"
+
+
+def save_session(session: Session, store_dir: Path | None = None) -> Path:
+    """Persist a session JSON document atomically and return its path."""
+    path = session_path(session.id, store_dir)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = path.with_suffix(".json.tmp")
+    tmp_path.write_text(
+        json.dumps(session.to_dict(), ensure_ascii=False, indent=2, sort_keys=True),
+        encoding="utf-8",
+    )
+    tmp_path.replace(path)
+    return path
+
+
+def load_session(session_id: str, store_dir: Path | None = None) -> Session:
+    """Load a session by id from disk."""
+    path = session_path(session_id, store_dir)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return Session.from_dict(data)
+
+
+def list_sessions(store_dir: Path | None = None) -> list[dict]:
+    """Return lightweight summaries for persisted sessions, newest first."""
+    base_dir = store_dir or get_session_store_dir()
+    if not base_dir.exists():
+        return []
+
+    summaries = []
+    for path in base_dir.glob("*.json"):
+        try:
+            session = Session.from_dict(json.loads(path.read_text(encoding="utf-8")))
+        except (OSError, json.JSONDecodeError, TypeError, ValueError):
+            continue
+
+        summaries.append(session_summary(session))
+
+    return sorted(summaries, key=lambda s: s["started_at"], reverse=True)
+
+
+def session_summary(session: Session) -> dict:
+    """Return the list-view representation of a session."""
+    correction_count = sum(len(turn.corrections) for turn in session.turns)
+    return {
+        "id": session.id,
+        "started_at": session.started_at.isoformat(),
+        "topic": session.topic,
+        "level": session.level,
+        "ai_provider": session.ai_provider,
+        "coaching_mode": session.coaching_mode,
+        "turn_count": len(session.turns),
+        "correction_count": correction_count,
+    }
 
 
 def new_session(

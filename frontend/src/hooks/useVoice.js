@@ -25,7 +25,7 @@ export function useVoice() {
     setTurns([])
     setCorrections([])
     setError(null)
-    fetch('/session/start', {
+    return fetch('/session/start', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -40,15 +40,26 @@ export function useVoice() {
       .then((data) => {
         if (data.session_id) {
           sessionIdRef.current = data.session_id
+          return data.session_id
         } else {
           setError({ stage: 'session', message: 'Failed to start session', recoverable: false })
+          return null
         }
       })
       .catch((err) => {
         if (err.name !== 'AbortError') {
           setError({ stage: 'session', message: 'Failed to start session', recoverable: false })
         }
+        return null
       })
+  }
+
+  function loadSession(session) {
+    sessionIdRef.current = session.id
+    setTurns(session.turns || [])
+    setCorrections((session.turns || []).flatMap((turn) => turn.corrections || []))
+    setError(null)
+    setState('idle')
   }
 
   async function startRecording() {
@@ -129,5 +140,5 @@ export function useVoice() {
     speechSynthesis.speak(utt)
   }
 
-  return { state, turns, corrections, error, startRecording, stopRecording, newSession }
+  return { state, turns, corrections, error, startRecording, stopRecording, newSession, loadSession }
 }

@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 import pytest
 
 from backend.session import Correction, Session, Turn, TurnError, new_session
+from backend.session import load_session, list_sessions, save_session, session_summary
 
 
 def _make_session(**kwargs) -> Session:
@@ -125,3 +126,75 @@ def test_from_dict_preserves_datetime():
     assert isinstance(restored.turns[0].timestamp, datetime)
     assert restored.started_at == original.started_at
     assert restored.turns[0].timestamp == ts
+
+
+def test_save_and_load_session_roundtrip(tmp_path):
+    """Persisting and loading a session preserves nested turns and corrections."""
+    original = _make_session(topic="travel", level=6)
+    ts = datetime(2026, 4, 21, 10, 0, 0, tzinfo=timezone.utc)
+    original.turns.append(Turn(speaker="user", timestamp=ts, transcript_norm="hola"))
+    original.turns.append(
+        Turn(
+            speaker="coach",
+            timestamp=ts,
+            coach_text="¡Hola!",
+            corrections=[
+                Correction(
+                    original="yo soy hambre",
+                    corrected="tengo hambre",
+                    explanation="Use tener with hunger.",
+                    triggered_by="auto",
+                )
+            ],
+        )
+    )
+
+    save_session(original, store_dir=tmp_path)
+    restored = load_session(original.id, store_dir=tmp_path)
+
+    assert restored.id == original.id
+    assert restored.topic == "travel"
+    assert restored.level == 6
+    assert len(restored.turns) == 2
+    assert restored.turns[1].corrections[0].corrected == "tengo hambre"
+
+
+def test_list_sessions_returns_newest_first(tmp_path):
+    older = _make_session(topic="older")
+    newer = _make_session(topic="newer")
+    older.started_at = datetime(2026, 4, 20, 10, 0, 0, tzinfo=timezone.utc)
+    newer.started_at = datetime(2026, 4, 21, 10, 0, 0, tzinfo=timezone.utc)
+    save_session(older, store_dir=tmp_path)
+    save_session(newer, store_dir=tmp_path)
+
+    summaries = list_sessions(store_dir=tmp_path)
+
+    assert [s["id"] for s in summaries] == [newer.id, older.id]
+
+
+def test_session_summary_counts_turns_and_corrections():
+    session = _make_session(topic="food")
+    ts = datetime(2026, 4, 21, 11, 0, 0, tzinfo=timezone.utc)
+    session.turns.append(Turn(speaker="user", timestamp=ts, transcript_norm="hola"))
+    session.turns.append(
+        Turn(
+            speaker="coach",
+            timestamp=ts,
+            coach_text="Bien",
+            corrections=[
+                Correction(
+                    original="mal",
+                    corrected="bien",
+                    explanation="Example correction.",
+                    triggered_by="auto",
+                )
+            ],
+        )
+    )
+
+    summary = session_summary(session)
+
+    assert summary["id"] == session.id
+    assert summary["topic"] == "food"
+    assert summary["turn_count"] == 2
+    assert summary["correction_count"] == 1
