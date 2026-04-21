@@ -11,7 +11,6 @@ export function useVoice() {
   const abortControllerRef = useRef(null)
 
   function newSession(config) {
-    // Stop any active recording before resetting session state
     if (mediaRecorderRef.current?.state === 'recording') {
       mediaRecorderRef.current.stop()
     }
@@ -33,6 +32,8 @@ export function useVoice() {
         level: config.level,
         ai_provider: config.ai_provider,
         coaching_mode: config.coaching_mode,
+        tts_provider: config.tts_provider || 'browser',
+        tts_voice_id: config.tts_voice_id || null,
       }),
       signal: controller.signal,
     })
@@ -121,9 +122,38 @@ export function useVoice() {
       setCorrections(data.corrections || [])
       setError(null)
       setState('playing')
-      speakCoachText(data.coach_text)
+
+      if (data.audio_b64) {
+        await playAudioB64(data.audio_b64)
+      } else {
+        speakCoachText(data.coach_text)
+      }
     } catch (err) {
       setError({ stage: 'stt', message: 'Network error', recoverable: true })
+      setState('idle')
+    }
+  }
+
+  async function playAudioB64(b64) {
+    const binary = atob(b64)
+    const bytes = new Uint8Array(binary.length)
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i)
+    }
+    const audioCtx = new AudioContext()
+    try {
+      const buffer = await audioCtx.decodeAudioData(bytes.buffer)
+      const source = audioCtx.createBufferSource()
+      source.buffer = buffer
+      source.connect(audioCtx.destination)
+      await new Promise((resolve) => {
+        source.onended = resolve
+        source.start()
+      })
+    } catch {
+      // decodeAudioData failure — fall through to idle
+    } finally {
+      audioCtx.close()
       setState('idle')
     }
   }
