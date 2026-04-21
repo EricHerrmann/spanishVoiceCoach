@@ -13,6 +13,7 @@ from backend.session import (
     save_session,
     should_save_audio,
 )
+from backend.tts import ELEVENLABS_VOICES, ElevenLabsTTSProvider
 from backend.stt import WhisperSTT
 from backend.coach import CoachSession
 from backend.ai.claude import ClaudeProvider
@@ -41,6 +42,8 @@ class SessionStartRequest(BaseModel):
     level: int = Field(default=5, ge=1, le=10)
     ai_provider: Literal["claude"] = "claude"
     coaching_mode: Literal["on_demand", "explicit", "shadowing"] = "on_demand"
+    tts_provider: Literal["browser", "elevenlabs"] = "browser"
+    tts_voice_id: str | None = None
 
 
 @app.get("/health")
@@ -58,6 +61,11 @@ def get_providers():
     return _PROVIDERS
 
 
+@app.get("/tts-voices")
+def get_tts_voices():
+    return ELEVENLABS_VOICES
+
+
 @app.post("/session/start")
 def session_start(body: SessionStartRequest | None = Body(default=None)):
     req = body or SessionStartRequest()
@@ -66,6 +74,8 @@ def session_start(body: SessionStartRequest | None = Body(default=None)):
         level=req.level,
         ai_provider=req.ai_provider,
         coaching_mode=req.coaching_mode,
+        tts_provider=req.tts_provider,
+        tts_voice_id=req.tts_voice_id,
     )
     sessions[session.id] = session
     save_session(session)

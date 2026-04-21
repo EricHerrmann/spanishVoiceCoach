@@ -320,3 +320,46 @@ class TestSessionPersistence:
         audio_file = persisted["turns"][0]["audio_file"]
         assert audio_file is not None
         assert os.path.exists(audio_file)
+
+
+class TestGetTtsVoices:
+    def test_returns_list(self):
+        client = make_client()
+        response = client.get("/tts-voices")
+        assert response.status_code == 200
+        body = response.json()
+        assert isinstance(body, list)
+        assert len(body) > 0
+
+    def test_each_voice_has_id_and_label(self):
+        client = make_client()
+        body = client.get("/tts-voices").json()
+        for voice in body:
+            assert "id" in voice
+            assert "label" in voice
+
+    def test_session_start_accepts_tts_provider(self):
+        client = make_client()
+        response = client.post(
+            "/session/start",
+            json={"tts_provider": "browser"},
+        )
+        assert response.status_code == 200
+        assert "session_id" in response.json()
+
+    def test_session_start_accepts_elevenlabs_tts_with_voice_id(self):
+        client = make_client()
+        response = client.post(
+            "/session/start",
+            json={"tts_provider": "elevenlabs", "tts_voice_id": "21m00Tcm4TlvDq8ikWAM"},
+        )
+        assert response.status_code == 200
+        assert "session_id" in response.json()
+
+    def test_session_start_invalid_tts_provider_returns_422(self):
+        client = make_client()
+        response = client.post(
+            "/session/start",
+            json={"tts_provider": "google"},
+        )
+        assert response.status_code == 422
