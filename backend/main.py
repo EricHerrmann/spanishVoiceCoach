@@ -154,11 +154,12 @@ async def post_turn(
     transcript_raw, transcript_norm = stt_result
     # CoachSession is re-instantiated per request; conversation history is
     # preserved via session.turns on the Session object, not on this instance.
+    user_turn_index = len(session.turns)
     coach = CoachSession(session, claude_provider)
     turn_result = coach.handle_turn(transcript_norm)
-    if session.turns and session.turns[-2].speaker == "user":
-        session.turns[-2].transcript_raw = transcript_raw
-        session.turns[-2].audio_file = audio_file
+    if user_turn_index < len(session.turns) and session.turns[user_turn_index].speaker == "user":
+        session.turns[user_turn_index].transcript_raw = transcript_raw
+        session.turns[user_turn_index].audio_file = audio_file
     save_session(session)
 
     if isinstance(turn_result, TurnError):
