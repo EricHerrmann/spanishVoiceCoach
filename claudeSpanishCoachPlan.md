@@ -6,9 +6,9 @@
 
 ## Executive Summary
 
-**Last updated:** 2026-04-22 (Phase 6 signed off; ready for Phase 7)
+**Last updated:** 2026-04-22 (Phase 6 signed off; ready for Phase 7; Phases 8–12 planned)
 
-**Current state:** Phases 0–6 complete. Phase 6 ElevenLabs TTS is implemented and signed off; ready to proceed to Phase 7 Android / PWA.
+**Current state:** Phases 0–6 complete. Phase 7 Android/PWA in progress. Phases 8 (refactor) and 9 (GUI redesign) precede cloud deployment to ensure a clean codebase reaches production.
 
 | Phase | Name | Status | Tests | Notes |
 |-------|------|--------|-------|-------|
@@ -19,11 +19,14 @@
 | 4 — Session Config UI | Topic/level picker, provider selector | ✅ Complete | 67 backend, 2 skipped; 33 frontend | Full session configuration in UI; signed off 2026-04-21 |
 | 5 — Persistence | Session history, transcript save | ✅ Complete | 74 backend, 2 skipped; 38 frontend | Session history and local persistence signed off 2026-04-21 |
 | 6 — ElevenLabs TTS | Swap browser TTS via tts.py | ✅ Complete | 92 backend, 2 skipped; 46 frontend | Voice quality upgrade; signed off 2026-04-22 |
-| 7 — Android / PWA | PWA packaging, mobile UX | ⏳ In progress | — | Local network + ngrok; Phase 8 = cloud |
-| 8 — Cloud Deployment | Cloud hosting, STT evaluation | ⏳ Not started | — | Decision doc required before implementation |
-| 9 — Windows 11 Packaging | Docker Compose packaging for Windows 11 | ⏳ Not started | — | Distribute to other laptops |
+| 7 — Android / PWA | PWA packaging, mobile UX | ⏳ In progress | — | Local network + ngrok; Phase 10 = cloud |
+| 8 — Code Review & Refactor | Systematic review, complexity + efficiency | ⏳ Not started | — | Discipline checkpoint before cloud/packaging |
+| 9 — GUI Layout Redesign | Two-pane desktop layout, mobile drawer | ⏳ Not started | — | Chat+tools split; responsive at 768px |
+| 10 — Cloud Deployment | Cloud hosting, STT evaluation | ⏳ Not started | — | Decision doc required before implementation |
+| 11 — Windows 11 Packaging | Docker Compose packaging for Windows 11 | ⏳ Not started | — | Distribute to other laptops |
+| 12 — Feature Expansion | Progress tracking, structured lessons, open brainstorm | ⏳ Not started | — | Each workstream gets its own spec first |
 
-**MVP = Phases 0–3.** Phase 4 adds full session configuration and Phase 5 adds local persistence and session history. Phase 6 is the next execution focus.
+**MVP = Phases 0–3.** Phase 4 adds full session configuration and Phase 5 adds local persistence and session history. Phase 6 is the voice quality upgrade. Phases 8–9 refactor and redesign before cloud deployment.
 
 **Phase gate rule:** Each phase ends with a passing test suite and a manual smoke-test sign-off in `docs/manualTestLog.md` before the next phase begins.
 
@@ -337,7 +340,7 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 - [x] Audit `useVoice.js` for mobile mic/audio compatibility — fix MIME type detection (`audio/webm;codecs=opus`) and AudioContext eager resume on user gesture
 - [x] Tune `VoiceButton` touch targets for mobile screen sizes — 48dp minimum via `.voice-btn` CSS rule
 - [x] Serve frontend build output (`frontend/dist`) as static files from FastAPI — single ngrok URL covers both app and API
-- [x] Evaluate hosting: local network + ngrok chosen for Phase 7; cloud deployment moved to Phase 8
+- [x] Evaluate hosting: local network + ngrok chosen for Phase 7; cloud deployment moved to Phase 10
 - [x] Document Android setup in `docs/android-setup.md`
 - [ ] Manual smoke test on Android device: full session — mic capture → Whisper → coach response → TTS playback
 - [ ] Add Phase 7 procedures to `docs/manualTestPlan.md`
@@ -352,7 +355,94 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 
 ---
 
-## Phase 8 — Cloud Deployment
+## Phase 8 — Code Review & Refactor
+
+**Goal:** Systematic review of all backend and frontend code after six phases of rapid delivery. Identify and resolve complexity hotspots, efficiency gaps, and test coverage holes. This is a discipline checkpoint, not a response to a specific bug.
+
+### Scope
+
+**Backend**
+- `main.py` — verify routes contain no business logic; all logic delegated to `coach.py`, `session.py`, or provider modules
+- `coach.py` — review system prompt construction, mode routing, and correction trigger detection for clarity and single responsibility
+- `session.py` — review data model, persistence logic, and serialization for correctness and efficiency
+- `stt.py` / `tts.py` — verify abstraction boundaries are clean; no provider-specific logic leaking into the base
+- `ai/claude.py` — review prompt caching usage, structured output parsing, and error handling path
+
+**Frontend**
+- `useVoice.js` — review state machine correctness, AudioContext lifecycle, and error surface
+- `App.jsx` — check for state that belongs in the hook vs. component; verify session config flow
+- All components — check for unused props, missing test coverage, and CSS not referenced by any component
+
+**Tests**
+- Measure backend coverage; identify untested branches in `coach.py` and `session.py`
+- Verify integration test still exercises the full WAV → `/turn` → JSON pipeline
+- Flag any tests that mock where they should use real implementations (per existing project rule)
+
+### Tasks
+
+- [ ] Review all backend modules against scope above; document findings with severity (fix now / defer / accept as-is)
+- [ ] Review all frontend files against scope above; document findings
+- [ ] Write refactor report to `docs/superpowers/specs/YYYY-MM-DD-phase8-refactor-report.md`
+- [ ] Implement all **fix now** findings — no speculative refactors
+- [ ] Verify all existing tests pass after refactor
+- [ ] Manual smoke test: full voice session still works end-to-end
+- [ ] Add Phase 8 procedures to `docs/manualTestPlan.md`
+
+### Phase 8 Gate
+
+- [ ] Refactor report written and committed
+- [ ] All existing tests pass (no regressions)
+- [ ] Manual smoke test signed off in `docs/manualTestLog.md`
+
+---
+
+## Phase 9 — GUI Layout Redesign
+
+**Goal:** Restructure the app from its current single-column layout into a two-pane desktop layout. Left pane: full-height conversation with voice button pinned to bottom. Right pane: session config (collapsible), corrections, and session history.
+
+### Layout: Chat + Tools Split
+
+```
+┌─────────────────────────────┬──────────────────────┐
+│                             │  ▸ Session Config    │
+│  Transcript                 │  ──────────────────  │
+│  (scrollable, full height)  │  Corrections         │
+│                             │  ──────────────────  │
+│                             │  Session History     │
+│  [   🎤 Voice Button   ]   │                      │
+└─────────────────────────────┴──────────────────────┘
+```
+
+**Left pane (~65% width):** Full-height scrollable transcript (user right / coach left); voice button pinned to bottom center; error state shown inline below voice button.
+
+**Right pane (~35% width):** Session config in collapsible `<details>` (collapsed by default during active session); corrections overlay auto-clears after 8 seconds or on next turn; session history list.
+
+**Responsive:** Below 768px, right pane collapses into a bottom drawer (preserves Android PWA usability).
+
+### Tasks
+
+- [ ] Update `App.jsx` — new two-column layout wrapper; right-pane composition
+- [ ] Update `Transcript.jsx` — full-height flex container; user/coach bubble alignment (user right, coach left)
+- [ ] Update `VoiceButton.jsx` — pinned bottom position within left pane
+- [ ] Update `SessionConfig.jsx` — wrap in collapsible `<details>`; collapsed by default
+- [ ] Update `CoachOverlay.jsx` — move into right pane; add 8-second auto-dismiss timer
+- [ ] Update `SessionHistory.jsx` — move into right pane; no structural change
+- [ ] Update `App.css` / `index.css` — new layout grid; responsive breakpoint at 768px
+- [ ] Add layout-level Vitest snapshots for two-pane structure
+- [ ] Manual smoke test: full session in new layout on desktop
+- [ ] Manual smoke test: right pane collapses correctly on Android
+- [ ] Add Phase 9 procedures to `docs/manualTestPlan.md`
+
+### Phase 9 Gate
+
+- [ ] All existing tests pass
+- [ ] Two-pane layout renders correctly on desktop
+- [ ] Right pane collapses to drawer on mobile (manual test on Android)
+- [ ] Manual smoke test signed off in `docs/manualTestLog.md`
+
+---
+
+## Phase 10 — Cloud Deployment
 
 **Goal:** Deploy the backend to a cloud host so the app works on Android anywhere, without needing a laptop running ngrok.
 
@@ -373,10 +463,10 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 - [ ] Evaluate hosting options — document which platforms support the RAM and pricing requirements
 - [ ] Evaluate HTTPS and secrets management per candidate host
 - [ ] Run a test session to measure cloud latency vs local — document perceived usability delta
-- [ ] Write decision doc to `docs/superpowers/specs/YYYY-MM-DD-phase8-cloud-decision.md`
+- [ ] Write decision doc to `docs/superpowers/specs/YYYY-MM-DD-phase10-cloud-decision.md`
 - [ ] Implement chosen approach based on decision doc
 
-### Phase 8 Gate
+### Phase 10 Gate
 
 - [ ] Decision doc written and committed before implementation begins
 - [ ] App accessible on Android without ngrok
@@ -384,7 +474,7 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 
 ---
 
-## Phase 9 — Windows 11 Packaging
+## Phase 11 — Windows 11 Packaging
 
 **Goal:** Package duoVoiceCoach so it can be installed and run on other Windows 11 laptops with minimal setup — one command to start the full stack.
 
@@ -405,10 +495,63 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 - [ ] Manual smoke test: full session on Windows 11 via Docker — mic capture → Whisper → coach response → TTS playback
 - [ ] Add Phase 9 procedures to `docs/manualTestPlan.md`
 
-### Phase 9 Gate
+### Phase 11 Gate
 
 - [ ] `docker compose up` starts the full stack on Windows 11
 - [ ] Full voice session works via Docker
+- [ ] Manual smoke test signed off in `docs/manualTestLog.md`
+
+---
+
+## Phase 12 — Feature Expansion
+
+**Goal:** Add meaningful depth to the coaching experience across three workstreams. Each workstream gets its own spec before implementation begins.
+
+### Workstream 1: Progress Tracking
+
+The app already stores every `Turn`, `Correction`, and session — progress tracking surfaces what is already captured.
+
+**Features:**
+- Correction frequency breakdown by type: article usage, verb conjugation, vocabulary (based on new `category` field on `Correction`)
+- "Words I keep getting wrong" list — same `original` corrected across multiple sessions
+- Session frequency view — sessions-per-week display
+
+**Data model change:** Add optional `category: str` to `Correction` (`"article"` | `"conjugation"` | `"vocabulary"` | `"other"`). Claude populates via structured output. Existing sessions without it degrade gracefully.
+
+### Workstream 2: Structured Lessons
+
+Guided topic exchanges before opening to freeform conversation.
+
+**Mechanics:**
+- New `session_mode: "lesson"` drives the system prompt with an ordered sequence of prompts per topic and level band
+- Coach steps through each prompt, confirms completion, then transitions to freeform
+- Lesson sequences stored as JSON config in `backend/lessons/` — one file per topic, keyed by level band
+- Frontend shows current step indicator in right pane (e.g., "Step 2 of 4: Ask for the menu")
+
+**New backend:** `backend/lessons/` directory; `GET /lessons/{topic}` route; `lesson_step` tracking in session state.
+
+### Workstream 3: Open Brainstorm (candidates, not commitments)
+
+Each item requires its own mini-spec before any implementation:
+
+- **Vocabulary flashcard review** — review logged corrections between sessions (React state only, no new framework)
+- **Coach personality modes** — `"formal_tutor"` vs. `"friendly_partner"` system prompt variation
+- **Correction export** — download corrections as CSV or Anki-compatible format (`backend/export.py`)
+
+### Tasks
+
+- [ ] Write workstream specs before any workstream implementation begins
+- [ ] Progress tracking: add `category` field to `Correction`; update `ClaudeProvider` structured output; implement stats view
+- [ ] Structured lessons: create lesson JSON for at least 3 topics at 2 level bands; implement `GET /lessons/{topic}`; add step indicator to frontend
+- [ ] Open brainstorm: spec and implement at least one candidate item
+- [ ] Add Phase 12 procedures to `docs/manualTestPlan.md`
+
+### Phase 12 Gate
+
+- [ ] All workstream specs written and committed before implementation begins
+- [ ] Progress tracking: stats view renders with real session data
+- [ ] Structured lessons: end-to-end lesson session works for 3 topics; manual smoke test
+- [ ] Open brainstorm: at least one item specced and implemented
 - [ ] Manual smoke test signed off in `docs/manualTestLog.md`
 
 ---
