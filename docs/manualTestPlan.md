@@ -1,4 +1,4 @@
-# duoVoiceCoach — Manual Test Plan: Phases 0–5
+# duoVoiceCoach — Manual Test Plan: Phases 0–6
 
 **Purpose:** Step-by-step test procedures for phase gate sign-offs. Phases 0–5 are complete and passed. Record results in `manualTestLog.md`.
 
@@ -955,10 +955,22 @@ uv sync
 cd frontend && npm install && cd ..
 ```
 
+Start backend and frontend:
+
+```bash
+# Terminal 1 — backend
+uv run --env-file .env uvicorn backend.main:app --reload --port 8001
+
+# Terminal 2 — frontend
+cd frontend && npm run dev
+```
+
+Open `http://localhost:5173`.
+
 ### MT-6-1: Automated tests pass
 
 ```bash
-uv run pytest -v
+uv run --env-file .env pytest -v
 cd frontend && npm test -- --run
 ```
 
@@ -967,16 +979,15 @@ Expected: all backend tests pass; all frontend tests pass (≥ 46).
 ### MT-6-2: `/tts-voices` route returns curated list
 
 ```bash
-curl -s http://localhost:8000/tts-voices | python3 -m json.tool
+curl -s http://localhost:8001/tts-voices | python3 -m json.tool
 ```
 
 Expected: JSON array with 4 voice objects, each with `id`, `label`, `description`.
 
 ### MT-6-3: Browser TTS still works (regression)
 
-1. Start backend: `uv run --env-file .env uvicorn backend.main:app --reload`
-2. Start frontend: `cd frontend && npm run dev`
-3. Open http://localhost:5173
+1. Backend and frontend already running from Setup above
+2. Open http://localhost:5173
 4. Leave Voice set to **Browser (built-in)**
 5. Start a new conversation, speak a sentence in Spanish
 6. Verify coach response plays via browser `speechSynthesis`
@@ -1002,7 +1013,7 @@ Expected: voice changes after new session is started.
 
 ### MT-6-6: ElevenLabs TTS with missing API key
 
-1. Temporarily remove `ELEVENLABS_API_KEY` from `.env` and restart backend
+1. Temporarily remove `ELEVENLABS_API_KEY` from `.env` and restart backend (`uv run --env-file .env uvicorn backend.main:app --reload --port 8001`)
 2. Set Voice to ElevenLabs, start a session, speak a sentence
 3. Verify coach text is still returned and displayed
 4. Verify `tts_error` is present in the network response
