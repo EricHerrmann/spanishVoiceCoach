@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-22
 **Reviewer:** Claude Code
-**Status:** Findings complete — fixes pending
+**Status:** All fixes applied — post-fix verification complete (Task 8)
 
 ---
 
@@ -18,23 +18,27 @@
 | `backend/ai/claude.py` | 37 | 4 | 10 | 1 | 81% | 92–95 |
 | `backend/ai/openai.py` | 6 | 0 | 0 | 0 | 100% | — |
 | `backend/coach.py` | 34 | 0 | 6 | 0 | 100% | — |
-| `backend/main.py` | 114 | 8 | 20 | 4 | 91% | 54, 99–100, 113–114, 166→169, 172, 195→204, 201–202, 224→exit |
-| `backend/session.py` | 116 | 6 | 22 | 5 | 91% | 78→82, 88→92, 102–103, 107, 165, 171–172 |
+| `backend/main.py` | 108 | 4 | 18 | 4 | 94% | 54, 160→163, 166, 189→198, 195–196, 218→exit |
+| `backend/session.py` | 114 | 5 | 20 | 4 | 92% | 78→82, 88→92, 102–103, 161, 167–168 |
 | `backend/tts.py` | 31 | 0 | 2 | 0 | 100% | — |
 | `backend/stt.py` | 26 | 0 | 4 | 0 | 100% | — |
-| **TOTAL** | **370** | **18** | **64** | **10** | **92%** | |
+| **TOTAL** | **362** | **13** | **60** | **9** | **93%** | |
 
-92 passed, 2 skipped.
+92 passed, 2 skipped. *(post-fix actuals — Task 8 verification run)*
 
-**Coverage notes:**
+**Coverage notes (post-fix actuals):**
 - `ai/claude.py` lines 92–95: error-path branch when Claude returns a malformed tool response (no `tool_use` block). Not easily unit-tested without a live API call. Accept as-is — TurnError path is exercised by the integration test fixture.
 - `main.py` line 54: `/health` route — trivially untested. Accept as-is.
-- `main.py` lines 99–100, 113–114: `FileNotFoundError` paths in session loading — covered by `test_unknown_session_id_returns_404`. Branch miss is the non-error path through `_get_session` when session is already in memory (which is also covered). These are branch coverage gaps, not line gaps.
-- `main.py` line 172: AI `TurnError` return path in `/turn` — covered by existing tests via `FakeAIProvider` returning `TurnError`. Branch miss likely from the early-return path.
-- `main.py` lines 195→204, 201–202: ElevenLabs TTS path — covered by `TestTurnTtsIntegration` tests. Branch miss on the `RuntimeError` catch at line 201–202.
-- `main.py` line 224→exit: static files mount — only executes when `frontend/dist` exists (not present in CI). Accept as-is.
-- `session.py` lines 78→82, 88→92: `from_dict` branches for non-string datetime and already-reconstructed `Correction` values — unreachable from JSON parse. Line 107 is the unreachable `isinstance(turn_data, Turn)` guard (Fix #3).
-- `session.py` lines 165, 171–172: `list_sessions` error-handling path (corrupt JSON or OS error). Accept as-is — defensive catch.
+- `main.py` line 166: AI `TurnError` return path in `/turn` — covered by existing tests via `FakeAIProvider` returning `TurnError`. Branch miss on the early-return path.
+- `main.py` lines 189→198, 195–196: ElevenLabs TTS path — covered by `TestTurnTtsIntegration` tests. Branch miss on the `RuntimeError` catch. Accept as-is.
+- `main.py` line 218→exit: static files mount — only executes when `frontend/dist` exists (not present in CI). Accept as-is.
+- `main.py` line 160→163: branch miss in `_get_session` helper — non-error path gap. Accept as-is.
+- `session.py` lines 78→82, 88→92: `from_dict` branches for non-string datetime and already-reconstructed `Correction` values — unreachable from JSON parse.
+- `session.py` lines 102–103: `from_dict` branch for missing/empty turns list. Accept as-is.
+- `session.py` lines 161, 167–168: `list_sessions` error-handling path (corrupt JSON or OS error). Accept as-is — defensive catch.
+- Fix #1 (duplicate `get_session` body) and Fix #2 (fragile `turns[-2]` index) eliminated dead code in `main.py`, reducing it from 114 → 108 stmts and raising coverage 91% → 94%.
+- Fix #3 (unreachable `isinstance` guard) reduced `session.py` from 116 → 114 stmts, raising coverage 91% → 92%.
+- Overall total improved from 92% → 93% (370 → 362 stmts, 64 → 60 branches).
 
 ### Frontend (Vitest)
 
