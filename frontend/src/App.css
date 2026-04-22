@@ -3,7 +3,7 @@
 .app {
   display: grid;
   grid-template-columns: 65fr 35fr;
-  height: 100svh;
+  height: 100%;
   overflow: hidden;
 }
 

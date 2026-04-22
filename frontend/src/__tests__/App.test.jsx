@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react'
+import { render, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import App from '../App'
 
@@ -59,5 +59,14 @@ describe('App — two-pane layout', () => {
   it('renders drawer toggle button', () => {
     const { container } = render(<App />)
     expect(container.querySelector('.drawer-toggle')).toBeInTheDocument()
+  })
+
+  it('adds app-right--open class when drawer toggle is clicked', () => {
+    const { container } = render(<App />)
+    const toggle = container.querySelector('.drawer-toggle')
+    const rightPane = container.querySelector('.app-right')
+    expect(rightPane).not.toHaveClass('app-right--open')
+    fireEvent.click(toggle)
+    expect(rightPane).toHaveClass('app-right--open')
   })
 })
