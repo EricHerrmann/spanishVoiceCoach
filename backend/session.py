@@ -102,11 +102,7 @@ class Session:
                 if not isinstance(error_data, TurnError):
                     turn_copy["error"] = TurnError(**error_data)
 
-            # Reconstruct Turn object (guard against already-reconstructed)
-            if isinstance(turn_data, Turn):
-                reconstructed_turns.append(turn_data)
-            else:
-                reconstructed_turns.append(Turn(**turn_copy))
+            reconstructed_turns.append(Turn(**turn_copy))
 
         data_copy["turns"] = reconstructed_turns
 
