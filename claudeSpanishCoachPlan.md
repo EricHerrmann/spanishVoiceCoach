@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-**Last updated:** 2026-04-22 (Phase 6 signed off; ready for Phase 7; Phases 8–12 planned)
+**Last updated:** 2026-04-22 (Phase 8 signed off; ready for Phase 9)
 
 **Current state:** Phases 0–6 complete. Phase 7 Android/PWA in progress. Phases 8 (refactor) and 9 (GUI redesign) precede cloud deployment to ensure a clean codebase reaches production.
 
@@ -20,7 +20,7 @@
 | 5 — Persistence | Session history, transcript save | ✅ Complete | 74 backend, 2 skipped; 38 frontend | Session history and local persistence signed off 2026-04-21 |
 | 6 — ElevenLabs TTS | Swap browser TTS via tts.py | ✅ Complete | 92 backend, 2 skipped; 46 frontend | Voice quality upgrade; signed off 2026-04-22 |
 | 7 — Android / PWA | PWA packaging, mobile UX | ⏳ In progress | — | Local network + ngrok; Phase 10 = cloud |
-| 8 — Code Review & Refactor | Systematic review, complexity + efficiency | ⏳ Not started | — | Discipline checkpoint before cloud/packaging |
+| 8 — Code Review & Refactor | Systematic review, complexity + efficiency | ✅ Complete | 93 backend; 47 frontend | Discipline checkpoint before cloud/packaging |
 | 9 — GUI Layout Redesign | Two-pane desktop layout, mobile drawer | ⏳ Not started | — | Chat+tools split; responsive at 768px |
 | 10 — Cloud Deployment | Cloud hosting, STT evaluation | ⏳ Not started | — | Decision doc required before implementation |
 | 11 — Windows 11 Packaging | Docker Compose packaging for Windows 11 | ⏳ Not started | — | Distribute to other laptops |
@@ -380,19 +380,19 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 
 ### Tasks
 
-- [ ] Review all backend modules against scope above; document findings with severity (fix now / defer / accept as-is)
-- [ ] Review all frontend files against scope above; document findings
-- [ ] Write refactor report to `docs/superpowers/specs/YYYY-MM-DD-phase8-refactor-report.md`
-- [ ] Implement all **fix now** findings — no speculative refactors
-- [ ] Verify all existing tests pass after refactor
-- [ ] Manual smoke test: full voice session still works end-to-end
-- [ ] Add Phase 8 procedures to `docs/manualTestPlan.md`
+- [x] Review all backend modules against scope above; document findings with severity (fix now / defer / accept as-is)
+- [x] Review all frontend files against scope above; document findings
+- [x] Write refactor report to `docs/superpowers/specs/YYYY-MM-DD-phase8-refactor-report.md`
+- [x] Implement all **fix now** findings — no speculative refactors
+- [x] Verify all existing tests pass after refactor
+- [x] Manual smoke test: full voice session still works end-to-end
+- [x] Add Phase 8 procedures to `docs/manualTestPlan.md`
 
 ### Phase 8 Gate
 
-- [ ] Refactor report written and committed
-- [ ] All existing tests pass (no regressions)
-- [ ] Manual smoke test signed off in `docs/manualTestLog.md`
+- [x] Refactor report written and committed
+- [x] All existing tests pass (no regressions)
+- [x] Manual smoke test signed off in `docs/manualTestLog.md`
 
 ---
 

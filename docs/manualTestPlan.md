@@ -1206,3 +1206,37 @@ Expected: coach text shows; `audio_b64` is null; `tts_error.stage == "tts"`.
 3. Verify the Voice dropdown restores to ElevenLabs / Rachel
 
 Expected: TTS config is restored from persisted session.
+
+---
+
+## Phase 8 — Code Review & Refactor
+
+**Goal:** Verify no regressions after refactor fixes.
+
+### Pre-conditions
+- Backend running: `uv run uvicorn backend.main:app --reload --port 8001`
+- Frontend running: `npm run dev` (or served from FastAPI dist)
+- All backend + frontend automated tests pass
+
+### Smoke Test Steps
+
+1. Open the app in Chrome at `http://localhost:5173` (or `http://localhost:8001` if using FastAPI static serve)
+2. Verify the page loads with no console errors
+3. Start a new session (topic: Ordering food, level 5, coaching mode: On-demand, TTS: Browser)
+4. Record: "Hola, quiero ordenar una mesa para dos personas"
+5. Verify: transcript appears, coach responds in Spanish, browser TTS plays the reply
+6. Record: "¿Corrígeme si digo algo mal?"
+7. Verify: coach responds and corrections overlay appears (on-demand trigger phrase detected)
+8. Click "New Conversation", select a different topic, verify session resets cleanly
+9. Open Session History, verify the previous session appears with the correct turn count
+10. Click the previous session to reload it; verify transcript restores correctly
+
+### Pass Criteria
+- No console errors throughout
+- Voice round-trip works end-to-end (mic → transcription → coach response → TTS playback)
+- Corrections overlay appears on step 6
+- Session history shows correct entry after new session
+- Session reload restores transcript
+
+### Sign-off
+Record date, tester, and any deviations in `docs/manualTestLog.md`.
