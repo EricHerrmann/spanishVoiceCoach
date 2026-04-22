@@ -135,7 +135,7 @@ export function useVoice() {
         speakCoachText(data.coach_text)
       }
     } catch (err) {
-      setError({ stage: 'stt', message: 'Network error', recoverable: true })
+      setError({ stage: 'network', message: 'Network error', recoverable: true })
       setState('idle')
     }
   }
