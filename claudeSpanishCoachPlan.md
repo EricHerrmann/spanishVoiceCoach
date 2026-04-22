@@ -19,7 +19,9 @@
 | 4 — Session Config UI | Topic/level picker, provider selector | ✅ Complete | 67 backend, 2 skipped; 33 frontend | Full session configuration in UI; signed off 2026-04-21 |
 | 5 — Persistence | Session history, transcript save | ✅ Complete | 74 backend, 2 skipped; 38 frontend | Session history and local persistence signed off 2026-04-21 |
 | 6 — ElevenLabs TTS | Swap browser TTS via tts.py | ✅ Complete | 92 backend, 2 skipped; 46 frontend | Voice quality upgrade; signed off 2026-04-22 |
-| 7 — Android / PWA | PWA packaging, mobile UX | ⏳ Not started | — | Android target |
+| 7 — Android / PWA | PWA packaging, mobile UX | ⏳ In progress | — | Local network + ngrok; Phase 8 = cloud |
+| 8 — Cloud Deployment | Cloud hosting, STT evaluation | ⏳ Not started | — | Decision doc required before implementation |
+| 9 — Windows 11 Packaging | Docker Compose packaging for Windows 11 | ⏳ Not started | — | Distribute to other laptops |
 
 **MVP = Phases 0–3.** Phase 4 adds full session configuration and Phase 5 adds local persistence and session history. Phase 6 is the next execution focus.
 
@@ -331,11 +333,12 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 
 ### Tasks
 
-- [ ] Add `manifest.json` and service worker to frontend — PWA installable in Chrome
-- [ ] Audit `useVoice.js` for mobile mic/audio compatibility — test `MediaRecorder` on Android Chrome
-- [ ] Tune `VoiceButton` touch targets and layout for mobile screen sizes
-- [ ] Evaluate hosting options: local network (backend on laptop, phone on same WiFi) vs. cloud deployment
-- [ ] Document Android setup in `docs/android-setup.md`
+- [x] Add `manifest.json` and service worker to frontend — PWA installable in Chrome
+- [x] Audit `useVoice.js` for mobile mic/audio compatibility — fix MIME type detection (`audio/webm;codecs=opus`) and AudioContext eager resume on user gesture
+- [x] Tune `VoiceButton` touch targets for mobile screen sizes — 48dp minimum via `.voice-btn` CSS rule
+- [x] Serve frontend build output (`frontend/dist`) as static files from FastAPI — single ngrok URL covers both app and API
+- [x] Evaluate hosting: local network + ngrok chosen for Phase 7; cloud deployment moved to Phase 8
+- [x] Document Android setup in `docs/android-setup.md`
 - [ ] Manual smoke test on Android device: full session — mic capture → Whisper → coach response → TTS playback
 - [ ] Add Phase 7 procedures to `docs/manualTestPlan.md`
 
@@ -343,7 +346,70 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 
 - [ ] PWA installable on Android Chrome
 - [ ] Full voice session works on Android
+- [ ] Manual smoke test signed off in `docs/manualTestLog.md`
+
+---
+
+---
+
+## Phase 8 — Cloud Deployment
+
+**Goal:** Deploy the backend to a cloud host so the app works on Android anywhere, without needing a laptop running ngrok.
+
+**Before writing any implementation code**, explore and document answers to the following in a decision doc at `docs/superpowers/specs/YYYY-MM-DD-phase8-cloud-decision.md`:
+
+- **STT — local Whisper vs API-based:** Whisper `base` needs ~1 GB RAM, ruling out most free cloud tiers. Candidates to evaluate:
+  - OpenAI Whisper API: pay-per-minute, no RAM concern, same model family
+  - Deepgram: faster transcription, competitive pricing, strong Spanish accuracy
+  - Benchmark: cost-per-session, round-trip latency, Spanish accuracy vs local Whisper `base`
+- **Hosting options:** Evaluate RAM requirements vs tier pricing for Fly.io, Railway, Render, plain VPS. Document which tiers support ≥1 GB RAM if staying with local Whisper, and which are adequate for an API-based STT swap.
+- **HTTPS:** Handled by the platform — no ngrok required. Document TLS setup expectations per host.
+- **Secrets management:** `ANTHROPIC_API_KEY` and `ELEVENLABS_API_KEY` go in the host's secret store, not `.env` files. Document the mechanism per candidate host.
+- **Usability delta:** Measure whether cloud latency (STT API round-trip + coach response over internet) feels noticeably worse than local Whisper in a real session.
+
+### Tasks
+
+- [ ] Explore API-based STT options (OpenAI Whisper API, Deepgram) — benchmark cost, latency, Spanish accuracy vs local Whisper `base`
+- [ ] Evaluate hosting options — document which platforms support the RAM and pricing requirements
+- [ ] Evaluate HTTPS and secrets management per candidate host
+- [ ] Run a test session to measure cloud latency vs local — document perceived usability delta
+- [ ] Write decision doc to `docs/superpowers/specs/YYYY-MM-DD-phase8-cloud-decision.md`
+- [ ] Implement chosen approach based on decision doc
+
+### Phase 8 Gate
+
+- [ ] Decision doc written and committed before implementation begins
+- [ ] App accessible on Android without ngrok
 - [ ] Manual smoke test signed off
+
+---
+
+## Phase 9 — Windows 11 Packaging
+
+**Goal:** Package duoVoiceCoach so it can be installed and run on other Windows 11 laptops with minimal setup — one command to start the full stack.
+
+**Approach:** Docker Compose. A `docker-compose.yml` bundles the FastAPI backend (with Whisper and all Python deps) and serves the built frontend as static files from the same container. Users need only Docker Desktop for Windows installed; no Python, Node.js, or uv required.
+
+**Key concerns to resolve during implementation:**
+- Whisper `base` model download on first run — cache it in the image or volume so it isn't re-downloaded each start
+- ffmpeg must be present in the container image (required by Whisper)
+- `.env` file handling on Windows — document how to set `ANTHROPIC_API_KEY` etc. in a `.env` file that Docker Compose picks up
+- Windows-specific paths and line endings — test `docker compose up` end-to-end on a real Windows 11 machine
+
+### Tasks
+
+- [ ] Write `Dockerfile` — Python 3.12 base, install uv, copy backend, install deps, copy built `frontend/dist/`, expose port 8001
+- [ ] Write `docker-compose.yml` — single service, mounts `.env` for secrets, persists `~/.duoVoiceCoach` session data via a named volume
+- [ ] Write `.env.example` additions for Docker context (if any new vars needed)
+- [ ] Write `docs/windows-setup.md` — install Docker Desktop, clone repo, `npm run build`, `docker compose up`, open `http://localhost:8001`
+- [ ] Manual smoke test: full session on Windows 11 via Docker — mic capture → Whisper → coach response → TTS playback
+- [ ] Add Phase 9 procedures to `docs/manualTestPlan.md`
+
+### Phase 9 Gate
+
+- [ ] `docker compose up` starts the full stack on Windows 11
+- [ ] Full voice session works via Docker
+- [ ] Manual smoke test signed off in `docs/manualTestLog.md`
 
 ---
 
