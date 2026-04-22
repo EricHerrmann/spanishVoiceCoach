@@ -1240,3 +1240,38 @@ Expected: TTS config is restored from persisted session.
 
 ### Sign-off
 Record date, tester, and any deviations in `docs/manualTestLog.md`.
+
+---
+
+## Phase 9 — GUI Layout Redesign
+
+**Goal:** Verify the two-pane desktop layout renders and functions correctly.
+
+### Desktop layout
+1. Open the app at the dev URL (frontend: `npm run dev` in `frontend/`, backend: `uv run uvicorn backend.main:app --reload --port 8001`)
+2. Confirm left pane (~65% width) shows the transcript area with VoiceButton pinned to the bottom
+3. Confirm right pane (~35% width) shows: collapsed Session Config, Corrections area, Session History
+
+### Session Config collapsible
+4. Click the "Session Config" summary row — confirm it expands to reveal all config fields
+5. Click again — confirm it collapses
+
+### Transcript bubbles
+6. Complete a voice turn (speak → process → coach responds)
+7. Confirm your utterance appears as a right-aligned bubble
+8. Confirm coach response appears as a left-aligned bubble
+
+### CoachOverlay auto-dismiss
+9. Trigger a correction (speak with a deliberate error in Explicit coaching mode)
+10. Confirm the corrections panel appears in the right pane
+11. Wait ~8 seconds — confirm it disappears automatically
+
+### Mobile/Android drawer (≤768px)
+12. Resize browser to ≤768px width or open on Android Chrome
+13. Confirm the right pane collapses to a 48px bottom bar showing "▲ Tools"
+14. Tap the bar — confirm the drawer opens to ~60% of viewport height
+15. Confirm all right-pane content (Session Config, Corrections, Session History) is accessible in the drawer
+16. Confirm the left pane (transcript + voice button) remains accessible above the drawer
+
+### Regression
+17. Complete a full 3-turn Spanish voice session — confirm all existing functionality works (mic → STT → Claude → TTS → corrections)

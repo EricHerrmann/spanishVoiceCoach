@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-**Last updated:** 2026-04-22 (Phase 8 signed off; ready for Phase 9)
+**Last updated:** 2026-04-22 (Phase 8 signed off; Phase 9 in progress)
 
 **Current state:** Phases 0–6 complete. Phase 7 Android/PWA in progress. Phases 8 (refactor) and 9 (GUI redesign) precede cloud deployment to ensure a clean codebase reaches production.
 
@@ -21,7 +21,7 @@
 | 6 — ElevenLabs TTS | Swap browser TTS via tts.py | ✅ Complete | 92 backend, 2 skipped; 46 frontend | Voice quality upgrade; signed off 2026-04-22 |
 | 7 — Android / PWA | PWA packaging, mobile UX | ⏳ In progress | — | Local network + ngrok; Phase 10 = cloud |
 | 8 — Code Review & Refactor | Systematic review, complexity + efficiency | ✅ Complete | 93 backend; 47 frontend | Discipline checkpoint before cloud/packaging |
-| 9 — GUI Layout Redesign | Two-pane desktop layout, mobile drawer | ⏳ Not started | — | Chat+tools split; responsive at 768px |
+| 9 — GUI Layout Redesign | Two-pane desktop layout, mobile drawer | 🔄 In progress | — | Chat+tools split; responsive at 768px |
 | 10 — Cloud Deployment | Cloud hosting, STT evaluation | ⏳ Not started | — | Decision doc required before implementation |
 | 11 — Windows 11 Packaging | Docker Compose packaging for Windows 11 | ⏳ Not started | — | Distribute to other laptops |
 | 12 — Feature Expansion | Progress tracking, structured lessons, open brainstorm | ⏳ Not started | — | Each workstream gets its own spec first |
@@ -421,17 +421,17 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 
 ### Tasks
 
-- [ ] Update `App.jsx` — new two-column layout wrapper; right-pane composition
-- [ ] Update `Transcript.jsx` — full-height flex container; user/coach bubble alignment (user right, coach left)
-- [ ] Update `VoiceButton.jsx` — pinned bottom position within left pane
-- [ ] Update `SessionConfig.jsx` — wrap in collapsible `<details>`; collapsed by default
-- [ ] Update `CoachOverlay.jsx` — move into right pane; add 8-second auto-dismiss timer
-- [ ] Update `SessionHistory.jsx` — move into right pane; no structural change
-- [ ] Update `App.css` / `index.css` — new layout grid; responsive breakpoint at 768px
-- [ ] Add layout-level Vitest snapshots for two-pane structure
+- [x] Update `App.jsx` — new two-column layout wrapper; right-pane composition
+- [x] Update `Transcript.jsx` — full-height flex container; user/coach bubble alignment (user right, coach left)
+- [x] Update `VoiceButton.jsx` — pinned bottom position within left pane
+- [x] Update `SessionConfig.jsx` — wrap in collapsible `<details>`; collapsed by default
+- [x] Update `CoachOverlay.jsx` — move into right pane; add 8-second auto-dismiss timer
+- [x] Update `SessionHistory.jsx` — move into right pane; no structural change
+- [x] Update `App.css` / `index.css` — new layout grid; responsive breakpoint at 768px
+- [x] Add layout-level Vitest snapshots for two-pane structure
 - [ ] Manual smoke test: full session in new layout on desktop
 - [ ] Manual smoke test: right pane collapses correctly on Android
-- [ ] Add Phase 9 procedures to `docs/manualTestPlan.md`
+- [x] Add Phase 9 procedures to `docs/manualTestPlan.md`
 
 ### Phase 9 Gate
 
