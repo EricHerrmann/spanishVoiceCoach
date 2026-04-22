@@ -1,8 +1,10 @@
 import base64
 import os
+import pathlib
 import tempfile
 from typing import Literal
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Body
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from backend.session import (
     Session,
@@ -216,3 +218,8 @@ async def post_turn(
         "tts_error": tts_error,
         "error": None,
     }
+
+
+_DIST = pathlib.Path(__file__).parent.parent / "frontend" / "dist"
+if _DIST.exists():
+    app.mount("/", StaticFiles(directory=_DIST, html=True), name="static")
