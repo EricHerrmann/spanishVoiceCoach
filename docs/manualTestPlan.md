@@ -927,10 +927,11 @@ Before recording sign-off in `manualTestLog.md`, confirm:
 - [x] MT-3-1 through MT-3-8 all passed (Phase 3)
 - [x] MT-4-1 through MT-4-8 all passed (Phase 4)
 - [x] MT-5-1 through MT-5-6 all passed (Phase 5)
+- [x] MT-6-1 through MT-6-7 all passed (Phase 6)
 - [x] No unexpected browser console errors observed during any test
 - [x] No unhandled exceptions in backend terminal output during any test
 
-**Current sign-off status:** Phases 0–5 passed on 2026-04-21 and are recorded in `docs/manualTestLog.md`. Ready to proceed to Phase 6.
+**Current sign-off status:** Phases 0–6 passed. Phase 6 signed off 2026-04-22 and recorded in `docs/manualTestLog.md`. Ready to proceed to Phase 7.
 
 Record in `docs/manualTestLog.md`:
 - Date tested

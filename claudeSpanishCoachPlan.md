@@ -6,9 +6,9 @@
 
 ## Executive Summary
 
-**Last updated:** 2026-04-21 (Phase 5 signed off; ready for Phase 6)
+**Last updated:** 2026-04-22 (Phase 6 signed off; ready for Phase 7)
 
-**Current state:** Phases 0–5 complete. Phase 5 persistence and session history is implemented and signed off; ready to proceed to Phase 6 ElevenLabs TTS.
+**Current state:** Phases 0–6 complete. Phase 6 ElevenLabs TTS is implemented and signed off; ready to proceed to Phase 7 Android / PWA.
 
 | Phase | Name | Status | Tests | Notes |
 |-------|------|--------|-------|-------|
@@ -18,7 +18,7 @@
 | 3 — Coaching Layer | Hybrid mode, corrections, toggle | ✅ Complete | 56 backend, 2 skipped; 19 frontend | MVP complete |
 | 4 — Session Config UI | Topic/level picker, provider selector | ✅ Complete | 67 backend, 2 skipped; 33 frontend | Full session configuration in UI; signed off 2026-04-21 |
 | 5 — Persistence | Session history, transcript save | ✅ Complete | 74 backend, 2 skipped; 38 frontend | Session history and local persistence signed off 2026-04-21 |
-| 6 — ElevenLabs TTS | Swap browser TTS via tts.py | ⏳ Implemented — awaiting manual sign-off | ≥ 92 backend, ≥ 46 frontend | Voice quality upgrade |
+| 6 — ElevenLabs TTS | Swap browser TTS via tts.py | ✅ Complete | 92 backend, 2 skipped; 46 frontend | Voice quality upgrade; signed off 2026-04-22 |
 | 7 — Android / PWA | PWA packaging, mobile UX | ⏳ Not started | — | Android target |
 
 **MVP = Phases 0–3.** Phase 4 adds full session configuration and Phase 5 adds local persistence and session history. Phase 6 is the next execution focus.
@@ -315,13 +315,13 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 - [x] Update `frontend/hooks/useVoice.js` — if response contains audio bytes, play via `AudioContext`; else fall back to `speechSynthesis`
 - [x] Add `tts_provider` to session config (browser / elevenlabs)
 - [x] Write unit test: `ElevenLabsTTSProvider` with fixture response (no live API in CI)
-- [ ] Manual smoke test: ElevenLabs voice vs. browser TTS — verify quality improvement
+- [x] Manual smoke test: ElevenLabs voice vs. browser TTS — verify quality improvement
 - [x] Add Phase 6 procedures to `docs/manualTestPlan.md`
 
 ### Phase 6 Gate
 
-- [ ] All tests pass
-- [ ] Manual smoke test signed off — ElevenLabs voice confirmed working
+- [x] All tests pass
+- [x] Manual smoke test signed off — ElevenLabs voice confirmed working (2026-04-22)
 
 ---
 

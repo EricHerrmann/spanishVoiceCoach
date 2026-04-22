@@ -96,3 +96,22 @@ Each phase gate requires a smoke-test sign-off entry before the next phase begin
 - Date: 2026-04-21
 - Tester: oldhat86@gmail.com
 - Notes: PASSED. MT-5-1 through MT-5-6 all passed. Phase 5 persistence and session history verified with explicit manual test `DVC_DATA_DIR`. Ready to proceed to Phase 6.
+
+---
+
+## Phase 6 — ElevenLabs TTS
+
+**Gate criteria:**
+- [x] All tests pass (92 backend, 2 skipped; 46 frontend — verified 2026-04-22)
+- [x] `/tts-voices` returns 4 curated voice objects
+- [x] ElevenLabs TTS produces audibly higher-quality Spanish audio than browser `speechSynthesis`
+- [x] Browser TTS fallback still works (no regression)
+- [x] TTS failure (missing API key) returns `tts_error`; coach text still displayed; app remains usable
+- [x] TTS config (provider + voice) restored correctly when resuming a saved session
+
+**Sign-off:**
+- Date: 2026-04-22
+- Tester: oldhat86@gmail.com
+- Whisper version: 20250625
+- Claude model: claude-sonnet-4-6
+- Notes: PASSED. MT-6-1 through MT-6-7 all passed. MT-6-4 required fixing the Vite proxy (`/tts-voices` was missing) — voice dropdown was null until proxy was added and dev server restarted. MT-6-6 (missing API key) correctly returns `tts_error` with CUDA/FP16 warnings present but benign (CPU-only machine). Ready to proceed to Phase 7.
