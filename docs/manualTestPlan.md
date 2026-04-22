@@ -1,4 +1,4 @@
-# duoVoiceCoach — Manual Test Plan: Phases 0–6
+# duoVoiceCoach — Manual Test Plan: Phases 0–7
 
 **Purpose:** Step-by-step test procedures for phase gate sign-offs. Phases 0–5 are complete and passed. Record results in `manualTestLog.md`.
 
@@ -917,6 +917,176 @@ uv run --env-file .env uvicorn backend.main:app --reload --port 8001
 
 ---
 
+## Phase 7 — Android / PWA
+
+### Prerequisites
+
+- Android device with Chrome (version 89+)
+- ngrok installed on the laptop: https://ngrok.com/download (free account sufficient)
+- `.env` contains `ANTHROPIC_API_KEY` (and optionally `ELEVENLABS_API_KEY`)
+- Both laptop and Android device connected to the internet (ngrok handles the tunnel)
+
+### Setup
+
+```bash
+# Step 1 — build the frontend (required; backend serves the built dist/)
+cd frontend && npm run build && cd ..
+
+# Step 2 — start the backend (Terminal 1)
+uv run --env-file .env uvicorn backend.main:app --host 0.0.0.0 --port 8001
+
+# Step 3 — start ngrok (Terminal 2)
+ngrok http 8001
+```
+
+Copy the `https://...` URL printed by ngrok (e.g. `https://abc123.ngrok-free.app`). Use this URL for all Android tests below. The URL changes each ngrok session on the free plan.
+
+---
+
+### MT-7-1: Automated tests pass
+
+```bash
+uv run --env-file .env pytest -v
+cd frontend && npm test -- --run
+```
+
+**Pass:** All backend and frontend tests pass. 2 skipped Whisper live tests are acceptable.
+**Fail:** Any test failure or error.
+
+---
+
+### MT-7-2: Backend serves frontend build as static files
+
+With the backend running and frontend built:
+
+```bash
+curl -s -o /dev/null -w "%{http_code}" http://localhost:8001/
+```
+
+**Expected output:** `200`
+
+Also open `http://localhost:8001` in a desktop browser.
+
+**Check:**
+- [ ] App loads at the backend port (no separate frontend dev server needed)
+- [ ] Transcript, VoiceButton, SessionConfig all render
+- [ ] No console errors
+
+**Pass:** App fully functional served from backend port alone.
+**Fail:** 404, blank page, or console errors.
+
+---
+
+### MT-7-3: PWA manifest and service worker present
+
+```bash
+curl -s http://localhost:8001/manifest.json | python3 -m json.tool
+```
+
+**Expected:** JSON with at minimum `name`, `short_name`, `start_url`, `display: "standalone"`, and `icons`.
+
+```bash
+curl -s -o /dev/null -w "%{http_code}" http://localhost:8001/sw.js
+```
+
+**Expected output:** `200`
+
+**Pass:** Both resources return 200 with valid content.
+**Fail:** 404 for either resource.
+
+---
+
+### MT-7-4: App loads on Android Chrome over ngrok
+
+On the Android device:
+
+1. Open Chrome.
+2. Navigate to the ngrok HTTPS URL (e.g. `https://abc123.ngrok-free.app`).
+
+**Check:**
+- [ ] App loads without a blank screen or security warning
+- [ ] VoiceButton, SessionConfig, and Transcript are all visible
+- [ ] No JavaScript errors in Chrome DevTools remote debug (optional but preferred)
+
+**Pass:** App renders correctly on Android Chrome.
+**Fail:** Blank screen, security error, or missing components.
+
+---
+
+### MT-7-5: Mic capture works on Android
+
+On the Android device (ngrok URL open in Chrome):
+
+1. Click the voice button.
+2. When Chrome prompts for microphone permission, tap **Allow**.
+3. Say "Hola, ¿cómo estás?" clearly.
+4. Tap the button again to stop recording.
+
+**Check:**
+- [ ] Button transitions: idle → recording → processing → playing → idle
+- [ ] Your transcript appears in the conversation panel
+- [ ] Coach reply appears below it
+- [ ] Coach reply is spoken aloud (browser TTS or ElevenLabs)
+
+**Pass:** Full voice round-trip works on Android.
+**Fail:** Mic permission denied (check Chrome site settings), silent recording, empty transcript, or no coach reply.
+
+---
+
+### MT-7-6: Touch targets are adequately sized
+
+On the Android device, verify the voice button is comfortably tappable:
+
+- [ ] Button is large enough to tap confidently without zooming (minimum ~48×48dp visual size)
+- [ ] No accidental taps on adjacent elements when targeting the button
+
+**Pass:** Button is easily tappable on a standard Android screen.
+**Fail:** Button is too small or taps miss consistently.
+
+---
+
+### MT-7-7: PWA install to home screen
+
+On the Android device in Chrome:
+
+1. Tap the browser menu (⋮).
+2. Tap **Add to Home screen** (or **Install app** if the banner appears).
+3. Confirm the install.
+4. Open the installed PWA from the home screen.
+
+**Check:**
+- [ ] App opens in standalone mode (no Chrome address bar visible)
+- [ ] Full voice session works from the installed PWA (repeat MT-7-5 steps)
+
+**Pass:** PWA installs and functions in standalone mode.
+**Fail:** "Add to Home screen" option missing, or app opens in browser tab instead of standalone.
+
+Note: The "Add to Home screen" option requires a valid `manifest.json` and service worker (verified in MT-7-3). If the option is missing, check that the ngrok URL is HTTPS and MT-7-3 passed.
+
+---
+
+### MT-7-8: Multiple turns on Android
+
+Conduct a 3-turn conversation on the Android device:
+
+1. Speak turn 1 (any Spanish sentence).
+2. Wait for the coach reply and TTS playback to finish.
+3. Speak turn 2 ("Quiero practicar más.").
+4. Wait for reply.
+5. Speak turn 3 ("Corrígeme, yo fui al mercado.").
+6. Wait for reply.
+
+**Check:**
+- [ ] All 3 user turns and 3 coach replies visible in transcript
+- [ ] Turn 3 triggers corrections (on_demand mode, phrase "corrígeme" detected)
+- [ ] Correction overlay visible after turn 3
+- [ ] No UI freezes or layout shifts between turns
+
+**Pass:** 3-turn session completes without issues.
+**Fail:** Freeze after any turn, missing transcript entries, or correction not triggered.
+
+---
+
 ## Sign-Off Checklist
 
 Before recording sign-off in `manualTestLog.md`, confirm:
@@ -928,10 +1098,11 @@ Before recording sign-off in `manualTestLog.md`, confirm:
 - [x] MT-4-1 through MT-4-8 all passed (Phase 4)
 - [x] MT-5-1 through MT-5-6 all passed (Phase 5)
 - [x] MT-6-1 through MT-6-7 all passed (Phase 6)
-- [x] No unexpected browser console errors observed during any test
-- [x] No unhandled exceptions in backend terminal output during any test
+- [ ] MT-7-1 through MT-7-8 all passed (Phase 7)
+- [ ] No unexpected browser console errors observed during any test
+- [ ] No unhandled exceptions in backend terminal output during any test
 
-**Current sign-off status:** Phases 0–6 passed. Phase 6 signed off 2026-04-22 and recorded in `docs/manualTestLog.md`. Ready to proceed to Phase 7.
+**Current sign-off status:** Phases 0–6 passed and recorded in `docs/manualTestLog.md`. Phase 7 Android/PWA manual smoke test pending.
 
 Record in `docs/manualTestLog.md`:
 - Date tested
