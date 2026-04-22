@@ -23,6 +23,7 @@ function App() {
   const [savedSessions, setSavedSessions] = useState([])
   const [selectedSessionId, setSelectedSessionId] = useState(null)
   const [config, setConfig] = useState(DEFAULT_CONFIG)
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const { state, turns, corrections, error, startRecording, stopRecording, newSession, loadSession } = useVoice()
 
   function refreshSessions() {
@@ -71,31 +72,45 @@ function App() {
 
   return (
     <div className="app">
-      <h1>duoVoiceCoach</h1>
-      <p className="subtitle">Spanish conversation practice</p>
-      <SessionConfig
-        config={config}
-        onConfigChange={onConfigChange}
-        topics={topics}
-        providers={providers}
-        ttsVoices={ttsVoices}
-        onNewSession={onNewSession}
-        state={state}
-      />
-      <VoiceButton
-        state={state}
-        onRecord={startRecording}
-        onStop={stopRecording}
-        error={error}
-      />
-      <CoachOverlay corrections={corrections} />
-      <Transcript turns={turns} />
-      <SessionHistory
-        sessions={savedSessions}
-        selectedSessionId={selectedSessionId}
-        onSelectSession={onSelectSession}
-        onRefresh={refreshSessions}
-      />
+      <div className="app-left">
+        <header className="app-header">
+          <span className="app-title">duoVoiceCoach</span>
+        </header>
+        <Transcript turns={turns} />
+        <VoiceButton
+          state={state}
+          onRecord={startRecording}
+          onStop={stopRecording}
+          error={error}
+        />
+      </div>
+      <div className={`app-right${drawerOpen ? ' app-right--open' : ''}`}>
+        <button
+          className="drawer-toggle"
+          onClick={() => setDrawerOpen((o) => !o)}
+          aria-label={drawerOpen ? 'Close tools panel' : 'Open tools panel'}
+        >
+          {drawerOpen ? '✕ Close' : '▲ Tools'}
+        </button>
+        <div className="right-pane-content">
+          <SessionConfig
+            config={config}
+            onConfigChange={onConfigChange}
+            topics={topics}
+            providers={providers}
+            ttsVoices={ttsVoices}
+            onNewSession={onNewSession}
+            state={state}
+          />
+          <CoachOverlay corrections={corrections} />
+          <SessionHistory
+            sessions={savedSessions}
+            selectedSessionId={selectedSessionId}
+            onSelectSession={onSelectSession}
+            onRefresh={refreshSessions}
+          />
+        </div>
+      </div>
     </div>
   )
 }
