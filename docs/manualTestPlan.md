@@ -453,6 +453,12 @@ cd frontend && npm test -- --run
 
 Open `http://localhost:5173`.
 
+The three coaching modes work as follows:
+
+- **On demand** — the coach stays quiet about errors and keeps the conversation flowing. If you want feedback, just ask mid-sentence (e.g. "corrígeme" or "was that right?") and the coach will review that turn.
+- **Explicit** — the coach flags every grammar or vocabulary mistake after each turn, whether you asked or not. Good for deliberate practice where you want a running account of errors.
+- **Shadowing** — the coach never breaks out corrections. Instead, when it detects a mistake, it naturally uses the correct form in its reply — you absorb the right usage through context rather than explicit feedback.
+
 **Check:**
 - [x] A "Coaching mode" label and dropdown are visible
 - [x] Dropdown shows three options: "On demand", "Explicit", "Shadowing"
@@ -462,23 +468,23 @@ Open `http://localhost:5173`.
 
 ---
 
-### MT-3-3: on_demand mode — no automatic corrections
+### MT-3-3: on_demand mode — coach stays silent on errors unprompted
 
 1. Ensure dropdown is set to "On demand".
 2. Say "Yo quiero ir al mercado." (deliberate use of optional pronoun).
 3. Wait for the coach reply.
 
 **Check:**
-- [x] Coach replies in Spanish
-- [x] No correction overlay appears
+- [x] Coach replies in Spanish and keeps the conversation going
+- [x] No correction overlay appears — the coach did not volunteer feedback
 - [x] Transcript shows user turn and coach reply normally
 
 **Pass:** No correction overlay visible.
-**Fail:** Correction overlay appears without the user asking.
+**Fail:** Correction overlay appears even though you didn't ask for feedback.
 
 ---
 
-### MT-3-4: on_demand mode — corrections surface on request
+### MT-3-4: on_demand mode — corrections appear when you ask
 
 Continuing the same session from MT-3-3:
 
@@ -491,11 +497,11 @@ Continuing the same session from MT-3-3:
 - [x] Coach reply is spoken aloud
 
 **Pass:** Overlay visible with correction fields populated.
-**Fail:** No overlay, or overlay appears with blank fields.
+**Fail:** No overlay after explicitly requesting feedback, or overlay appears with blank fields.
 
 ---
 
-### MT-3-5: explicit mode — automatic corrections appear
+### MT-3-5: explicit mode — every error flagged automatically
 
 1. Change dropdown to "Explicit". Wait 2 seconds for new session to initialise.
 2. Say "Yo quiero ir al mercado."
@@ -503,29 +509,29 @@ Continuing the same session from MT-3-3:
 
 **Check:**
 - [x] Coach replies in Spanish
-- [x] A correction overlay appears (Claude flagging the optional "yo")
+- [x] A correction overlay appears without you having to ask (Claude flagging the optional "yo")
 - [x] Correction fields (original, corrected, explanation) are all populated
 
-**Pass:** Overlay visible after turn in explicit mode.
+**Pass:** Overlay visible automatically after the turn.
 **Fail:** No overlay despite speaking with a known error.
 
-Note: If Claude doesn't flag "yo quiero" as an error, try a clearer error like "Ayer yo come tacos" (wrong tense).
+Note: If Claude doesn't flag "yo quiero", try a more obvious error like "Ayer yo come tacos" (present tense instead of past).
 
 ---
 
-### MT-3-6: shadowing mode — no overlay, error woven into reply
+### MT-3-6: shadowing mode — no overlay, correct form absorbed through conversation
 
 1. Change dropdown to "Shadowing". Wait 2 seconds for new session.
 2. Say "Yo quiero ir al mercado."
 3. Wait for reply.
 
 **Check:**
-- [x] No correction overlay appears
-- [x] Coach reply may naturally model the correct form ("quiero ir") in its response
-- [x] Conversation flows naturally
+- [x] No correction overlay appears — the coach never breaks out explicit feedback
+- [x] The coach reply may use the correct form naturally (e.g. "quiero ir al mercado también") without labelling it as a correction
+- [x] Conversation continues without interruption
 
-**Pass:** No overlay. Coach reply is natural Spanish.
-**Fail:** Overlay appears in shadowing mode.
+**Pass:** No overlay. Coach reply is natural, flowing Spanish.
+**Fail:** Overlay appears — corrections should never surface in shadowing mode.
 
 ---
 
