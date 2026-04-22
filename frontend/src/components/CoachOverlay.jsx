@@ -1,5 +1,19 @@
+import { useState, useEffect } from 'react'
+
 export default function CoachOverlay({ corrections }) {
-  if (!corrections || corrections.length === 0) return null
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    if (!corrections || corrections.length === 0) {
+      setVisible(false)
+      return
+    }
+    setVisible(true)
+    const timer = setTimeout(() => setVisible(false), 8000)
+    return () => clearTimeout(timer)
+  }, [corrections])
+
+  if (!visible) return null
   return (
     <div className="coach-overlay">
       <h3>Corrections</h3>
