@@ -31,8 +31,8 @@ function renderConfig(overrides = {}) {
     state: 'idle',
     ...overrides,
   }
-  render(<SessionConfig {...props} />)
-  return props
+  const { container } = render(<SessionConfig {...props} />)
+  return { ...props, container }
 }
 
 describe('SessionConfig — coaching mode', () => {
@@ -207,5 +207,24 @@ describe('SessionConfig — TTS provider', () => {
       target: { value: TTS_VOICES[1].id },
     })
     expect(onConfigChange).toHaveBeenCalledWith({ tts_voice_id: TTS_VOICES[1].id })
+  })
+})
+
+describe('SessionConfig — collapsible wrapper', () => {
+  it('renders inside a details element', () => {
+    const { container } = renderConfig()
+    expect(container.querySelector('details')).toBeInTheDocument()
+  })
+
+  it('details element is collapsed by default', () => {
+    const { container } = renderConfig()
+    expect(container.querySelector('details')).not.toHaveAttribute('open')
+  })
+
+  it('details element has a summary with text matching Session Config', () => {
+    const { container } = renderConfig()
+    const summary = container.querySelector('details > summary')
+    expect(summary).toBeInTheDocument()
+    expect(summary.textContent).toMatch(/session config/i)
   })
 })
