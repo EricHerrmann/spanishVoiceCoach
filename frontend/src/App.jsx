@@ -37,7 +37,6 @@ function App() {
       setSelectedSessionId(sessionId)
       refreshSessions()
     })
-    refreshSessions()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   function onConfigChange(patch) {
