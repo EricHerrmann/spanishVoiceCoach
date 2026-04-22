@@ -53,7 +53,7 @@
 | `CoachOverlay.jsx` | not reported | not reported | not reported | not reported | Status unconfirmed — see note |
 | `SessionHistory.jsx` | not reported | not reported | not reported | not reported | Status unconfirmed — see note |
 
-46 passed.
+47 passed.
 
 **Coverage notes:**
 - `SessionConfig.jsx` line 54: uncovered branch — likely a conditional render path not exercised by existing tests. Accept as-is for Phase 8.
