@@ -1,0 +1,4 @@
+{"type":"server-started","port":50215,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:50215","screen_dir":"/home/oldha/projects/duoVoiceCoach/.superpowers/brainstorm/39720-1776871850/content","state_dir":"/home/oldha/projects/duoVoiceCoach/.superpowers/brainstorm/39720-1776871850/state"}
+{"type":"screen-added","file":"/home/oldha/projects/duoVoiceCoach/.superpowers/brainstorm/39720-1776871850/content/gui-layouts.html"}
+{"type":"screen-added","file":"/home/oldha/projects/duoVoiceCoach/.superpowers/brainstorm/39720-1776871850/content/waiting-1.html"}
+{"type":"server-stopped","reason":"idle timeout"}
