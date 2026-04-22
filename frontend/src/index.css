@@ -115,3 +115,9 @@ code {
   min-width: 48px;
   padding: 12px 24px;
 }
+
+.mode-description {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--text);
+}

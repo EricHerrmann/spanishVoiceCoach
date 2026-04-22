@@ -1,5 +1,11 @@
 import { useState } from 'react'
 
+const COACHING_MODE_DESCRIPTIONS = {
+  on_demand: 'Corrections hidden — ask anytime to see them.',
+  explicit: 'Corrections visible after every turn.',
+  shadowing: 'Corrections woven into the conversation.',
+}
+
 export default function SessionConfig({ config, onConfigChange, topics, providers, ttsVoices, onNewSession, state }) {
   const isKnownTopic = topics.some((t) => t.id === config.topic)
   const [customSelected, setCustomSelected] = useState(false)
@@ -95,6 +101,7 @@ export default function SessionConfig({ config, onConfigChange, topics, provider
           <option value="explicit">Explicit</option>
           <option value="shadowing">Shadowing</option>
         </select>
+        <p className="mode-description">{COACHING_MODE_DESCRIPTIONS[config.coaching_mode]}</p>
       </div>
 
       <div className="session-config-field">
