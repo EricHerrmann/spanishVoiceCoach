@@ -70,9 +70,14 @@ export function useVoice() {
       return
     }
     setError(null)
+    // Resume AudioContext synchronously inside the user gesture (Android Chrome autoplay policy)
+    getAudioCtx().resume()
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const recorder = new MediaRecorder(stream)
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : 'audio/wav'
+      const recorder = new MediaRecorder(stream, { mimeType })
       chunksRef.current = []
 
       recorder.ondataavailable = (e) => {
@@ -82,7 +87,7 @@ export function useVoice() {
       recorder.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop())
         setState('processing')
-        const blob = new Blob(chunksRef.current, { type: 'audio/wav' })
+        const blob = new Blob(chunksRef.current, { type: recorder.mimeType })
         await submitAudio(blob)
       }
 
