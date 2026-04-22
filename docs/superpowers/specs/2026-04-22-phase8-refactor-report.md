@@ -43,13 +43,18 @@
 | All files | 97.61% | 91.48% | 95.45% | 97.29% | |
 | `SessionConfig.jsx` | 95.83% | 85.71% | 92.3% | 95.45% | Line 54 |
 | `VoiceButton.jsx` | 100% | 92.85% | 100% | 100% | Branch at line 9 |
+| `useVoice.js` | not reported | not reported | not reported | not reported | Status unconfirmed — see note |
+| `App.jsx` | not reported | not reported | not reported | not reported | Status unconfirmed — see note |
+| `Transcript.jsx` | not reported | not reported | not reported | not reported | Status unconfirmed — see note |
+| `CoachOverlay.jsx` | not reported | not reported | not reported | not reported | Status unconfirmed — see note |
+| `SessionHistory.jsx` | not reported | not reported | not reported | not reported | Status unconfirmed — see note |
 
 46 passed.
 
 **Coverage notes:**
 - `SessionConfig.jsx` line 54: uncovered branch — likely a conditional render path not exercised by existing tests. Accept as-is for Phase 8.
 - `VoiceButton.jsx` branch at line 9: minor branch miss, all lines covered. Accept as-is.
-- `useVoice.js`, `App.jsx`, `Transcript.jsx`, `CoachOverlay.jsx`, `SessionHistory.jsx`: not shown in Vitest output — either 100% or excluded from coverage collection. Consistent with 97.61% overall.
+- `useVoice.js`, `App.jsx`, `Transcript.jsx`, `CoachOverlay.jsx`, `SessionHistory.jsx`: **not shown in Vitest output** — status unconfirmed. These files may be at 100% (not shown because all lines covered) or excluded from instrumentation entirely. `useVoice.js` contains Finding #4 (the `stage: 'stt'` catch-block bug); Task 6 adds a test for it, which will confirm coverage. Final coverage re-run in Task 8 will resolve the status for all five files.
 
 ---
 
