@@ -92,14 +92,7 @@ def get_sessions():
 
 @app.get("/sessions/{session_id}")
 def get_session(session_id: str):
-    session = sessions.get(session_id)
-    if session is None:
-        try:
-            session = load_session(session_id)
-        except FileNotFoundError:
-            raise HTTPException(status_code=404, detail="Session not found")
-        sessions[session.id] = session
-    return session.to_dict()
+    return _get_session(session_id).to_dict()
 
 
 def _get_session(session_id: str) -> Session:
