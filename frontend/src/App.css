@@ -127,7 +127,6 @@
   font-weight: 500;
   color: var(--text-h);
   user-select: none;
-  list-style: none;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -317,13 +316,13 @@
 @media (max-width: 768px) {
   .app {
     grid-template-columns: 1fr;
-    grid-template-rows: 1fr auto;
     height: 100svh;
   }
 
   .app-left {
     border-right: none;
     min-height: 0;
+    padding-bottom: 48px;
   }
 
   .app-right {
