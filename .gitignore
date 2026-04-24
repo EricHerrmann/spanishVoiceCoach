@@ -52,6 +52,9 @@ frontend/coverage/
 
 # --- Docker data volumes ------------------------------------------------------
 data/
+# backend/data/ contains checked-in static assets (pronunciation challenges, etc.)
+!backend/data/
+!backend/data/**
 
 # --- OS / editor -------------------------------------------------------------
 .DS_Store

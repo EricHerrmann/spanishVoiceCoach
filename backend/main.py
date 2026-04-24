@@ -1,4 +1,5 @@
 import base64
+import json
 import os
 import pathlib
 import tempfile
@@ -210,6 +211,67 @@ async def post_turn(
         ],
         "audio_b64": audio_b64,
         "tts_error": tts_error,
+        "error": None,
+    }
+
+
+_PRONUNCIATION_CHALLENGES_PATH = pathlib.Path(__file__).parent / "data" / "pronunciation_challenges.json"
+
+
+@app.get("/pronunciation/challenges")
+def get_pronunciation_challenges():
+    with open(_PRONUNCIATION_CHALLENGES_PATH) as f:
+        return json.load(f)
+
+
+@app.post("/pronunciation/evaluate")
+async def pronunciation_evaluate(
+    audio: UploadFile = File(...),
+    target: str = Form(...),
+):
+    audio_bytes = await audio.read()
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
+        tmp.write(audio_bytes)
+        tmp_path = tmp.name
+    try:
+        stt_result = stt_provider.transcribe(tmp_path)
+    finally:
+        os.unlink(tmp_path)
+
+    if isinstance(stt_result, TurnError):
+        return {
+            "transcript": None,
+            "score": None,
+            "feedback": None,
+            "issues": None,
+            "error": {
+                "stage": stt_result.stage,
+                "message": stt_result.message,
+                "recoverable": stt_result.recoverable,
+            },
+        }
+
+    _, transcript_norm = stt_result
+    eval_result = claude_provider.evaluate_pronunciation(target, transcript_norm)
+
+    if isinstance(eval_result, TurnError):
+        return {
+            "transcript": transcript_norm,
+            "score": None,
+            "feedback": None,
+            "issues": None,
+            "error": {
+                "stage": eval_result.stage,
+                "message": eval_result.message,
+                "recoverable": eval_result.recoverable,
+            },
+        }
+
+    return {
+        "transcript": transcript_norm,
+        "score": eval_result["score"],
+        "feedback": eval_result["feedback"],
+        "issues": eval_result["issues"],
         "error": None,
     }
 

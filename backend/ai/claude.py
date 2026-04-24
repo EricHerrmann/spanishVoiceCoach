@@ -36,6 +36,47 @@ _TOOL_DEFINITION = {
     },
 }
 
+_PRONUNCIATION_TOOL = {
+    "name": "evaluate_pronunciation",
+    "description": "Return a structured pronunciation evaluation for a Spanish phrase.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "score": {
+                "type": "integer",
+                "description": "Overall pronunciation score from 0 to 100.",
+            },
+            "feedback": {
+                "type": "string",
+                "description": "Brief, encouraging feedback on the pronunciation attempt.",
+            },
+            "issues": {
+                "type": "array",
+                "description": "Specific sound issues identified. Empty list if none.",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "sound": {
+                            "type": "string",
+                            "description": "The phoneme or sound pattern (e.g. 'rr', 'ñ', 'b/v').",
+                        },
+                        "said": {
+                            "type": "string",
+                            "description": "What the learner appears to have pronounced.",
+                        },
+                        "expected": {
+                            "type": "string",
+                            "description": "The correct pronunciation.",
+                        },
+                    },
+                    "required": ["sound", "said", "expected"],
+                },
+            },
+        },
+        "required": ["score", "feedback", "issues"],
+    },
+}
+
 _LEVEL_SCALE = (
     "Level scale for reference:\n"
     "- 1–2 (Duolingo 5–30): Greetings, food, basic nouns. Simple present tense only.\n"
@@ -138,4 +179,34 @@ class ClaudeProvider(AbstractAIProvider):
                 stage="ai",
                 message=f"AI request failed: {exc}",
                 recoverable=True,
+            )
+
+    def evaluate_pronunciation(self, target: str, transcript: str) -> Union[dict, TurnError]:
+        try:
+            response = self._client.messages.create(
+                model="claude-sonnet-4-6",
+                max_tokens=512,
+                tools=[_PRONUNCIATION_TOOL],
+                tool_choice={"type": "tool", "name": "evaluate_pronunciation"},
+                messages=[{
+                    "role": "user",
+                    "content": (
+                        "A Spanish learner attempted to say this phrase:\n\n"
+                        f"Target: {target}\n"
+                        f"Whisper transcript of their attempt: {transcript}\n\n"
+                        "Evaluate their pronunciation by comparing the transcript to the target. "
+                        "Give a score of 100 if the transcript matches the target exactly or very closely. "
+                        "Identify any specific sounds that differ. Be encouraging."
+                    ),
+                }],
+            )
+            for block in response.content:
+                if block.type == "tool_use" and block.name == "evaluate_pronunciation":
+                    return block.input
+            return TurnError(
+                stage="ai", message="No evaluation block in Claude response", recoverable=True
+            )
+        except Exception as exc:
+            return TurnError(
+                stage="ai", message=f"Pronunciation evaluation failed: {exc}", recoverable=True
             )

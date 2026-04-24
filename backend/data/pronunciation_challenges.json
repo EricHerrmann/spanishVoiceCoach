@@ -1,0 +1,74 @@
+[
+  {
+    "id": "pc001",
+    "target": "perro",
+    "sound_focus": "rr",
+    "hint": "Roll the 'rr' — vibrate the tongue tip rapidly against the ridge behind your upper teeth."
+  },
+  {
+    "id": "pc002",
+    "target": "España",
+    "sound_focus": "ñ",
+    "hint": "The 'ñ' sounds like 'ny' in 'canyon' — nasal air through the palate."
+  },
+  {
+    "id": "pc003",
+    "target": "bueno",
+    "sound_focus": "b/v",
+    "hint": "Spanish 'b' and 'v' are the same sound — a soft bilabial, not the hard English 'b'."
+  },
+  {
+    "id": "pc004",
+    "target": "mujer",
+    "sound_focus": "j",
+    "hint": "The Spanish 'j' is a strong 'h' sound — like clearing your throat lightly."
+  },
+  {
+    "id": "pc005",
+    "target": "para",
+    "sound_focus": "vowel purity",
+    "hint": "Spanish 'a' is a clean, short vowel — no glide at the end like English 'ah'."
+  },
+  {
+    "id": "pc006",
+    "target": "ferrocarril",
+    "sound_focus": "rr",
+    "hint": "Two 'rr' sounds in one word. Say 'ferro' (ff-EH-rroh) then 'carril' (cah-RREEL)."
+  },
+  {
+    "id": "pc007",
+    "target": "verde",
+    "sound_focus": "b/v",
+    "hint": "The 'v' in 'verde' is soft, almost like a 'b' — lips barely touching."
+  },
+  {
+    "id": "pc008",
+    "target": "niño",
+    "sound_focus": "ñ",
+    "hint": "Hold the 'ny' sound for a beat — 'NEE-nyoh', not 'NEE-noh'."
+  },
+  {
+    "id": "pc009",
+    "target": "hola",
+    "sound_focus": "h (silent)",
+    "hint": "The 'h' is completely silent in Spanish — say 'OH-lah'."
+  },
+  {
+    "id": "pc010",
+    "target": "gente",
+    "sound_focus": "g before e/i",
+    "hint": "'g' before 'e' or 'i' sounds like Spanish 'j' — a strong 'h'. Say 'HEN-teh'."
+  },
+  {
+    "id": "pc011",
+    "target": "quiero",
+    "sound_focus": "vowel purity",
+    "hint": "Keep the 'ie' diphthong crisp: 'KYEH-roh'. Don't add an extra vowel between them."
+  },
+  {
+    "id": "pc012",
+    "target": "trabajar",
+    "sound_focus": "j",
+    "hint": "Strong 'h' on the 'j': 'trah-bah-HAHR'. The final 'r' is tapped, not rolled."
+  }
+]
