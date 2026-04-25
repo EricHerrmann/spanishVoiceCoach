@@ -186,3 +186,19 @@ Each phase gate requires a smoke-test sign-off entry before the next phase begin
 - Whisper version: 20250625
 - Claude model: claude-sonnet-4-6
 - Notes: PASSED. All three sub-features verified. Vocabulary tab functional after Phase A flashcard endpoint was in place. Challenges tab and cross-mode Practice button both work as specified.
+
+---
+
+## Phase 10 — Cloud Deployment
+
+**Gate criteria:**
+- [x] All tests pass (124 backend, 4 skipped; 89 frontend — verified 2026-04-25)
+- [x] App accessible at `https://duo-voice-coach.fly.dev` with HTTP Basic Auth
+- [x] Health endpoint returns 200 with valid credentials (`/health` verified via curl)
+- [ ] Full voice session works on Android Chrome end-to-end (manual smoke test pending)
+- [ ] Session history persists across redeploy (manual smoke test pending)
+
+**Sign-off:**
+- Date: 2026-04-25
+- Tester: oldhat86@gmail.com
+- Notes: PARTIAL. Fly.io deployment live at https://duo-voice-coach.fly.dev — Basic Auth, OpenAI Whisper API (STT_PROVIDER=openai), ElevenLabs TTS, persistent volume at /data all configured. Health endpoint verified 200. Full Android voice session smoke test and session persistence check across redeploy pending manual testing.
