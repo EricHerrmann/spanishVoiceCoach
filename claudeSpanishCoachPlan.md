@@ -6,9 +6,9 @@
 
 ## Executive Summary
 
-**Last updated:** 2026-04-23 (Phase 9 signed off; Phase 7 Android/PWA in progress)
+**Last updated:** 2026-04-25 (Phase A implemented, pending manual sign-off; Phase B implemented, pending manual sign-off)
 
-**Current state:** Phases 0–6 complete. Phase 7 Android/PWA in progress. Phases 8 (refactor) and 9 (GUI redesign) precede cloud deployment to ensure a clean codebase reaches production.
+**Current state:** Phases 0–9 complete. Phase A (Flashcards + Translation) and Phase B (Pronunciation Practice) both implemented and awaiting manual sign-off. Phase A must be signed off before Phase B vocabulary tab testing (which depends on the /flashcards/deck endpoint).
 
 | Phase | Name | Status | Tests | Notes |
 |-------|------|--------|-------|-------|
@@ -22,7 +22,7 @@
 | 7 — Android / PWA | PWA packaging, mobile UX | ⏳ In progress | — | Local network + ngrok; Phase 10 = cloud |
 | 8 — Code Review & Refactor | Systematic review, complexity + efficiency | ✅ Complete | 93 backend; 47 frontend | Discipline checkpoint before cloud/packaging |
 | 9 — GUI Layout Redesign | Two-pane desktop layout, mobile drawer | ✅ Complete | 60 frontend | Chat+tools split; responsive at 768px; signed off 2026-04-23 |
-| A — Flashcards + Translation | Vocab flashcards, English→Spanish translation | 🔲 Planned | — | Plan: docs/superpowers/plans/2026-04-24-phase-a-flashcards-translation.md |
+| A — Flashcards + Translation | Vocab flashcards, English→Spanish translation | 🔶 Implemented, not signed off | 114 backend (4 skipped), 89 frontend | NavTabs, FlashcardsView, TranslationView, GET /flashcards/deck, POST /translate; 2026-04-25 |
 | B — Pronunciation Practice | Vocab/phonetic scoring, cross-mode Practice button | ✅ Complete | 103 backend, 3 skipped; 76 frontend | PronunciationView, evaluate_pronunciation(), Practice button; 2026-04-24 |
 | 10 — Cloud Deployment | Cloud hosting, STT evaluation | ⏳ Not started | — | Decision doc required before implementation |
 | 11 — Windows 11 Packaging | Docker Compose packaging for Windows 11 | ⏳ Not started | — | Distribute to other laptops |
