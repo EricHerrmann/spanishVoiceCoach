@@ -27,6 +27,8 @@ def test_abstract_ai_provider_raises_not_implemented():
         provider.chat(session=None, user_text="hola")
     with pytest.raises(NotImplementedError):
         provider.evaluate_pronunciation(target="hola", transcript="hola")
+    with pytest.raises(NotImplementedError):
+        provider.translate(english_text="hello")
 
 
 from backend.session import new_session
@@ -47,6 +49,11 @@ class TestOpenAIProvider:
         provider = OpenAIProvider()
         with pytest.raises(NotImplementedError):
             provider.evaluate_pronunciation(target="hola", transcript="hola")
+
+    def test_translate_raises_not_implemented(self):
+        provider = OpenAIProvider()
+        with pytest.raises(NotImplementedError):
+            provider.translate(english_text="hello")
 
 
 from unittest.mock import MagicMock, patch

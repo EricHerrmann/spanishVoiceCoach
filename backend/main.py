@@ -286,8 +286,11 @@ def get_flashcard_deck(
     level_max: int = None,
     topic: str = None,
 ):
-    with open(_FLASHCARD_DECK_PATH) as f:
-        deck = json.load(f)
+    try:
+        with open(_FLASHCARD_DECK_PATH) as f:
+            deck = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        raise HTTPException(status_code=500, detail="Flashcard deck data not found")
     if topic is not None:
         deck = [c for c in deck if c["topic"] == topic]
     if level_min is not None:

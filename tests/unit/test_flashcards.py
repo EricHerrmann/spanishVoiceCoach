@@ -46,10 +46,10 @@ class TestGetFlashcardDeck:
             assert card["level"] <= 2
 
     def test_combined_filter(self):
-        response = client.get("/flashcards/deck?topic=food&level_min=3&level_max=4")
+        response = client.get("/flashcards/deck?topic=ordering_food&level_min=3&level_max=4")
         assert response.status_code == 200
         for card in response.json():
-            assert card["topic"] == "food"
+            assert card["topic"] == "ordering_food"
             assert 3 <= card["level"] <= 4
 
     def test_unknown_topic_returns_empty_list(self):
