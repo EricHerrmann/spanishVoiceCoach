@@ -3,6 +3,9 @@ primary_region = "iad"
 
 [build]
 
+[env]
+  DVC_DATA_DIR = "/data"
+
 [mounts]
   source = "duo_data"
   destination = "/data"
