@@ -188,7 +188,7 @@ export default function PronunciationView({ pronunciationTarget, onClearTarget }
             <div className="pronunciation-result">
               <span className="pronunciation-score">{evalResult.score}</span>
               <p className="pronunciation-feedback">{evalResult.feedback}</p>
-              {evalResult.issues.length > 0 && (
+              {evalResult.issues?.length > 0 && (
                 <ul className="pronunciation-issues">
                   {evalResult.issues.map((issue, i) => (
                     <li key={i} className="pronunciation-issue">

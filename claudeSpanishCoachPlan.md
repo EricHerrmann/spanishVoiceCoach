@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-**Last updated:** 2026-04-22 (Phase 8 signed off; Phase 9 in progress)
+**Last updated:** 2026-04-23 (Phase 9 signed off; Phase 7 Android/PWA in progress)
 
 **Current state:** Phases 0–6 complete. Phase 7 Android/PWA in progress. Phases 8 (refactor) and 9 (GUI redesign) precede cloud deployment to ensure a clean codebase reaches production.
 
@@ -21,7 +21,9 @@
 | 6 — ElevenLabs TTS | Swap browser TTS via tts.py | ✅ Complete | 92 backend, 2 skipped; 46 frontend | Voice quality upgrade; signed off 2026-04-22 |
 | 7 — Android / PWA | PWA packaging, mobile UX | ⏳ In progress | — | Local network + ngrok; Phase 10 = cloud |
 | 8 — Code Review & Refactor | Systematic review, complexity + efficiency | ✅ Complete | 93 backend; 47 frontend | Discipline checkpoint before cloud/packaging |
-| 9 — GUI Layout Redesign | Two-pane desktop layout, mobile drawer | 🔄 In progress | — | Chat+tools split; responsive at 768px |
+| 9 — GUI Layout Redesign | Two-pane desktop layout, mobile drawer | ✅ Complete | 60 frontend | Chat+tools split; responsive at 768px; signed off 2026-04-23 |
+| A — Flashcards + Translation | Vocab flashcards, English→Spanish translation | 🔲 Planned | — | Plan: docs/superpowers/plans/2026-04-24-phase-a-flashcards-translation.md |
+| B — Pronunciation Practice | Vocab/phonetic scoring, cross-mode Practice button | ✅ Complete | 103 backend, 3 skipped; 76 frontend | PronunciationView, evaluate_pronunciation(), Practice button; 2026-04-24 |
 | 10 — Cloud Deployment | Cloud hosting, STT evaluation | ⏳ Not started | — | Decision doc required before implementation |
 | 11 — Windows 11 Packaging | Docker Compose packaging for Windows 11 | ⏳ Not started | — | Distribute to other laptops |
 | 12 — Feature Expansion | Progress tracking, structured lessons, open brainstorm | ⏳ Not started | — | Each workstream gets its own spec first |
@@ -429,16 +431,16 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 - [x] Update `SessionHistory.jsx` — move into right pane; no structural change
 - [x] Update `App.css` / `index.css` — new layout grid; responsive breakpoint at 768px
 - [x] Add layout-level Vitest snapshots for two-pane structure
-- [ ] Manual smoke test: full session in new layout on desktop
-- [ ] Manual smoke test: right pane collapses correctly on Android
+- [x] Manual smoke test: full session in new layout on desktop
+- [x] Manual smoke test: right pane collapses correctly on Android (browser DevTools viewport resize; device test deferred to Phase 7)
 - [x] Add Phase 9 procedures to `docs/manualTestPlan.md`
 
 ### Phase 9 Gate
 
-- [ ] All existing tests pass
-- [ ] Two-pane layout renders correctly on desktop
-- [ ] Right pane collapses to drawer on mobile (manual test on Android)
-- [ ] Manual smoke test signed off in `docs/manualTestLog.md`
+- [x] All existing tests pass
+- [x] Two-pane layout renders correctly on desktop
+- [x] Right pane collapses to drawer on mobile (browser DevTools viewport resize; device test deferred to Phase 7)
+- [x] Manual smoke test signed off in `docs/manualTestLog.md`
 
 ---
 
@@ -503,7 +505,26 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 
 ---
 
-## Phase 12 — Feature Expansion
+## Phase 12 — Mobile Capability
+
+**Issues:**
+- `CoachOverlay` renders in the right pane (drawer). On mobile, if the drawer is closed when a correction arrives in Explicit or On-demand mode, the correction is invisible — it auto-dismisses after 8 seconds with the user never seeing it.
+
+### Tasks
+
+- [ ] Write spec for chosen correction notification pattern on mobile
+- [ ] Implement chosen approach
+- [ ] Verify all three coaching modes (on_demand, explicit, shadowing) surface corrections correctly on mobile
+- [ ] Add Phase 12 procedures to `docs/manualTestPlan.md`
+
+### Phase 12 Gate
+
+- [ ] Corrections visible in all three coaching modes without requiring the drawer to be open
+- [ ] Manual smoke test on Android PWA signed off in `docs/manualTestLog.md`
+
+---
+
+## Phase 13 — Feature Expansion
 
 **Goal:** Add meaningful depth to the coaching experience across three workstreams. Each workstream gets its own spec before implementation begins.
 
@@ -544,9 +565,9 @@ Each item requires its own mini-spec before any implementation:
 - [ ] Progress tracking: add `category` field to `Correction`; update `ClaudeProvider` structured output; implement stats view
 - [ ] Structured lessons: create lesson JSON for at least 3 topics at 2 level bands; implement `GET /lessons/{topic}`; add step indicator to frontend
 - [ ] Open brainstorm: spec and implement at least one candidate item
-- [ ] Add Phase 12 procedures to `docs/manualTestPlan.md`
+- [ ] Add Phase 13 procedures to `docs/manualTestPlan.md`
 
-### Phase 12 Gate
+### Phase 13 Gate
 
 - [ ] All workstream specs written and committed before implementation begins
 - [ ] Progress tracking: stats view renders with real session data
