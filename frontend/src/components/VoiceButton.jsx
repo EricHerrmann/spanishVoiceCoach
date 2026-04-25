@@ -35,7 +35,11 @@ export default function VoiceButton({ state, onRecord, onStop, error, coachingMo
         </p>
       )}
       {error?.recoverable && (
-        <p className="retry-prompt">Transcription failed — try again</p>
+        <p className="retry-prompt">
+          {error.stage === 'mic'
+            ? `Microphone error: ${error.message} — check browser permissions`
+            : 'Transcription failed — try again'}
+        </p>
       )}
     </div>
   )
