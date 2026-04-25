@@ -2,10 +2,13 @@ import base64
 import json
 import os
 import pathlib
+import secrets
 from typing import Literal
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Body
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
 from backend.session import (
     Session,
     TurnError,
@@ -38,6 +41,32 @@ stt_provider = get_stt_provider()
 claude_provider = ClaudeProvider()
 sessions: dict[str, Session] = {}
 app = FastAPI()
+
+
+class BasicAuthMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        expected_user = os.environ.get("DVC_BASIC_AUTH_USER")
+        expected_pass = os.environ.get("DVC_BASIC_AUTH_PASS")
+        if not expected_user or not expected_pass:
+            return await call_next(request)
+        auth = request.headers.get("Authorization", "")
+        if auth.startswith("Basic "):
+            try:
+                decoded = base64.b64decode(auth[6:]).decode("utf-8")
+            except Exception:
+                pass
+            else:
+                user, _, pw = decoded.partition(":")
+                if secrets.compare_digest(user, expected_user) and \
+                   secrets.compare_digest(pw, expected_pass):
+                    return await call_next(request)
+        return Response(
+            status_code=401,
+            headers={"WWW-Authenticate": 'Basic realm="duoVoiceCoach"'},
+        )
+
+
+app.add_middleware(BasicAuthMiddleware)
 
 
 class SessionStartRequest(BaseModel):
