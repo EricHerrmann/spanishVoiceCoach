@@ -223,7 +223,7 @@ def get_pronunciation_challenges():
     try:
         with open(_PRONUNCIATION_CHALLENGES_PATH) as f:
             return json.load(f)
-    except OSError:
+    except (OSError, json.JSONDecodeError):
         raise HTTPException(status_code=500, detail="Pronunciation challenges data not found")
 
 
