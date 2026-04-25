@@ -1,4 +1,4 @@
-# duoVoiceCoach — Manual Test Plan: Phases 0–7
+# duoVoiceCoach — Manual Test Plan: Phases 0–7 + Phase B
 
 **Purpose:** Step-by-step test procedures for phase gate sign-offs. Phases 0–5 are complete and passed. Record results in `manualTestLog.md`.
 
@@ -1105,10 +1105,12 @@ Before recording sign-off in `manualTestLog.md`, confirm:
 - [x] MT-5-1 through MT-5-6 all passed (Phase 5)
 - [x] MT-6-1 through MT-6-7 all passed (Phase 6)
 - [ ] MT-7-1 through MT-7-8 all passed (Phase 7)
+- [x] Phase 8 smoke test passed (refactor — no regressions, 93 backend / 47 frontend)
+- [x] Phase 9 smoke test passed (two-pane layout, collapsible config, CoachOverlay auto-dismiss, mobile drawer)
 - [ ] No unexpected browser console errors observed during any test
 - [ ] No unhandled exceptions in backend terminal output during any test
 
-**Current sign-off status:** Phases 0–6 passed and recorded in `docs/manualTestLog.md`. Phase 7 Android/PWA manual smoke test pending.
+**Current sign-off status:** Phases 0–6, 8, and 9 passed and recorded in `docs/manualTestLog.md`. Phase 7 Android/PWA manual smoke test pending (Android device test required).
 
 Record in `docs/manualTestLog.md`:
 - Date tested
@@ -1214,7 +1216,7 @@ Expected: TTS config is restored from persisted session.
 **Goal:** Verify no regressions after refactor fixes.
 
 ### Pre-conditions
-- Backend running: `uv run uvicorn backend.main:app --reload --port 8001`
+- Backend running: `uv run --env-file .env uvicorn backend.main:app --reload --port 8001`
 - Frontend running: `npm run dev` (or served from FastAPI dist)
 - All backend + frontend automated tests pass
 
@@ -1248,7 +1250,7 @@ Record date, tester, and any deviations in `docs/manualTestLog.md`.
 **Goal:** Verify the two-pane desktop layout renders and functions correctly.
 
 ### Desktop layout
-1. Open the app at the dev URL (frontend: `npm run dev` in `frontend/`, backend: `uv run uvicorn backend.main:app --reload --port 8001`)
+1. Open the app at the dev URL (frontend: `npm run dev` in `frontend/`, backend: `uv run --env-file .env uvicorn backend.main:app --reload --port 8001`)
 2. Confirm left pane (~65% width) shows the transcript area with VoiceButton pinned to the bottom
 3. Confirm right pane (~35% width) shows: collapsed Session Config, Corrections area, Session History
 
@@ -1275,3 +1277,52 @@ Record date, tester, and any deviations in `docs/manualTestLog.md`.
 
 ### Regression
 17. Complete a full 3-turn Spanish voice session — confirm all existing functionality works (mic → STT → Claude → TTS → corrections)
+
+---
+
+## Phase B — Pronunciation Practice
+
+**Goal:** Verify all three pronunciation sub-features function correctly and that sub-feature C correctly hands phrases across mode boundaries.
+
+### Prerequisites
+
+Start backend and frontend:
+```bash
+# Terminal 1
+uv run --env-file .env uvicorn backend.main:app --reload --port 8001
+# Terminal 2
+cd frontend && npm run dev
+```
+
+Open `http://localhost:5173`.
+
+### Vocabulary tab
+
+1. Click the Pronunciation tab in the left-pane header — confirm Vocabulary sub-tab is active by default
+2. Select a topic from the dropdown and a level band (e.g. Beginner)
+3. Confirm a Spanish word or phrase appears as the target in the center card
+4. Click Record and say the target phrase aloud
+5. Click Stop — confirm score (0–100), feedback text, and any sound issues appear below the card
+6. Click Next card — confirm a new target appears and the scoring area resets
+
+### Challenges tab
+
+7. Click the Challenges sub-tab — confirm a list of phonetic challenges appears
+8. Click any challenge (e.g. "perro") — confirm target phrase and hint text appear
+9. Record the phrase — confirm score and feedback appear
+10. Click ← Challenges — confirm the challenge list reappears
+
+### Sub-feature C — Practice from conversation
+
+11. Click the Conversation tab (or home icon) to return to conversation mode
+12. Conduct a short session (2–3 voice turns) — confirm coach responses appear in the transcript
+13. Locate a coach turn bubble — confirm a small "Practice" button appears in the turn header
+14. Click Practice — confirm the app switches to the Pronunciation tab showing "From conversation" header and the coach's exact phrase as the target
+15. Record the phrase — confirm score and feedback appear
+16. Click ← Back — confirm the header disappears, normal Vocabulary/Challenges tabs return, and the conversation transcript is shown
+
+### Regression
+
+17. Conversation tab: complete a full 3-turn voice session — confirm all existing functionality works
+18. Pronunciation tab: all sub-features work after returning from conversation
+
