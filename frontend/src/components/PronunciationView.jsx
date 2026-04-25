@@ -115,7 +115,7 @@ export default function PronunciationView({ pronunciationTarget, onClearTarget }
           <span className="pronunciation-source-label">From conversation</span>
           <button
             className="pronunciation-back-btn"
-            onClick={() => { onClearTarget?.(); resetScoring() }}
+            onClick={onClearTarget}
           >
             ← Back
           </button>

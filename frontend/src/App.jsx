@@ -30,10 +30,13 @@ function App() {
   const { state, turns, corrections, error, startRecording, stopRecording, newSession, loadSession } = useVoice()
 
   function handlePractice(text) {
+    if (!text) return
     setPronunciationTarget(text)
     setMode('pronunciation')
   }
 
+  // setMode('conversation') is required here: without it, clearing the target
+  // leaves mode === 'pronunciation' and PronunciationView renders with no target.
   function clearPronunciationTarget() {
     setPronunciationTarget(null)
     setMode('conversation')
