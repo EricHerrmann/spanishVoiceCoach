@@ -23,9 +23,53 @@
 /* ── Left pane header ───────────────────────────────── */
 
 .app-header {
-  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px 0;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+}
+
+/* ── Navigation tabs ────────────────────────────────── */
+
+.nav-tabs {
+  display: flex;
+  gap: 4px;
+  padding-bottom: 8px;
+}
+
+.nav-tab {
+  padding: 3px 10px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.nav-tab--active {
+  background: var(--code-bg);
+  border-color: var(--border);
+  color: var(--text-h);
+  font-weight: 500;
+}
+
+.nav-tab:hover:not(.nav-tab--active) {
+  color: var(--text-h);
+}
+
+/* ── Mode placeholder ───────────────────────────────── */
+
+.mode-placeholder {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  font-size: 14px;
 }
 
 .app-title {
