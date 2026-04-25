@@ -1,4 +1,4 @@
-app = "duo-voice-coach"
+app = "spanishcoach"
 primary_region = "iad"
 
 [build]
