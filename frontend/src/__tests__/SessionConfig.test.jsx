@@ -216,15 +216,15 @@ describe('SessionConfig — collapsible wrapper', () => {
     expect(container.querySelector('details')).toBeInTheDocument()
   })
 
-  it('details element is collapsed by default', () => {
+  it('details element is open by default', () => {
     const { container } = renderConfig()
-    expect(container.querySelector('details')).not.toHaveAttribute('open')
+    expect(container.querySelector('details')).toHaveAttribute('open')
   })
 
-  it('details element has a summary with text matching Session Config', () => {
+  it('details element has a summary with text matching Coaching Setup', () => {
     const { container } = renderConfig()
     const summary = container.querySelector('details > summary')
     expect(summary).toBeInTheDocument()
-    expect(summary.textContent).toMatch(/session config/i)
+    expect(summary.textContent).toMatch(/coaching setup/i)
   })
 })

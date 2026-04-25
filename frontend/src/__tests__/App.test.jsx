@@ -53,7 +53,7 @@ describe('App — two-pane layout', () => {
 
   it('renders SessionHistory inside right pane', () => {
     const { container } = render(<App />)
-    expect(container.querySelector('.app-right .session-history')).toBeInTheDocument()
+    expect(container.querySelector('.app-right .session-history-refresh')).toBeInTheDocument()
   })
 
   it('renders drawer toggle button', () => {
