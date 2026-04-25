@@ -665,6 +665,92 @@
   font-style: italic;
 }
 
+/* ── Flashcards ─────────────────────────────────────── */
+
+.flashcards-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+.flashcards-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.flashcards-topic-select {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.flashcards-bands {
+  display: flex;
+  gap: 4px;
+}
+
+.flashcard {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px 24px;
+  cursor: pointer;
+  background: var(--code-bg);
+  gap: 12px;
+  min-height: 160px;
+}
+
+.flashcard:hover {
+  border-color: var(--accent-border);
+}
+
+.flashcard-side-label {
+  font-size: 11px;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.flashcard-text {
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--text-h);
+  text-align: center;
+  margin: 0;
+}
+
+.flashcard-hint {
+  font-size: 11px;
+  color: var(--text);
+}
+
+.flashcards-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.flashcards-progress {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.flashcards-empty,
+.flashcards-complete {
+  color: var(--text);
+  font-size: 14px;
+  text-align: center;
+  padding: 32px;
+}
+
 /* ── Turn practice button ───────────────────────────── */
 
 .turn-practice-btn {
