@@ -11,3 +11,6 @@ class OpenAIProvider(AbstractAIProvider):
 
     def evaluate_pronunciation(self, target: str, transcript: str) -> Union[PronunciationEvaluation, TurnError]:
         raise NotImplementedError("OpenAIProvider is not implemented in MVP")
+
+    def translate(self, english_text: str) -> Union[str, TurnError]:
+        raise NotImplementedError("OpenAIProvider is not implemented in MVP")

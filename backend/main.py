@@ -216,6 +216,7 @@ async def post_turn(
 
 
 _PRONUNCIATION_CHALLENGES_PATH = pathlib.Path(__file__).parent / "data" / "pronunciation_challenges.json"
+_FLASHCARD_DECK_PATH = pathlib.Path(__file__).parent / "data" / "flashcard_deck.json"
 
 
 @app.get("/pronunciation/challenges")
@@ -275,6 +276,95 @@ async def pronunciation_evaluate(
         "score": eval_result.score,
         "feedback": eval_result.feedback,
         "issues": [{"sound": iss.sound, "said": iss.said, "expected": iss.expected} for iss in eval_result.issues],
+        "error": None,
+    }
+
+
+@app.get("/flashcards/deck")
+def get_flashcard_deck(
+    level_min: int = None,
+    level_max: int = None,
+    topic: str = None,
+):
+    with open(_FLASHCARD_DECK_PATH) as f:
+        deck = json.load(f)
+    if topic is not None:
+        deck = [c for c in deck if c["topic"] == topic]
+    if level_min is not None:
+        deck = [c for c in deck if c["level"] >= level_min]
+    if level_max is not None:
+        deck = [c for c in deck if c["level"] <= level_max]
+    return deck
+
+
+@app.post("/translate")
+async def translate(
+    audio: UploadFile = File(...),
+    tts_provider: str = Form("browser"),
+    tts_voice_id: str = Form(None),
+):
+    audio_bytes = await audio.read()
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
+        tmp.write(audio_bytes)
+        tmp_path = tmp.name
+    try:
+        stt_result = stt_provider.transcribe(tmp_path)
+    finally:
+        os.unlink(tmp_path)
+
+    if isinstance(stt_result, TurnError):
+        return {
+            "english": None,
+            "spanish": None,
+            "audio_b64": None,
+            "tts_error": None,
+            "error": {
+                "stage": stt_result.stage,
+                "message": stt_result.message,
+                "recoverable": stt_result.recoverable,
+            },
+        }
+
+    _, transcript_norm = stt_result
+    translation_result = claude_provider.translate(transcript_norm)
+
+    if isinstance(translation_result, TurnError):
+        return {
+            "english": transcript_norm,
+            "spanish": None,
+            "audio_b64": None,
+            "tts_error": None,
+            "error": {
+                "stage": translation_result.stage,
+                "message": translation_result.message,
+                "recoverable": translation_result.recoverable,
+            },
+        }
+
+    spanish = translation_result
+    audio_b64 = None
+    tts_error = None
+
+    if tts_provider == "elevenlabs" and tts_voice_id:
+        try:
+            tts = ElevenLabsTTSProvider(tts_voice_id)
+            tts_result = tts.synthesize(spanish)
+            if isinstance(tts_result, bytes):
+                audio_b64 = base64.b64encode(tts_result).decode("ascii")
+            elif isinstance(tts_result, TurnError):
+                tts_error = {
+                    "stage": tts_result.stage,
+                    "message": tts_result.message,
+                    "recoverable": tts_result.recoverable,
+                }
+        except RuntimeError as exc:
+            tts_error = {"stage": "tts", "message": str(exc), "recoverable": False}
+
+    return {
+        "english": transcript_norm,
+        "spanish": spanish,
+        "audio_b64": audio_b64,
+        "tts_error": tts_error,
         "error": None,
     }
 
