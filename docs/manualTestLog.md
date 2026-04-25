@@ -150,3 +150,39 @@ Each phase gate requires a smoke-test sign-off entry before the next phase begin
 - Whisper version: 20250625
 - Claude model: claude-sonnet-4-6
 - Notes: PASSED. Desktop two-pane layout verified. CoachOverlay requires Explicit mode session started via "New Conversation" and a real Spanish sentence with a deliberate grammar error — garbled input does not produce structured corrections (expected). Mobile drawer tested via browser DevTools viewport resize. Android device smoke test deferred to Phase 7 gate.
+
+---
+
+## Phase A — Flashcards + Translation
+
+**Gate criteria:**
+- [x] All tests pass (114 backend, 4 skipped; 89 frontend — verified 2026-04-25)
+- [x] Four tabs render in header: Conversation, Flashcards, Translation, Pronunciation
+- [x] Flashcards: topic dropdown and level band buttons load cards; flip, Next/Previous/Restart work
+- [x] Translation: record English phrase → Spanish result displayed and spoken via TTS
+- [x] Regression: Conversation tab unaffected
+
+**Sign-off:**
+- Date: 2026-04-25
+- Tester: oldhat86@gmail.com
+- Whisper version: 20250625
+- Claude model: claude-sonnet-4-6
+- Notes: PASSED. Tab navigation verified across all four modes. Flashcard deck confirmed across all topics (shopping and directions cards added after initial test found missing data; Vite proxy entries added for /flashcards, /translate, /pronunciation routes which were absent). Translation round-trip verified. All regression checks passed.
+
+---
+
+## Phase B — Pronunciation Practice
+
+**Gate criteria:**
+- [x] All tests pass (114 backend, 4 skipped; 89 frontend — verified 2026-04-25)
+- [x] Vocabulary tab: cards load from flashcard deck; Record → score + feedback appear; Next card advances
+- [x] Challenges tab: challenge list loads; select challenge shows target + hint; Record → score + feedback appear; ← Challenges returns to list
+- [x] Sub-feature C: Practice button on coach turns switches to Pronunciation tab with phrase pre-loaded; ← Back returns to Conversation
+- [x] Regression: Conversation, Flashcards, Translation tabs unaffected
+
+**Sign-off:**
+- Date: 2026-04-25
+- Tester: oldhat86@gmail.com
+- Whisper version: 20250625
+- Claude model: claude-sonnet-4-6
+- Notes: PASSED. All three sub-features verified. Vocabulary tab functional after Phase A flashcard endpoint was in place. Challenges tab and cross-mode Practice button both work as specified.
