@@ -90,7 +90,7 @@ export default function PronunciationView({ pronunciationTarget, onClearTarget }
 
   async function submitAudio(blob, currentTarget) {
     const form = new FormData()
-    form.append('audio', blob, 'recording.wav')
+    form.append('audio', blob, `recording.${blob.type.split('/')[1]?.split(';')[0] || 'wav'}`)
     form.append('target', currentTarget)
     try {
       const res = await fetch('/pronunciation/evaluate', { method: 'POST', body: form })

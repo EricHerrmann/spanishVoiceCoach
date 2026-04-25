@@ -44,7 +44,7 @@ export default function TranslationView({ config }) {
 
   async function submitAudio(blob) {
     const form = new FormData()
-    form.append('audio', blob, 'recording.wav')
+    form.append('audio', blob, `recording.${blob.type.split('/')[1]?.split(';')[0] || 'wav'}`)
     form.append('tts_provider', config?.tts_provider || 'browser')
     if (config?.tts_voice_id) form.append('tts_voice_id', config.tts_voice_id)
     try {

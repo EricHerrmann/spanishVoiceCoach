@@ -108,7 +108,7 @@ export function useVoice() {
 
   async function submitAudio(blob) {
     const form = new FormData()
-    form.append('audio', blob, 'recording.wav')
+    form.append('audio', blob, `recording.${blob.type.split('/')[1]?.split(';')[0] || 'wav'}`)
     form.append('session_id', sessionIdRef.current)
     try {
       const res = await fetch('/turn', { method: 'POST', body: form })
