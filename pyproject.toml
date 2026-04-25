@@ -22,6 +22,7 @@ dev = [
     "pytest>=8",
     "pytest-asyncio>=0.26",
     "gtts>=2.5.4",
+    "pytest-cov>=7.1.0",
 ]
 
 [tool.hatch.build.targets.wheel]

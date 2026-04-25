@@ -1,6 +1,6 @@
-# duoVoiceCoach — Manual Test Plan: Phases 0–7 + Phase B
+# duoVoiceCoach — Manual Test Plan: Phases 0–7 + Phase A + Phase B
 
-**Purpose:** Step-by-step test procedures for phase gate sign-offs. Phases 0–5 are complete and passed. Record results in `manualTestLog.md`.
+**Purpose:** Step-by-step test procedures for phase gate sign-offs. Phases 0–9 are complete and passed. Record results in `manualTestLog.md`.
 
 **Prerequisites:**
 - `uv` installed, Python 3.12+ available
@@ -1280,9 +1280,62 @@ Record date, tester, and any deviations in `docs/manualTestLog.md`.
 
 ---
 
+## Phase A — Flashcards + Translation
+
+**Goal:** Verify both new practice modes work correctly and that the tab nav switches the left pane without breaking the conversation pipeline.
+
+### Prerequisites
+
+Start backend and frontend:
+```bash
+# Terminal 1
+uv run --env-file .env uvicorn backend.main:app --reload --port 8001
+# Terminal 2
+cd frontend && npm run dev
+```
+
+Open `http://localhost:5173`.
+
+### Tab navigation
+
+1. Confirm four tabs in the app header: Conversation, Flashcards, Translation, Pronunciation
+2. Click each tab — confirm the left pane content switches; right pane (Session Config, Coach Overlay, Session History) is unchanged
+3. Confirm the active tab is highlighted
+
+### Flashcards
+
+4. Click the Flashcards tab
+5. Select a topic from the dropdown (e.g. General)
+6. Click a level band (e.g. Beginner)
+7. Confirm a card appears showing an English word or phrase
+8. Click the card — confirm it flips to show the Spanish translation
+9. Click Next — confirm the next card appears with the English side showing (flip state reset)
+10. Click Previous — confirm it returns to the previous card; Previous is disabled on the first card
+11. Advance through all cards — confirm "Deck complete" message appears
+12. Click Restart — confirm the deck resets to the first card
+13. Change topic or level band — confirm the deck reloads
+
+### Translation
+
+14. Click the Translation tab
+15. Click "Record English phrase"
+16. Say an English phrase (e.g. "Where is the library?")
+17. Click Stop Recording
+18. Confirm the English transcription appears above the Spanish translation
+19. Confirm TTS plays the Spanish translation
+20. Record a second phrase — confirm the previous result is replaced
+
+### Regression
+
+21. Click the Conversation tab and complete a full voice session — confirm all existing functionality works
+
+---
+
 ## Phase B — Pronunciation Practice
 
 **Goal:** Verify all three pronunciation sub-features function correctly and that sub-feature C correctly hands phrases across mode boundaries.
+
+> **Prerequisite:** Phase A must be implemented and passing before running the Vocabulary tab tests (steps 1–6 below). Phase A provides the `/flashcards/deck` endpoint and the NavTabs component that the vocabulary tab and step 11 depend on. The Challenges tab (steps 7–10) and Sub-feature C (steps 11–16) can be tested independently once Phase A's tab nav exists.
 
 ### Prerequisites
 

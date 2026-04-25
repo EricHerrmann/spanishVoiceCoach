@@ -115,3 +115,38 @@ Each phase gate requires a smoke-test sign-off entry before the next phase begin
 - Whisper version: 20250625
 - Claude model: claude-sonnet-4-6
 - Notes: PASSED. MT-6-1 through MT-6-7 all passed. MT-6-4 required fixing the Vite proxy (`/tts-voices` was missing) — voice dropdown was null until proxy was added and dev server restarted. MT-6-6 (missing API key) correctly returns `tts_error` with CUDA/FP16 warnings present but benign (CPU-only machine). Ready to proceed to Phase 7.
+
+---
+
+## Phase 8 — Code Review & Refactor
+
+**Gate criteria:**
+- [x] All tests pass (93 backend, 2 skipped; 47 frontend — verified 2026-04-22)
+- [x] No regressions in voice pipeline, session config, coaching modes, or session history
+- [x] Code review fixes applied: complexity reduced, linting clean, no dead code
+
+**Sign-off:**
+- Date: 2026-04-22
+- Tester: oldhat86@gmail.com
+- Whisper version: 20250625
+- Claude model: claude-sonnet-4-6
+- Notes: PASSED. Full smoke test (ordering food session, on-demand corrections, session history reload) passed without issues. Ready for Phase 9 GUI redesign.
+
+---
+
+## Phase 9 — GUI Layout Redesign
+
+**Gate criteria:**
+- [x] All tests pass (60 frontend — verified 2026-04-23; backend tests unchanged from Phase 8)
+- [x] Two-pane layout renders correctly on desktop (left ~65% transcript + voice button; right ~35% session config, corrections, history)
+- [x] Session Config collapsible `<details>` expands and collapses correctly
+- [x] Transcript bubbles: user right-aligned, coach left-aligned
+- [x] CoachOverlay appears in right pane with structured corrections (explicit mode) and auto-dismisses after 8 seconds
+- [x] Mobile drawer (≤768px): right pane collapses to 48px bar; "▲ Tools" tap expands to 60vh drawer
+
+**Sign-off:**
+- Date: 2026-04-23
+- Tester: oldhat86@gmail.com
+- Whisper version: 20250625
+- Claude model: claude-sonnet-4-6
+- Notes: PASSED. Desktop two-pane layout verified. CoachOverlay requires Explicit mode session started via "New Conversation" and a real Spanish sentence with a deliberate grammar error — garbled input does not produce structured corrections (expected). Mobile drawer tested via browser DevTools viewport resize. Android device smoke test deferred to Phase 7 gate.
