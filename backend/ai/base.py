@@ -20,3 +20,8 @@ class AbstractAIProvider(ABC):
     def evaluate_pronunciation(self, target: str, transcript: str) -> "Union[PronunciationEvaluation, TurnError]":
         """Score a pronunciation attempt. Never raises — errors returned as TurnError."""
         raise NotImplementedError
+
+    @abstractmethod
+    def translate(self, english_text: str) -> "Union[str, TurnError]":
+        """Translate English text to Spanish. Never raises — errors returned as TurnError."""
+        raise NotImplementedError

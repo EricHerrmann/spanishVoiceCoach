@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useVoice } from './hooks/useVoice'
-import VoiceButton from './components/VoiceButton'
-import Transcript from './components/Transcript'
+import NavTabs from './components/NavTabs'
+import ConversationView from './components/ConversationView'
+import FlashcardsView from './components/FlashcardsView'
+import TranslationView from './components/TranslationView'
+import PronunciationView from './components/PronunciationView'
 import CoachOverlay from './components/CoachOverlay'
 import SessionConfig from './components/SessionConfig'
 import SessionHistory from './components/SessionHistory'
-import PronunciationView from './components/PronunciationView'
 import './App.css'
 
 const DEFAULT_CONFIG = {
@@ -35,8 +37,6 @@ function App() {
     setMode('pronunciation')
   }
 
-  // setMode('conversation') is required here: without it, clearing the target
-  // leaves mode === 'pronunciation' and PronunciationView renders with no target.
   function clearPronunciationTarget() {
     setPronunciationTarget(null)
     setMode('conversation')
@@ -91,19 +91,21 @@ function App() {
       <div className="app-left">
         <header className="app-header">
           <span className="app-title">duoVoiceCoach</span>
+          <NavTabs mode={mode} onModeChange={setMode} />
         </header>
         {mode === 'conversation' && (
-          <>
-            <Transcript turns={turns} onPractice={handlePractice} />
-            <VoiceButton
-              state={state}
-              onRecord={startRecording}
-              onStop={stopRecording}
-              error={error}
-              coachingMode={config.coaching_mode}
-            />
-          </>
+          <ConversationView
+            state={state}
+            turns={turns}
+            error={error}
+            onRecord={startRecording}
+            onStop={stopRecording}
+            onPractice={handlePractice}
+            coachingMode={config.coaching_mode}
+          />
         )}
+        {mode === 'flashcards' && <FlashcardsView />}
+        {mode === 'translation' && <TranslationView config={config} />}
         {mode === 'pronunciation' && (
           <PronunciationView
             pronunciationTarget={pronunciationTarget}

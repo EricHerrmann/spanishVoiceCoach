@@ -6,9 +6,9 @@
 
 ## Executive Summary
 
-**Last updated:** 2026-04-25 (Phase B backend + frontend complete, pending manual sign-off; Phase A not yet started)
+**Last updated:** 2026-04-25 (Phase A implemented, pending manual sign-off; Phase B implemented, pending manual sign-off)
 
-**Current state:** Phases 0–9 complete. Phase B (Pronunciation Practice) implemented — backend endpoints, PronunciationView, and Practice button all shipped — but not yet manually signed off. Phase A (Flashcards + Translation) not started; Phase B's vocabulary tab depends on Phase A's `/flashcards/deck` endpoint and will show empty until Phase A ships. Phase A must be implemented and signed off before Phase B vocabulary tab testing.
+**Current state:** Phases 0–9 complete. Phase A (Flashcards + Translation) and Phase B (Pronunciation Practice) both implemented and awaiting manual sign-off. Phase A must be signed off before Phase B vocabulary tab testing (which depends on the /flashcards/deck endpoint).
 
 | Phase | Name | Status | Tests | Notes |
 |-------|------|--------|-------|-------|
@@ -22,8 +22,8 @@
 | 7 — Android / PWA | PWA packaging, mobile UX | ⏳ In progress | — | Local network + ngrok; Phase 10 = cloud |
 | 8 — Code Review & Refactor | Systematic review, complexity + efficiency | ✅ Complete | 93 backend; 47 frontend | Discipline checkpoint before cloud/packaging |
 | 9 — GUI Layout Redesign | Two-pane desktop layout, mobile drawer | ✅ Complete | 60 frontend | Chat+tools split; responsive at 768px; signed off 2026-04-23 |
-| A — Flashcards + Translation | Vocab flashcards, English→Spanish translation | 🔲 Not started | — | Plan: docs/superpowers/plans/2026-04-24-phase-a-flashcards-translation.md |
-| B — Pronunciation Practice | Vocab/phonetic scoring, cross-mode Practice button | 🔶 Implemented, not signed off | 103 backend, 3 skipped; 76 frontend | Challenges + Practice button work; vocabulary tab requires Phase A's /flashcards/deck |
+| A — Flashcards + Translation | Vocab flashcards, English→Spanish translation | 🔶 Implemented, not signed off | 114 backend (4 skipped), 89 frontend | NavTabs, FlashcardsView, TranslationView, GET /flashcards/deck, POST /translate; 2026-04-25 |
+| B — Pronunciation Practice | Vocab/phonetic scoring, cross-mode Practice button | 🔶 Implemented, not signed off | 103 backend, 3 skipped; 76 frontend | Challenges + Practice button work; vocabulary tab now functional with Phase A's /flashcards/deck |
 | 10 — Cloud Deployment | Cloud hosting, STT evaluation | ⏳ Not started | — | Decision doc required before implementation |
 | 11 — Windows 11 Packaging | Docker Compose packaging for Windows 11 | ⏳ Not started | — | Distribute to other laptops |
 | 12 — Feature Expansion | Progress tracking, structured lessons, open brainstorm | ⏳ Not started | — | Each workstream gets its own spec first |

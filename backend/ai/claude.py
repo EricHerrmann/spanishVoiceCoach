@@ -181,6 +181,28 @@ class ClaudeProvider(AbstractAIProvider):
                 recoverable=True,
             )
 
+    def translate(self, english_text: str) -> Union[str, TurnError]:
+        try:
+            response = self._client.messages.create(
+                model="claude-sonnet-4-6",
+                max_tokens=256,
+                messages=[{
+                    "role": "user",
+                    "content": (
+                        "Translate this English phrase to natural Spanish. "
+                        "Return only the Spanish translation, no explanation:\n\n"
+                        f"{english_text}"
+                    ),
+                }],
+            )
+            return response.content[0].text.strip()
+        except Exception as exc:
+            return TurnError(
+                stage="ai",
+                message=f"Translation failed: {exc}",
+                recoverable=True,
+            )
+
     def evaluate_pronunciation(self, target: str, transcript: str) -> Union[PronunciationEvaluation, TurnError]:
         try:
             response = self._client.messages.create(

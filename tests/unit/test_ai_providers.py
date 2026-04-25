@@ -11,20 +11,24 @@ def test_abstract_ai_provider_raises_not_implemented():
     """Directly calling AbstractAIProvider.chat() raises NotImplementedError."""
 
     class ConcreteNoOp(AbstractAIProvider):
-        """Minimal concrete subclass that does NOT override chat() or evaluate_pronunciation()."""
+        """Minimal concrete subclass that does NOT override chat(), evaluate_pronunciation(), or translate()."""
 
         def chat(self, session, user_text: str) -> str:
-            # Deliberately call super() to trigger the NotImplementedError
             return super().chat(session, user_text)
 
         def evaluate_pronunciation(self, target: str, transcript: str):
             return super().evaluate_pronunciation(target, transcript)
+
+        def translate(self, english_text: str):
+            return super().translate(english_text)
 
     provider = ConcreteNoOp()
     with pytest.raises(NotImplementedError):
         provider.chat(session=None, user_text="hola")
     with pytest.raises(NotImplementedError):
         provider.evaluate_pronunciation(target="hola", transcript="hola")
+    with pytest.raises(NotImplementedError):
+        provider.translate(english_text="hello")
 
 
 from backend.session import new_session
@@ -45,6 +49,11 @@ class TestOpenAIProvider:
         provider = OpenAIProvider()
         with pytest.raises(NotImplementedError):
             provider.evaluate_pronunciation(target="hola", transcript="hola")
+
+    def test_translate_raises_not_implemented(self):
+        provider = OpenAIProvider()
+        with pytest.raises(NotImplementedError):
+            provider.translate(english_text="hello")
 
 
 from unittest.mock import MagicMock, patch
