@@ -620,3 +620,21 @@
   color: var(--text-h);
   font-style: italic;
 }
+
+/* ── Turn practice button ───────────────────────────── */
+
+.turn-practice-btn {
+  font-size: 11px;
+  color: var(--text);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 6px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.turn-practice-btn:hover {
+  color: var(--text-h);
+  border-color: var(--accent-border);
+}

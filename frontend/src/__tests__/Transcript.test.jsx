@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react'
-import { describe, it, expect } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi } from 'vitest'
 import Transcript from '../components/Transcript'
 
 describe('Transcript', () => {
@@ -33,5 +33,40 @@ describe('Transcript', () => {
     render(<Transcript turns={turns} />)
     expect(screen.getByText(/you|user/i)).toBeInTheDocument()
     expect(screen.getByText(/coach/i)).toBeInTheDocument()
+  })
+})
+
+describe('Transcript — Practice button', () => {
+  it('coach turns have a Practice button', () => {
+    const turns = [
+      { speaker: 'coach', coach_text: 'Muy bien, sigamos practicando.' },
+    ]
+    render(<Transcript turns={turns} onPractice={vi.fn()} />)
+    expect(screen.getByText('Practice')).toBeInTheDocument()
+  })
+
+  it('user turns do not have a Practice button', () => {
+    const turns = [
+      { speaker: 'user', transcript_norm: 'Quiero hablar más.' },
+    ]
+    render(<Transcript turns={turns} onPractice={vi.fn()} />)
+    expect(screen.queryByText('Practice')).not.toBeInTheDocument()
+  })
+
+  it('clicking Practice calls onPractice with the coach text', () => {
+    const onPractice = vi.fn()
+    const turns = [
+      { speaker: 'coach', coach_text: 'Muy bien, sigamos practicando.' },
+    ]
+    render(<Transcript turns={turns} onPractice={onPractice} />)
+    fireEvent.click(screen.getByText('Practice'))
+    expect(onPractice).toHaveBeenCalledWith('Muy bien, sigamos practicando.')
+  })
+
+  it('works without onPractice prop (no crash)', () => {
+    const turns = [{ speaker: 'coach', coach_text: 'Hola.' }]
+    render(<Transcript turns={turns} />)
+    fireEvent.click(screen.getByText('Practice'))
+    // No error thrown
   })
 })

@@ -5,6 +5,7 @@ import Transcript from './components/Transcript'
 import CoachOverlay from './components/CoachOverlay'
 import SessionConfig from './components/SessionConfig'
 import SessionHistory from './components/SessionHistory'
+import PronunciationView from './components/PronunciationView'
 import './App.css'
 
 const DEFAULT_CONFIG = {
@@ -24,7 +25,19 @@ function App() {
   const [selectedSessionId, setSelectedSessionId] = useState(null)
   const [config, setConfig] = useState(DEFAULT_CONFIG)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [mode, setMode] = useState('conversation')
+  const [pronunciationTarget, setPronunciationTarget] = useState(null)
   const { state, turns, corrections, error, startRecording, stopRecording, newSession, loadSession } = useVoice()
+
+  function handlePractice(text) {
+    setPronunciationTarget(text)
+    setMode('pronunciation')
+  }
+
+  function clearPronunciationTarget() {
+    setPronunciationTarget(null)
+    setMode('conversation')
+  }
 
   function refreshSessions() {
     return fetch('/sessions').then((r) => r.json()).then(setSavedSessions).catch(() => {})
@@ -76,13 +89,24 @@ function App() {
         <header className="app-header">
           <span className="app-title">duoVoiceCoach</span>
         </header>
-        <Transcript turns={turns} />
-        <VoiceButton
-          state={state}
-          onRecord={startRecording}
-          onStop={stopRecording}
-          error={error}
-        />
+        {mode === 'conversation' && (
+          <>
+            <Transcript turns={turns} onPractice={handlePractice} />
+            <VoiceButton
+              state={state}
+              onRecord={startRecording}
+              onStop={stopRecording}
+              error={error}
+              coachingMode={config.coaching_mode}
+            />
+          </>
+        )}
+        {mode === 'pronunciation' && (
+          <PronunciationView
+            pronunciationTarget={pronunciationTarget}
+            onClearTarget={clearPronunciationTarget}
+          />
+        )}
       </div>
       <div className={`app-right${drawerOpen ? ' app-right--open' : ''}`}>
         <button
