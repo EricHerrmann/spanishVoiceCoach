@@ -2,7 +2,6 @@ import base64
 import json
 import os
 import pathlib
-import tempfile
 from typing import Literal
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Body
 from fastapi.staticfiles import StaticFiles
@@ -18,7 +17,7 @@ from backend.session import (
     should_save_audio,
 )
 from backend.tts import ELEVENLABS_VOICES, ElevenLabsTTSProvider
-from backend.stt import WhisperSTT
+from backend.stt import get_stt_provider
 from backend.coach import CoachSession
 from backend.ai.claude import ClaudeProvider
 
@@ -35,7 +34,7 @@ _PROVIDERS = [
     {"id": "claude", "label": "Claude (Anthropic)"},
 ]
 
-stt_provider = WhisperSTT()
+stt_provider = get_stt_provider()
 claude_provider = ClaudeProvider()
 sessions: dict[str, Session] = {}
 app = FastAPI()
@@ -128,14 +127,7 @@ async def post_turn(
     audio_bytes = await audio.read()
     audio_file = _save_audio_file(session_id, audio_bytes, len(session.turns) + 1)
 
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
-        tmp.write(audio_bytes)
-        tmp_path = tmp.name
-
-    try:
-        stt_result = stt_provider.transcribe(tmp_path)
-    finally:
-        os.unlink(tmp_path)
+    stt_result = stt_provider.transcribe(audio_bytes, audio.filename or "audio.wav")
 
     if isinstance(stt_result, TurnError):
         return {
@@ -234,13 +226,7 @@ async def pronunciation_evaluate(
     target: str = Form(...),
 ):
     audio_bytes = await audio.read()
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
-        tmp.write(audio_bytes)
-        tmp_path = tmp.name
-    try:
-        stt_result = stt_provider.transcribe(tmp_path)
-    finally:
-        os.unlink(tmp_path)
+    stt_result = stt_provider.transcribe(audio_bytes, audio.filename or "audio.wav")
 
     if isinstance(stt_result, TurnError):
         return {
@@ -307,13 +293,7 @@ async def translate(
     tts_voice_id: str = Form(None),
 ):
     audio_bytes = await audio.read()
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
-        tmp.write(audio_bytes)
-        tmp_path = tmp.name
-    try:
-        stt_result = stt_provider.transcribe(tmp_path)
-    finally:
-        os.unlink(tmp_path)
+    stt_result = stt_provider.transcribe(audio_bytes, audio.filename or "audio.wav")
 
     if isinstance(stt_result, TurnError):
         return {

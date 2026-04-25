@@ -256,7 +256,7 @@ class TestSessionPersistence:
         from backend import main
 
         class FakeSTT:
-            def transcribe(self, _path):
+            def transcribe(self, _bytes, _filename):
                 return ("Hola", "hola")
 
         class FakeAIProvider:
@@ -295,7 +295,7 @@ class TestSessionPersistence:
         from backend import main
 
         class FakeSTT:
-            def transcribe(self, _path):
+            def transcribe(self, _bytes, _filename):
                 return ("Hola", "hola")
 
         class FakeAIProvider:
@@ -373,7 +373,7 @@ class TestTurnTtsIntegration:
         from backend.session import CoachResponse
 
         class FakeSTT:
-            def transcribe(self, _path):
+            def transcribe(self, _bytes, _filename):
                 return ("Hola", "hola")
 
         class FakeAIProvider:
@@ -407,7 +407,7 @@ class TestTurnTtsIntegration:
         from unittest.mock import MagicMock, patch
 
         class FakeSTT:
-            def transcribe(self, _path):
+            def transcribe(self, _bytes, _filename):
                 return ("Hola", "hola")
 
         class FakeAIProvider:
@@ -450,7 +450,7 @@ class TestTurnTtsIntegration:
         from unittest.mock import patch
 
         class FakeSTT:
-            def transcribe(self, _path):
+            def transcribe(self, _bytes, _filename):
                 return ("Hola", "hola")
 
         class FakeAIProvider:
