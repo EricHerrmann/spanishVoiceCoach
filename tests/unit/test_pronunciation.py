@@ -5,6 +5,8 @@ import pytest
 os.environ.setdefault("ANTHROPIC_API_KEY", "test-key")
 os.environ.setdefault("DVC_DATA_DIR", "/tmp/duoVoiceCoach-test-data")
 
+from backend.session import PronunciationEvaluation, PronunciationIssue
+
 from fastapi.testclient import TestClient
 from backend.main import app
 
@@ -52,7 +54,7 @@ class TestPronunciationEvaluate:
         assert data["transcript"] is None
 
     def test_response_shape_with_mocked_evaluate(self):
-        mock_eval = {"score": 85, "feedback": "Good effort!", "issues": []}
+        mock_eval = PronunciationEvaluation(score=85, feedback="Good effort!", issues=[])
         with patch("backend.main.claude_provider") as mock_provider:
             mock_provider.evaluate_pronunciation.return_value = mock_eval
             with open(FIXTURE_WAV, "rb") as f:
@@ -70,11 +72,11 @@ class TestPronunciationEvaluate:
         assert data["transcript"] is not None
 
     def test_response_shape_with_issues(self):
-        mock_eval = {
-            "score": 60,
-            "feedback": "Work on the rr sound.",
-            "issues": [{"sound": "rr", "said": "r", "expected": "rr"}],
-        }
+        mock_eval = PronunciationEvaluation(
+            score=60,
+            feedback="Work on the rr sound.",
+            issues=[PronunciationIssue(sound="rr", said="r", expected="rr")],
+        )
         with patch("backend.main.claude_provider") as mock_provider:
             mock_provider.evaluate_pronunciation.return_value = mock_eval
             with open(FIXTURE_WAV, "rb") as f:

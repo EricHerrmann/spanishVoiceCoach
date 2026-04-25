@@ -4,18 +4,21 @@ from __future__ import annotations
 import pytest
 
 from backend.ai.base import AbstractAIProvider
-from backend.session import CoachResponse, Correction
+from backend.session import CoachResponse, Correction, PronunciationEvaluation
 
 
 def test_abstract_ai_provider_raises_not_implemented():
     """Directly calling AbstractAIProvider.chat() raises NotImplementedError."""
 
     class ConcreteNoOp(AbstractAIProvider):
-        """Minimal concrete subclass that does NOT override chat()."""
+        """Minimal concrete subclass that does NOT override chat() or evaluate_pronunciation()."""
 
         def chat(self, session, user_text: str) -> str:
             # Deliberately call super() to trigger the NotImplementedError
             return super().chat(session, user_text)
+
+        def evaluate_pronunciation(self, target: str, transcript: str):
+            return super().evaluate_pronunciation(target, transcript)
 
     provider = ConcreteNoOp()
     with pytest.raises(NotImplementedError):
@@ -195,3 +198,63 @@ class TestClaudeProviderSystemPrompt:
                 session = new_session(topic="food", level=5, ai_provider="claude", coaching_mode="shadowing")
                 prompt = provider._build_system_prompt(session)
                 assert "empty corrections list" in prompt.lower() or "return an empty" in prompt.lower()
+
+
+def _mock_pronunciation_response(score, feedback, issues=None):
+    """Build a fake anthropic response containing an evaluate_pronunciation tool_use block."""
+    tool_block = MagicMock()
+    tool_block.type = "tool_use"
+    tool_block.name = "evaluate_pronunciation"
+    tool_block.input = {"score": score, "feedback": feedback, "issues": issues or []}
+    response = MagicMock()
+    response.content = [tool_block]
+    return response
+
+
+class TestClaudeProviderEvaluatePronunciation:
+    def test_valid_tool_response_returns_pronunciation_evaluation(self):
+        with patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test-key"}):
+            with patch("backend.ai.claude.anthropic.Anthropic") as MockClient:
+                mock_client = MagicMock()
+                MockClient.return_value = mock_client
+                mock_client.messages.create.return_value = _mock_pronunciation_response(
+                    score=90, feedback="Great!", issues=[]
+                )
+
+                provider = ClaudeProvider()
+                result = provider.evaluate_pronunciation("hola", "hola")
+
+                assert isinstance(result, PronunciationEvaluation)
+                assert result.score == 90
+                assert result.feedback == "Great!"
+                assert result.issues == []
+
+    def test_missing_tool_block_returns_turn_error(self):
+        with patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test-key"}):
+            with patch("backend.ai.claude.anthropic.Anthropic") as MockClient:
+                mock_client = MagicMock()
+                MockClient.return_value = mock_client
+                empty_response = MagicMock()
+                empty_response.content = []
+                mock_client.messages.create.return_value = empty_response
+
+                provider = ClaudeProvider()
+                result = provider.evaluate_pronunciation("hola", "ola")
+
+                assert isinstance(result, TurnError)
+                assert result.stage == "ai"
+                assert result.recoverable is True
+
+    def test_api_exception_returns_turn_error(self):
+        with patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test-key"}):
+            with patch("backend.ai.claude.anthropic.Anthropic") as MockClient:
+                mock_client = MagicMock()
+                MockClient.return_value = mock_client
+                mock_client.messages.create.side_effect = Exception("connection refused")
+
+                provider = ClaudeProvider()
+                result = provider.evaluate_pronunciation("hola", "hola")
+
+                assert isinstance(result, TurnError)
+                assert result.stage == "ai"
+                assert result.recoverable is True

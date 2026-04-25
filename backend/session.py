@@ -31,6 +31,20 @@ class TurnError:
 
 
 @dataclass
+class PronunciationIssue:
+    sound: str      # phoneme or sound pattern (e.g. 'rr', 'ñ')
+    said: str       # what the learner pronounced
+    expected: str   # correct pronunciation
+
+
+@dataclass
+class PronunciationEvaluation:
+    score: int                          # 0–100
+    feedback: str                       # encouraging feedback
+    issues: list[PronunciationIssue]    # empty list if no issues
+
+
+@dataclass
 class Turn:
     speaker: str                        # "user" | "coach"
     timestamp: datetime

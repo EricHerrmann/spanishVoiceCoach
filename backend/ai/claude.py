@@ -2,7 +2,7 @@ import os
 import anthropic
 from typing import Union
 from backend.ai.base import AbstractAIProvider
-from backend.session import Session, CoachResponse, Correction, TurnError
+from backend.session import Session, CoachResponse, Correction, TurnError, PronunciationEvaluation, PronunciationIssue
 
 _TOOL_DEFINITION = {
     "name": "get_coach_response",
@@ -181,7 +181,7 @@ class ClaudeProvider(AbstractAIProvider):
                 recoverable=True,
             )
 
-    def evaluate_pronunciation(self, target: str, transcript: str) -> Union[dict, TurnError]:
+    def evaluate_pronunciation(self, target: str, transcript: str) -> Union[PronunciationEvaluation, TurnError]:
         try:
             response = self._client.messages.create(
                 model="claude-sonnet-4-6",
@@ -202,7 +202,20 @@ class ClaudeProvider(AbstractAIProvider):
             )
             for block in response.content:
                 if block.type == "tool_use" and block.name == "evaluate_pronunciation":
-                    return block.input
+                    raw = block.input
+                    issues = [
+                        PronunciationIssue(
+                            sound=iss["sound"],
+                            said=iss["said"],
+                            expected=iss["expected"],
+                        )
+                        for iss in raw.get("issues", [])
+                    ]
+                    return PronunciationEvaluation(
+                        score=raw["score"],
+                        feedback=raw["feedback"],
+                        issues=issues,
+                    )
             return TurnError(
                 stage="ai", message="No evaluation block in Claude response", recoverable=True
             )

@@ -220,8 +220,11 @@ _PRONUNCIATION_CHALLENGES_PATH = pathlib.Path(__file__).parent / "data" / "pronu
 
 @app.get("/pronunciation/challenges")
 def get_pronunciation_challenges():
-    with open(_PRONUNCIATION_CHALLENGES_PATH) as f:
-        return json.load(f)
+    try:
+        with open(_PRONUNCIATION_CHALLENGES_PATH) as f:
+            return json.load(f)
+    except OSError:
+        raise HTTPException(status_code=500, detail="Pronunciation challenges data not found")
 
 
 @app.post("/pronunciation/evaluate")
@@ -243,7 +246,7 @@ async def pronunciation_evaluate(
             "transcript": None,
             "score": None,
             "feedback": None,
-            "issues": None,
+            "issues": [],
             "error": {
                 "stage": stt_result.stage,
                 "message": stt_result.message,
@@ -259,7 +262,7 @@ async def pronunciation_evaluate(
             "transcript": transcript_norm,
             "score": None,
             "feedback": None,
-            "issues": None,
+            "issues": [],
             "error": {
                 "stage": eval_result.stage,
                 "message": eval_result.message,
@@ -269,9 +272,9 @@ async def pronunciation_evaluate(
 
     return {
         "transcript": transcript_norm,
-        "score": eval_result["score"],
-        "feedback": eval_result["feedback"],
-        "issues": eval_result["issues"],
+        "score": eval_result.score,
+        "feedback": eval_result.feedback,
+        "issues": [{"sound": iss.sound, "said": iss.said, "expected": iss.expected} for iss in eval_result.issues],
         "error": None,
     }
 

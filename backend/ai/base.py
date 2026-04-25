@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
-    from backend.session import Session, CoachResponse, TurnError
+    from backend.session import Session, CoachResponse, TurnError, PronunciationEvaluation
 
 
 class AbstractAIProvider(ABC):
@@ -14,4 +14,9 @@ class AbstractAIProvider(ABC):
 
         Never raises — errors are returned as TurnError values.
         """
+        raise NotImplementedError
+
+    @abstractmethod
+    def evaluate_pronunciation(self, target: str, transcript: str) -> "Union[PronunciationEvaluation, TurnError]":
+        """Score a pronunciation attempt. Never raises — errors returned as TurnError."""
         raise NotImplementedError
