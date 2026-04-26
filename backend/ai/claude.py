@@ -1,8 +1,54 @@
 import os
 import anthropic
+import json
+import re
 from typing import Union
 from backend.ai.base import AbstractAIProvider
 from backend.session import Session, CoachResponse, Correction, TurnError, PronunciationEvaluation, PronunciationIssue
+
+_VALID_TOPICS = frozenset({
+    "general", "ordering_food", "directions_transport",
+    "shopping_markets", "work_daily_routine", "travel_tourism",
+})
+
+
+def _validate_cards(cards: list) -> list[dict]:
+    result = []
+    for card in cards:
+        if not isinstance(card, dict):
+            continue
+        if not all(k in card for k in ("english", "spanish", "level", "topic")):
+            continue
+        if not isinstance(card["level"], int) or not (1 <= card["level"] <= 10):
+            continue
+        if card["topic"] not in _VALID_TOPICS:
+            continue
+        result.append({
+            "english": str(card["english"]),
+            "spanish": str(card["spanish"]),
+            "level": card["level"],
+            "topic": card["topic"],
+        })
+    return result
+
+
+def parse_flashcard_response(raw_text: str) -> list[dict]:
+    """Extract and validate flashcard dicts from Claude's raw text response."""
+    text = raw_text.strip()
+    try:
+        parsed = json.loads(text)
+        if isinstance(parsed, list):
+            return _validate_cards(parsed)
+    except json.JSONDecodeError:
+        pass
+    match = re.search(r'\[.*\]', text, re.DOTALL)
+    if not match:
+        return []
+    try:
+        parsed = json.loads(match.group())
+    except json.JSONDecodeError:
+        return []
+    return _validate_cards(parsed)
 
 _TOOL_DEFINITION = {
     "name": "get_coach_response",
