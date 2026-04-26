@@ -46,4 +46,12 @@ describe('ConversationView — hint', () => {
     expect(screen.queryByText('Try saying')).not.toBeInTheDocument()
     expect(screen.queryByText('You translated')).not.toBeInTheDocument()
   })
+
+  it('resets to visible when hint changes after being hidden', () => {
+    const { rerender } = render(<ConversationView {...defaultProps} hint={{ text: 'Hola', source: 'topic' }} />)
+    fireEvent.click(screen.getByText('Hide'))
+    expect(screen.queryByText('Hola')).not.toBeInTheDocument()
+    rerender(<ConversationView {...defaultProps} hint={{ text: 'Adiós', source: 'translation' }} />)
+    expect(screen.getByText('Adiós')).toBeInTheDocument()
+  })
 })

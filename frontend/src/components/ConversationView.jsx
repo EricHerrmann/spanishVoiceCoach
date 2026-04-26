@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import VoiceButton from './VoiceButton'
 import Transcript from './Transcript'
 
@@ -9,6 +9,7 @@ const HINT_SOURCE_LABELS = {
 
 export default function ConversationView({ state, turns, error, onRecord, onStop, onPractice, coachingMode, hint }) {
   const [hintVisible, setHintVisible] = useState(true)
+  useEffect(() => { setHintVisible(true) }, [hint])
 
   return (
     <>
