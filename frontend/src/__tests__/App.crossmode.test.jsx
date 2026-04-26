@@ -39,3 +39,11 @@ describe('App — Practice button cross-mode handoff', () => {
     expect(container.querySelector('.pronunciation-view')).not.toBeInTheDocument()
   })
 })
+
+describe('App — Translation tab', () => {
+  it('switches to Translation view when Translation tab clicked', () => {
+    const { container } = render(<App />)
+    fireEvent.click(screen.getByText('Translation'))
+    expect(container.querySelector('.translation-view')).toBeInTheDocument()
+  })
+})

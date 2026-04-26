@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 
-export default function TranslationView({ config }) {
+export default function TranslationView({ config, onResult, onPractice }) {
   const [recordingState, setRecordingState] = useState('idle')
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
@@ -52,6 +52,7 @@ export default function TranslationView({ config }) {
       const data = await res.json()
       if (data.error) { setError(data.error.message); setRecordingState('idle'); return }
       setResult({ english: data.english, spanish: data.spanish })
+      onResult?.({ text: data.spanish, source: 'translation' })
       setRecordingState('playing')
       if (data.audio_b64) await playAudioB64(data.audio_b64)
       else speakText(data.spanish)
@@ -96,6 +97,12 @@ export default function TranslationView({ config }) {
         <div className="translation-result">
           <p className="translation-english">{result.english}</p>
           <p className="translation-spanish">{result.spanish}</p>
+          <button
+            className="translation-practice-btn"
+            onClick={() => onPractice?.(result.spanish, 'translation')}
+          >
+            Practice pronunciation
+          </button>
         </div>
       )}
       {error && <p className="translation-error">{error}</p>}

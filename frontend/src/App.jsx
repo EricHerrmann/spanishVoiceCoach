@@ -43,6 +43,10 @@ function App() {
     setMode('conversation')
   }
 
+  function handleTranslationResult(hint) {
+    setConversationHint(hint)
+  }
+
   function refreshSessions() {
     return fetch('/sessions').then((r) => r.json()).then(setSavedSessions).catch(() => {})
   }
@@ -112,7 +116,13 @@ function App() {
           />
         )}
         {mode === 'flashcards' && <FlashcardsView />}
-        {mode === 'translation' && <TranslationView config={config} />}
+        {mode === 'translation' && (
+          <TranslationView
+            config={config}
+            onResult={handleTranslationResult}
+            onPractice={handlePractice}
+          />
+        )}
         {mode === 'pronunciation' && (
           <PronunciationView
             pronunciationTarget={pronunciationTarget}
