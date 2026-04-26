@@ -88,3 +88,11 @@ class TestSaveUserDeck:
         save_user_deck([card])
         save_user_deck([card])
         assert len(load_user_deck()) == 1
+
+    def test_dedup_against_static_deck(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("DVC_DATA_DIR", str(tmp_path))
+        # Use a Spanish phrase from the built-in static deck
+        card = {"english": "hello", "spanish": "hola", "level": 1, "topic": "general"}
+        saved = save_user_deck([card])
+        assert saved == []
+        assert load_user_deck() == []
