@@ -52,22 +52,28 @@ describe('FlashcardButton', () => {
   })
 
   it('returns to idle after 2 seconds on success', async () => {
-    const setTimeoutSpy = vi.spyOn(global, 'setTimeout')
+    vi.useFakeTimers()
     const onAdd = vi.fn().mockResolvedValue({ added: 1 })
     render(<FlashcardButton label="Add to flashcards" onAdd={onAdd} />)
     fireEvent.click(screen.getByText('Add to flashcards'))
-    await waitFor(() => expect(screen.getByText('✓ 1 added')).toBeInTheDocument())
-    expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 2000)
-    setTimeoutSpy.mockRestore()
+    await act(async () => {
+      await Promise.resolve()
+    })
+    expect(screen.getByText('✓ 1 added')).toBeInTheDocument()
+    act(() => { vi.advanceTimersByTime(2000) })
+    expect(screen.getByText('Add to flashcards')).toBeInTheDocument()
   })
 
   it('returns to idle after 2 seconds on error', async () => {
-    const setTimeoutSpy = vi.spyOn(global, 'setTimeout')
+    vi.useFakeTimers()
     const onAdd = vi.fn().mockRejectedValue(new Error('fail'))
     render(<FlashcardButton label="Add to flashcards" onAdd={onAdd} />)
     fireEvent.click(screen.getByText('Add to flashcards'))
-    await waitFor(() => expect(screen.getByText('Error')).toBeInTheDocument())
-    expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 2000)
-    setTimeoutSpy.mockRestore()
+    await act(async () => {
+      await Promise.resolve()
+    })
+    expect(screen.getByText('Error')).toBeInTheDocument()
+    act(() => { vi.advanceTimersByTime(2000) })
+    expect(screen.getByText('Add to flashcards')).toBeInTheDocument()
   })
 })
