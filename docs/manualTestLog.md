@@ -201,4 +201,4 @@ Each phase gate requires a smoke-test sign-off entry before the next phase begin
 **Sign-off:**
 - Date: 2026-04-25
 - Tester: oldhat86@gmail.com
-- Notes: PARTIAL. Fly.io deployment live at https://duo-voice-coach.fly.dev — Basic Auth, OpenAI Whisper API (STT_PROVIDER=openai), ElevenLabs TTS, persistent volume at /data all configured. Health endpoint verified 200. Full Android voice session smoke test and session persistence check across redeploy pending manual testing.
+- Notes: PARTIAL. App live at https://spanishcoach.fly.dev (renamed from duo-voice-coach) — Basic Auth, OpenAI Whisper API (STT_PROVIDER=openai), ElevenLabs TTS, persistent volume at /data all configured. Health endpoint verified 200. Android recording bug fixed (commit e107c0f): hardcoded 'recording.wav' filename caused OpenAI Whisper API to reject WebM audio from Android Chrome — now derives extension from blob.type. Deployed 2026-04-25. Full Android voice session smoke test and session persistence check across redeploy still pending manual verification.

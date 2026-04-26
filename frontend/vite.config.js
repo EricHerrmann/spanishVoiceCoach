@@ -16,6 +16,9 @@ export default defineConfig({
       '/topics': 'http://localhost:8001',
       '/providers': 'http://localhost:8001',
       '/tts-voices': 'http://localhost:8001',
+      '/flashcards': 'http://localhost:8001',
+      '/translate': 'http://localhost:8001',
+      '/pronunciation': 'http://localhost:8001',
     },
   },
 })
