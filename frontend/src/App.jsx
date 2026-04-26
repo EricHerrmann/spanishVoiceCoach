@@ -72,6 +72,8 @@ function App() {
 
   function onNewSession() {
     const topic = config.topic.trim() || 'general'
+    const topicObj = topics.find((t) => t.id === config.topic)
+    setConversationHint(topicObj?.starter ? { text: topicObj.starter, source: 'topic' } : null)
     newSession({ ...config, topic }).then((sessionId) => {
       setSelectedSessionId(sessionId)
       refreshSessions()
