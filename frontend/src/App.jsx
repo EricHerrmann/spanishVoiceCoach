@@ -25,7 +25,14 @@ function App() {
   const [ttsVoices, setTtsVoices] = useState([])
   const [savedSessions, setSavedSessions] = useState([])
   const [selectedSessionId, setSelectedSessionId] = useState(null)
-  const [config, setConfig] = useState(DEFAULT_CONFIG)
+  const [config, setConfig] = useState(() => {
+    try {
+      const saved = localStorage.getItem('dvc_config')
+      return saved ? { ...DEFAULT_CONFIG, ...JSON.parse(saved) } : DEFAULT_CONFIG
+    } catch {
+      return DEFAULT_CONFIG
+    }
+  })
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [mode, setMode] = useState('conversation')
   const [pronunciationTarget, setPronunciationTarget] = useState(null)
@@ -60,6 +67,10 @@ function App() {
       refreshSessions()
     })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    try { localStorage.setItem('dvc_config', JSON.stringify(config)) } catch {}
+  }, [config])
 
   useEffect(() => {
     const topic = topics.find((t) => t.id === config.topic)
