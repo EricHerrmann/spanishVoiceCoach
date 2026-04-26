@@ -1,3 +1,4 @@
+import json
 import os
 import pytest
 
@@ -56,3 +57,110 @@ class TestGetFlashcardDeck:
         response = client.get("/flashcards/deck?topic=nonexistent_xyz")
         assert response.status_code == 200
         assert response.json() == []
+
+
+class TestGetFlashcardDeckMerged:
+    def test_user_deck_cards_appear_in_results(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("DVC_DATA_DIR", str(tmp_path))
+        user_card = {
+            "id": "u-test-1",
+            "english": "test user card",
+            "spanish": "__test_user_card__",
+            "level": 3,
+            "topic": "general",
+        }
+        deck_file = tmp_path / "user_flashcards.json"
+        deck_file.write_text(json.dumps([user_card]))
+
+        response = client.get("/flashcards/deck")
+        assert response.status_code == 200
+        spanish_phrases = [c["spanish"] for c in response.json()]
+        assert "__test_user_card__" in spanish_phrases
+
+    def test_topic_filter_applies_to_user_cards(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("DVC_DATA_DIR", str(tmp_path))
+        user_card = {
+            "id": "u-test-2",
+            "english": "to travel",
+            "spanish": "__test_viajar__",
+            "level": 4,
+            "topic": "travel_tourism",
+        }
+        deck_file = tmp_path / "user_flashcards.json"
+        deck_file.write_text(json.dumps([user_card]))
+
+        response = client.get("/flashcards/deck?topic=general")
+        assert response.status_code == 200
+        spanish_phrases = [c["spanish"] for c in response.json()]
+        assert "__test_viajar__" not in spanish_phrases
+
+    def test_level_filter_applies_to_user_cards(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("DVC_DATA_DIR", str(tmp_path))
+        user_card = {
+            "id": "u-test-3",
+            "english": "difficult word",
+            "spanish": "__test_dificil__",
+            "level": 9,
+            "topic": "general",
+        }
+        deck_file = tmp_path / "user_flashcards.json"
+        deck_file.write_text(json.dumps([user_card]))
+
+        response = client.get("/flashcards/deck?level_max=5")
+        assert response.status_code == 200
+        spanish_phrases = [c["spanish"] for c in response.json()]
+        assert "__test_dificil__" not in spanish_phrases
+
+
+class TestPostFlashcardGenerate:
+    def test_returns_200_with_list(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("DVC_DATA_DIR", str(tmp_path))
+        monkeypatch.setattr(
+            "backend.main.claude_provider",
+            type("MockProvider", (), {
+                "generate_flashcards": lambda self, text, turns, source: [
+                    {"english": "to ask for", "spanish": "__test_pedir__", "level": 3, "topic": "ordering_food"}
+                ],
+            })(),
+        )
+        response = client.post("/flashcards/generate", json={
+            "text": "Quisiera pedir la cuenta",
+            "turns": [],
+            "source": "turn",
+        })
+        assert response.status_code == 200
+        assert isinstance(response.json(), list)
+
+    def test_returns_empty_list_for_all_duplicates(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("DVC_DATA_DIR", str(tmp_path))
+        monkeypatch.setattr(
+            "backend.main.claude_provider",
+            type("MockProvider", (), {
+                "generate_flashcards": lambda self, text, turns, source: [
+                    {"english": "yes", "spanish": "__test_si_dup__", "level": 1, "topic": "general"}
+                ],
+            })(),
+        )
+        # First call saves the card
+        client.post("/flashcards/generate", json={"text": "sí", "turns": [], "source": "turn"})
+        # Second call should return empty (duplicate)
+        response = client.post("/flashcards/generate", json={"text": "sí", "turns": [], "source": "turn"})
+        assert response.status_code == 200
+        assert response.json() == []
+
+    def test_provider_error_returns_500(self, monkeypatch):
+        from backend.session import TurnError
+        monkeypatch.setattr(
+            "backend.main.claude_provider",
+            type("MockProvider", (), {
+                "generate_flashcards": lambda self, text, turns, source: TurnError(
+                    stage="ai", message="Claude failed", recoverable=True
+                ),
+            })(),
+        )
+        response = client.post("/flashcards/generate", json={
+            "text": "test",
+            "turns": [],
+            "source": "turn",
+        })
+        assert response.status_code == 500

@@ -79,6 +79,12 @@ class SessionStartRequest(BaseModel):
     tts_voice_id: str | None = None
 
 
+class FlashcardGenerateRequest(BaseModel):
+    text: str | None = None
+    turns: list[dict] = []
+    source: Literal["turn", "conversation", "translation"] = "turn"
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
@@ -353,6 +359,7 @@ def get_flashcard_deck(
             deck = json.load(f)
     except (OSError, json.JSONDecodeError):
         raise HTTPException(status_code=500, detail="Flashcard deck data not found")
+    deck = deck + load_user_deck()
     if topic is not None:
         deck = [c for c in deck if c["topic"] == topic]
     if level_min is not None:
@@ -360,6 +367,14 @@ def get_flashcard_deck(
     if level_max is not None:
         deck = [c for c in deck if c["level"] <= level_max]
     return deck
+
+
+@app.post("/flashcards/generate")
+def post_flashcard_generate(body: FlashcardGenerateRequest):
+    result = claude_provider.generate_flashcards(body.text or "", body.turns, body.source)
+    if isinstance(result, TurnError):
+        raise HTTPException(status_code=500, detail=result.message)
+    return save_user_deck(result)
 
 
 @app.post("/translate")
