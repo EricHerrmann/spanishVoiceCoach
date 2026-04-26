@@ -29,6 +29,7 @@ function App() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [mode, setMode] = useState('conversation')
   const [pronunciationTarget, setPronunciationTarget] = useState(null)
+  const [conversationHint, setConversationHint] = useState(null)
   const { state, turns, corrections, error, startRecording, stopRecording, newSession, loadSession } = useVoice()
 
   function handlePractice(text, source = 'conversation') {
@@ -56,12 +57,19 @@ function App() {
     })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    const topic = topics.find((t) => t.id === config.topic)
+    setConversationHint(topic?.starter ? { text: topic.starter, source: 'topic' } : null)
+  }, [config.topic, topics])
+
   function onConfigChange(patch) {
     setConfig((prev) => ({ ...prev, ...patch }))
   }
 
   function onNewSession() {
     const topic = config.topic.trim() || 'general'
+    const topicObj = topics.find((t) => t.id === topic)
+    setConversationHint(topicObj?.starter ? { text: topicObj.starter, source: 'topic' } : null)
     newSession({ ...config, topic }).then((sessionId) => {
       setSelectedSessionId(sessionId)
       refreshSessions()
@@ -102,6 +110,7 @@ function App() {
             onStop={stopRecording}
             onPractice={handlePractice}
             coachingMode={config.coaching_mode}
+            hint={conversationHint}
           />
         )}
         {mode === 'flashcards' && <FlashcardsView />}
