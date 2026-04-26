@@ -7,13 +7,13 @@ const HINT_SOURCE_LABELS = {
   translation: 'You translated',
 }
 
-export default function ConversationView({ state, turns, error, onRecord, onStop, onPractice, coachingMode, hint }) {
+export default function ConversationView({ state, turns, error, onRecord, onStop, onPractice, onAddFlashcards, coachingMode, hint }) {
   const [hintVisible, setHintVisible] = useState(true)
   useEffect(() => { setHintVisible(true) }, [hint])
 
   return (
     <>
-      <Transcript turns={turns} onPractice={onPractice} />
+      <Transcript turns={turns} onPractice={onPractice} onAddFlashcards={onAddFlashcards} />
       <VoiceButton state={state} onRecord={onRecord} onStop={onStop} error={error} coachingMode={coachingMode} />
       {hint && (
         <div className="conversation-hint">

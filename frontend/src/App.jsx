@@ -54,6 +54,25 @@ function App() {
     setConversationHint(hint)
   }
 
+  async function handleAddFlashcards(text, source) {
+    let body
+    if (source === 'conversation') {
+      const conversationText = turns
+        .map((t) => `${t.speaker}: ${t.speaker === 'user' ? t.transcript_norm : t.coach_text}`)
+        .join('\n')
+      body = { text: conversationText, turns, source }
+    } else {
+      body = { text, turns, source }
+    }
+    const res = await fetch('/flashcards/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    const data = await res.json()
+    return { added: Array.isArray(data) ? data.length : 0 }
+  }
+
   function refreshSessions() {
     return fetch('/sessions').then((r) => r.json()).then(setSavedSessions).catch(() => {})
   }
@@ -124,6 +143,7 @@ function App() {
             onRecord={startRecording}
             onStop={stopRecording}
             onPractice={handlePractice}
+            onAddFlashcards={handleAddFlashcards}
             coachingMode={config.coaching_mode}
             hint={conversationHint}
           />
@@ -134,6 +154,7 @@ function App() {
             config={config}
             onResult={handleTranslationResult}
             onPractice={handlePractice}
+            onAddFlashcards={handleAddFlashcards}
           />
         )}
         {mode === 'pronunciation' && (
