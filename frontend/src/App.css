@@ -876,10 +876,10 @@
 /* ── Flashcard add button ───────────────────────────── */
 .flashcard-add-btn {
   padding: 2px 8px;
-  font-size: 0.7rem;
+  font-size: 11px;
   background: transparent;
-  color: var(--accent, #6c63ff);
-  border: 1px solid var(--accent, #6c63ff);
+  color: var(--accent);
+  border: 1px solid var(--accent);
   border-radius: 4px;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
@@ -887,7 +887,7 @@
 }
 
 .flashcard-add-btn:hover:not(:disabled) {
-  background: var(--accent, #6c63ff);
+  background: var(--accent);
   color: #fff;
 }
 

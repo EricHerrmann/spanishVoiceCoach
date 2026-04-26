@@ -1,8 +1,11 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 export default function FlashcardButton({ label, onAdd }) {
   const [status, setStatus] = useState('idle')
   const [count, setCount] = useState(0)
+  const timerRef = useRef(null)
+
+  useEffect(() => () => clearTimeout(timerRef.current), [])
 
   async function handleClick() {
     if (status !== 'idle') return
@@ -11,10 +14,10 @@ export default function FlashcardButton({ label, onAdd }) {
       const result = await onAdd()
       setCount(result?.added ?? 0)
       setStatus('done')
-      setTimeout(() => setStatus('idle'), 2000)
     } catch {
       setStatus('error')
-      setTimeout(() => setStatus('idle'), 2000)
+    } finally {
+      timerRef.current = setTimeout(() => setStatus('idle'), 2000)
     }
   }
 
