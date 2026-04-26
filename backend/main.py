@@ -3,6 +3,7 @@ import json
 import os
 import pathlib
 import secrets
+import uuid
 from typing import Literal
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Body
 from fastapi.staticfiles import StaticFiles
@@ -238,6 +239,52 @@ async def post_turn(
 
 _PRONUNCIATION_CHALLENGES_PATH = pathlib.Path(__file__).parent / "data" / "pronunciation_challenges.json"
 _FLASHCARD_DECK_PATH = pathlib.Path(__file__).parent / "data" / "flashcard_deck.json"
+
+
+def _get_user_deck_path() -> pathlib.Path:
+    data_dir = pathlib.Path(os.environ.get("DVC_DATA_DIR", "~/.duoVoiceCoach")).expanduser()
+    return data_dir / "user_flashcards.json"
+
+
+def load_user_deck() -> list[dict]:
+    path = _get_user_deck_path()
+    if not path.exists():
+        return []
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return []
+
+
+def save_user_deck(new_cards: list[dict]) -> list[dict]:
+    """Append new_cards to user deck after deduplication. Returns only the cards actually saved."""
+    existing = load_user_deck()
+    existing_spanish = {c["spanish"].lower().strip() for c in existing}
+    try:
+        with open(_FLASHCARD_DECK_PATH) as f:
+            static = json.load(f)
+        existing_spanish.update(c["spanish"].lower().strip() for c in static)
+    except (OSError, json.JSONDecodeError):
+        pass
+
+    saved = []
+    for card in new_cards:
+        key = card["spanish"].lower().strip()
+        if key in existing_spanish:
+            continue
+        existing_spanish.add(key)
+        card_with_id = {"id": f"u-{uuid.uuid4()}", **card}
+        existing.append(card_with_id)
+        saved.append(card_with_id)
+
+    if saved:
+        path = _get_user_deck_path()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "w") as f:
+            json.dump(existing, f, indent=2)
+
+    return saved
 
 
 @app.get("/pronunciation/challenges")
