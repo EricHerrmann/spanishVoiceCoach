@@ -31,7 +31,7 @@ export default function Transcript({ turns, onPractice }) {
               {turn.speaker === 'coach' && (
                 <button
                   className="turn-practice-btn"
-                  onClick={() => onPractice?.(text)}
+                  onClick={() => onPractice?.(text, 'conversation')}
                   aria-label="Practice this phrase"
                 >
                   Practice

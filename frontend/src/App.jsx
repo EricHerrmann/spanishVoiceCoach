@@ -31,9 +31,9 @@ function App() {
   const [pronunciationTarget, setPronunciationTarget] = useState(null)
   const { state, turns, corrections, error, startRecording, stopRecording, newSession, loadSession } = useVoice()
 
-  function handlePractice(text) {
+  function handlePractice(text, source = 'conversation') {
     if (!text) return
-    setPronunciationTarget(text)
+    setPronunciationTarget({ text, source })
     setMode('pronunciation')
   }
 

@@ -60,7 +60,7 @@ describe('Transcript — Practice button', () => {
     ]
     render(<Transcript turns={turns} onPractice={onPractice} />)
     fireEvent.click(screen.getByText('Practice'))
-    expect(onPractice).toHaveBeenCalledWith('Muy bien, sigamos practicando.')
+    expect(onPractice).toHaveBeenCalledWith('Muy bien, sigamos practicando.', 'conversation')
   })
 
   it('works without onPractice prop (no crash)', () => {

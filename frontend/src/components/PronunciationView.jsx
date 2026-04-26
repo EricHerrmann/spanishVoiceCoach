@@ -7,6 +7,11 @@ const BANDS = [
   { id: 'advanced', label: 'Advanced', min: 7, max: 10 },
 ]
 
+const SOURCE_LABELS = {
+  conversation: 'From conversation',
+  translation: 'From translation',
+}
+
 export default function PronunciationView({ pronunciationTarget, onClearTarget }) {
   const [tab, setTab] = useState('vocabulary')
 
@@ -53,7 +58,7 @@ export default function PronunciationView({ pronunciationTarget, onClearTarget }
   }
 
   const target = pronunciationTarget
-    ? pronunciationTarget
+    ? pronunciationTarget.text
     : tab === 'vocabulary'
     ? vocabDeck[vocabIndex]?.spanish ?? null
     : selectedChallenge?.target ?? null
@@ -112,7 +117,9 @@ export default function PronunciationView({ pronunciationTarget, onClearTarget }
     <div className="pronunciation-view">
       {pronunciationTarget ? (
         <div className="pronunciation-external-header">
-          <span className="pronunciation-source-label">From conversation</span>
+          <span className="pronunciation-source-label">
+            {SOURCE_LABELS[pronunciationTarget.source] ?? 'From session'}
+          </span>
           <button
             className="pronunciation-back-btn"
             onClick={onClearTarget}

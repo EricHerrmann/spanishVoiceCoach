@@ -75,21 +75,31 @@ describe('PronunciationView — challenges tab', () => {
 
 describe('PronunciationView — single-phrase mode', () => {
   it('when pronunciationTarget is set, shows that phrase without tabs', () => {
-    render(<PronunciationView pronunciationTarget="Muy bien, gracias." onClearTarget={vi.fn()} />)
+    render(<PronunciationView pronunciationTarget={{ text: 'Muy bien, gracias.', source: 'conversation' }} onClearTarget={vi.fn()} />)
     expect(screen.getByText('Muy bien, gracias.')).toBeInTheDocument()
     expect(screen.queryByText('Vocabulary')).not.toBeInTheDocument()
     expect(screen.queryByText('Challenges')).not.toBeInTheDocument()
   })
 
   it('shows a back button in single-phrase mode', () => {
-    render(<PronunciationView pronunciationTarget="Muy bien." onClearTarget={vi.fn()} />)
+    render(<PronunciationView pronunciationTarget={{ text: 'Muy bien.', source: 'conversation' }} onClearTarget={vi.fn()} />)
     expect(screen.getByText('← Back')).toBeInTheDocument()
   })
 
   it('back button calls onClearTarget', () => {
     const onClearTarget = vi.fn()
-    render(<PronunciationView pronunciationTarget="Muy bien." onClearTarget={onClearTarget} />)
+    render(<PronunciationView pronunciationTarget={{ text: 'Muy bien.', source: 'conversation' }} onClearTarget={onClearTarget} />)
     fireEvent.click(screen.getByText('← Back'))
     expect(onClearTarget).toHaveBeenCalled()
+  })
+
+  it('shows "From conversation" source label when source is conversation', () => {
+    render(<PronunciationView pronunciationTarget={{ text: 'Muy bien.', source: 'conversation' }} onClearTarget={vi.fn()} />)
+    expect(screen.getByText('From conversation')).toBeInTheDocument()
+  })
+
+  it('shows "From translation" source label when source is translation', () => {
+    render(<PronunciationView pronunciationTarget={{ text: 'El gato es bonito.', source: 'translation' }} onClearTarget={vi.fn()} />)
+    expect(screen.getByText('From translation')).toBeInTheDocument()
   })
 })
