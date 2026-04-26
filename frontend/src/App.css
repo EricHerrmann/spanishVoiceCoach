@@ -872,3 +872,26 @@
   color: var(--text-h);
   line-height: 1.4;
 }
+
+/* ── Flashcard add button ───────────────────────────── */
+.flashcard-add-btn {
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  background: transparent;
+  color: var(--accent, #6c63ff);
+  border: 1px solid var(--accent, #6c63ff);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.flashcard-add-btn:hover:not(:disabled) {
+  background: var(--accent, #6c63ff);
+  color: #fff;
+}
+
+.flashcard-add-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
