@@ -68,3 +68,7 @@ class TestParseFlashcardResponse:
             raw = f'[{{"english": "x", "spanish": "y", "level": 5, "topic": "{topic}"}}]'
             result = parse_flashcard_response(raw)
             assert len(result) == 1, f"Topic {topic} should be valid"
+
+    def test_level_bool_dropped(self):
+        raw = '[{"english": "hello", "spanish": "hola", "level": true, "topic": "general"}]'
+        assert parse_flashcard_response(raw) == []

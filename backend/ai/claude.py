@@ -19,7 +19,7 @@ def _validate_cards(cards: list) -> list[dict]:
             continue
         if not all(k in card for k in ("english", "spanish", "level", "topic")):
             continue
-        if not isinstance(card["level"], int) or not (1 <= card["level"] <= 10):
+        if not isinstance(card["level"], int) or isinstance(card["level"], bool) or not (1 <= card["level"] <= 10):
             continue
         if card["topic"] not in _VALID_TOPICS:
             continue
@@ -49,6 +49,7 @@ def parse_flashcard_response(raw_text: str) -> list[dict]:
     except json.JSONDecodeError:
         return []
     return _validate_cards(parsed)
+
 
 _TOOL_DEFINITION = {
     "name": "get_coach_response",
