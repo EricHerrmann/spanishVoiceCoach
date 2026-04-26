@@ -11,7 +11,7 @@ def test_abstract_ai_provider_raises_not_implemented():
     """Directly calling AbstractAIProvider.chat() raises NotImplementedError."""
 
     class ConcreteNoOp(AbstractAIProvider):
-        """Minimal concrete subclass that does NOT override chat(), evaluate_pronunciation(), or translate()."""
+        """Minimal concrete subclass that does NOT override chat(), evaluate_pronunciation(), translate(), or generate_flashcards()."""
 
         def chat(self, session, user_text: str) -> str:
             return super().chat(session, user_text)
@@ -21,6 +21,9 @@ def test_abstract_ai_provider_raises_not_implemented():
 
         def translate(self, english_text: str):
             return super().translate(english_text)
+
+        def generate_flashcards(self, text: str, turns: list[dict], source: str):
+            return super().generate_flashcards(text, turns, source)
 
     provider = ConcreteNoOp()
     with pytest.raises(NotImplementedError):
@@ -274,3 +277,9 @@ class TestClaudeProviderEvaluatePronunciation:
                 assert isinstance(result, TurnError)
                 assert result.stage == "ai"
                 assert result.recoverable is True
+
+
+def test_abstract_provider_generate_flashcards_raises():
+    """AbstractAIProvider cannot be instantiated directly."""
+    with pytest.raises(TypeError):
+        AbstractAIProvider()

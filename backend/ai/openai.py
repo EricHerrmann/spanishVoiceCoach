@@ -14,3 +14,6 @@ class OpenAIProvider(AbstractAIProvider):
 
     def translate(self, english_text: str) -> Union[str, TurnError]:
         raise NotImplementedError("OpenAIProvider is not implemented in MVP")
+
+    def generate_flashcards(self, text: str, turns: list[dict], source: str) -> Union[list[dict], TurnError]:
+        raise NotImplementedError("OpenAIProvider is not implemented in MVP")

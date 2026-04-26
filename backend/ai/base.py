@@ -25,3 +25,8 @@ class AbstractAIProvider(ABC):
     def translate(self, english_text: str) -> "Union[str, TurnError]":
         """Translate English text to Spanish. Never raises — errors returned as TurnError."""
         raise NotImplementedError
+
+    @abstractmethod
+    def generate_flashcards(self, text: str, turns: list[dict], source: str) -> "Union[list[dict], TurnError]":
+        """Extract flashcard vocabulary from text. Never raises — errors returned as TurnError."""
+        raise NotImplementedError

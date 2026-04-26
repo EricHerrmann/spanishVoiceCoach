@@ -292,3 +292,41 @@ class ClaudeProvider(AbstractAIProvider):
             return TurnError(
                 stage="ai", message=f"Pronunciation evaluation failed: {exc}", recoverable=True
             )
+
+    def generate_flashcards(self, text: str, turns: list[dict], source: str) -> Union[list[dict], TurnError]:
+        turns_lines = []
+        for t in turns:
+            speaker = t.get("speaker", "")
+            content = t.get("transcript_norm", "") if speaker == "user" else t.get("coach_text", "")
+            if content:
+                turns_lines.append(f"{speaker}: {content}")
+        turns_context = "\n".join(turns_lines)
+
+        if source == "conversation":
+            focal = f"Full conversation:\n{turns_context}"
+            card_count = "5–15"
+        else:
+            context_section = f"\n\nConversation context:\n{turns_context}" if turns_context else ""
+            focal = f"Text: {text}{context_section}"
+            card_count = "3–8"
+
+        prompt = (
+            "Extract vocabulary and key phrases suitable for Spanish flashcard study.\n\n"
+            f"{focal}\n\n"
+            "Assign each card exactly one of these topic IDs:\n"
+            "general, ordering_food, directions_transport, shopping_markets, work_daily_routine, travel_tourism\n\n"
+            "Assign difficulty levels 1–10 (1=very basic greetings, 10=advanced native-level).\n\n"
+            f"Return {card_count} cards as a bare JSON array only — no prose, no markdown fences:\n"
+            '[{"english": "...", "spanish": "...", "level": N, "topic": "..."}]'
+        )
+
+        try:
+            response = self._client.messages.create(
+                model="claude-haiku-4-5-20251001",
+                max_tokens=1024,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            raw = response.content[0].text
+            return parse_flashcard_response(raw)
+        except Exception as exc:
+            return TurnError(stage="ai", message=f"Flashcard generation failed: {exc}", recoverable=True)
