@@ -32,6 +32,8 @@ def test_abstract_ai_provider_raises_not_implemented():
         provider.evaluate_pronunciation(target="hola", transcript="hola")
     with pytest.raises(NotImplementedError):
         provider.translate(english_text="hello")
+    with pytest.raises(NotImplementedError):
+        provider.generate_flashcards(text="hello", turns=[], source="turn")
 
 
 from backend.session import new_session
@@ -57,6 +59,11 @@ class TestOpenAIProvider:
         provider = OpenAIProvider()
         with pytest.raises(NotImplementedError):
             provider.translate(english_text="hello")
+
+    def test_generate_flashcards_raises_not_implemented(self):
+        provider = OpenAIProvider()
+        with pytest.raises(NotImplementedError):
+            provider.generate_flashcards(text="hello", turns=[], source="turn")
 
 
 from unittest.mock import MagicMock, patch

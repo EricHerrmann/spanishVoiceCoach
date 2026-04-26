@@ -315,7 +315,7 @@ class ClaudeProvider(AbstractAIProvider):
             f"{focal}\n\n"
             "Assign each card exactly one of these topic IDs:\n"
             "general, ordering_food, directions_transport, shopping_markets, work_daily_routine, travel_tourism\n\n"
-            "Assign difficulty levels 1–10 (1=very basic greetings, 10=advanced native-level).\n\n"
+            f"Assign difficulty levels 1–10 using this scale:\n{_LEVEL_SCALE}\n\n"
             f"Return {card_count} cards as a bare JSON array only — no prose, no markdown fences:\n"
             '[{"english": "...", "spanish": "...", "level": N, "topic": "..."}]'
         )
