@@ -23,6 +23,7 @@ vi.mock('../hooks/useVoice', () => ({
 let fetchMock
 
 beforeEach(() => {
+  localStorage.clear()
   fetchMock = vi.fn().mockImplementation((url) => {
     if (url === '/flashcards/generate') {
       return Promise.resolve({

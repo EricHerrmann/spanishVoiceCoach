@@ -69,6 +69,7 @@ function App() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     })
+    if (!res.ok) throw new Error(`Server error: ${res.status}`)
     const data = await res.json()
     return { added: Array.isArray(data) ? data.length : 0 }
   }
