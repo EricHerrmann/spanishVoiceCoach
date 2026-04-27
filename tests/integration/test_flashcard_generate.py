@@ -3,9 +3,8 @@ import os
 import pytest
 
 os.environ.setdefault("ANTHROPIC_API_KEY", "test-key")
-os.environ.setdefault("DVC_DATA_DIR", "/tmp/duoVoiceCoach-test-data")
 
-_VALID_TOPICS = {"general", "ordering_food", "directions_transport", "shopping_markets", "work_daily_routine", "travel_tourism"}
+from backend.ai.claude import _VALID_TOPICS
 
 
 def _has_real_api_key():
@@ -58,10 +57,10 @@ class TestFlashcardGenerateIntegration:
         cards = response.json()
         assert isinstance(cards, list)
 
-        if len(cards) > 0:
-            deck_path = tmp_path / "user_flashcards.json"
-            assert deck_path.exists()
-            saved = json.loads(deck_path.read_text())
-            assert len(saved) == len(cards)
-            for card in saved:
-                assert card["id"].startswith("u-")
+        assert len(cards) > 0, "Expected at least one flashcard from a valid Spanish phrase"
+        deck_path = tmp_path / "user_flashcards.json"
+        assert deck_path.exists()
+        saved = json.loads(deck_path.read_text())
+        assert len(saved) == len(cards)
+        for card in saved:
+            assert card["id"].startswith("u-")
