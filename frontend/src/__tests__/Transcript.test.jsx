@@ -81,7 +81,7 @@ describe('Transcript — flashcard buttons', () => {
     const onAdd = vi.fn().mockResolvedValue({ added: 1 })
     render(<Transcript turns={twoTurns} onAddFlashcards={onAdd} />)
     const addButtons = screen.getAllByText('Add to flashcards')
-    expect(addButtons.length).toBeGreaterThanOrEqual(1)
+    expect(addButtons).toHaveLength(2)
   })
 
   it('"Add to flashcards" button present on coach turns', () => {

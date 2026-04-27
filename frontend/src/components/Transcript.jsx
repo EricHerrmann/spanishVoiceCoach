@@ -53,6 +53,7 @@ export default function Transcript({ turns, onPractice, onAddFlashcards }) {
       })}
       {turns.length >= 2 && onAddFlashcards && (
         <div className="transcript-footer">
+          {/* null sentinel signals parent to use full turns array */}
           <FlashcardButton
             label="Add conversation"
             onAdd={() => onAddFlashcards(null, 'conversation')}
