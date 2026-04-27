@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import FlashcardButton from './FlashcardButton'
 
 export default function TranslationView({ config, onResult, onPractice, onAddFlashcards }) {
   const [recordingState, setRecordingState] = useState('idle')
@@ -103,6 +104,12 @@ export default function TranslationView({ config, onResult, onPractice, onAddFla
           >
             Practice pronunciation
           </button>
+          {onAddFlashcards && (
+            <FlashcardButton
+              label="Add to flashcards"
+              onAdd={() => onAddFlashcards(result.spanish, 'translation')}
+            />
+          )}
         </div>
       )}
       {error && <p className="translation-error">{error}</p>}
