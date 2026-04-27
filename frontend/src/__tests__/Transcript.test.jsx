@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import Transcript from '../components/Transcript'
 
@@ -68,5 +68,58 @@ describe('Transcript — Practice button', () => {
     render(<Transcript turns={turns} />)
     fireEvent.click(screen.getByText('Practice'))
     // No error thrown
+  })
+})
+
+describe('Transcript — flashcard buttons', () => {
+  const twoTurns = [
+    { speaker: 'user', transcript_norm: 'Hola', coach_text: null },
+    { speaker: 'coach', transcript_norm: null, coach_text: '¡Hola!' },
+  ]
+
+  it('"Add to flashcards" button present on user turns', () => {
+    const onAdd = vi.fn().mockResolvedValue({ added: 1 })
+    render(<Transcript turns={twoTurns} onAddFlashcards={onAdd} />)
+    const addButtons = screen.getAllByText('Add to flashcards')
+    expect(addButtons.length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('"Add to flashcards" button present on coach turns', () => {
+    const turns = [{ speaker: 'coach', transcript_norm: null, coach_text: '¡Hola!' }]
+    const onAdd = vi.fn().mockResolvedValue({ added: 1 })
+    render(<Transcript turns={turns} onAddFlashcards={onAdd} />)
+    expect(screen.getByText('Add to flashcards')).toBeInTheDocument()
+  })
+
+  it('"Add conversation" button absent when turns.length < 2', () => {
+    const onAdd = vi.fn().mockResolvedValue({ added: 1 })
+    render(<Transcript turns={[twoTurns[0]]} onAddFlashcards={onAdd} />)
+    expect(screen.queryByText('Add conversation')).not.toBeInTheDocument()
+  })
+
+  it('"Add conversation" button present when turns.length >= 2', () => {
+    const onAdd = vi.fn().mockResolvedValue({ added: 1 })
+    render(<Transcript turns={twoTurns} onAddFlashcards={onAdd} />)
+    expect(screen.getByText('Add conversation')).toBeInTheDocument()
+  })
+
+  it('clicking "Add to flashcards" on a turn calls onAddFlashcards with source "turn"', async () => {
+    const onAdd = vi.fn().mockResolvedValue({ added: 1 })
+    render(<Transcript turns={[twoTurns[0]]} onAddFlashcards={onAdd} />)
+    fireEvent.click(screen.getByText('Add to flashcards'))
+    await waitFor(() => expect(onAdd).toHaveBeenCalledWith('Hola', 'turn'))
+  })
+
+  it('clicking "Add conversation" calls onAddFlashcards with source "conversation"', async () => {
+    const onAdd = vi.fn().mockResolvedValue({ added: 2 })
+    render(<Transcript turns={twoTurns} onAddFlashcards={onAdd} />)
+    fireEvent.click(screen.getByText('Add conversation'))
+    await waitFor(() => expect(onAdd).toHaveBeenCalledWith(null, 'conversation'))
+  })
+
+  it('flashcard buttons absent when onAddFlashcards prop is not provided', () => {
+    render(<Transcript turns={twoTurns} />)
+    expect(screen.queryByText('Add to flashcards')).not.toBeInTheDocument()
+    expect(screen.queryByText('Add conversation')).not.toBeInTheDocument()
   })
 })

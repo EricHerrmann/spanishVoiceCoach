@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import FlashcardButton from './FlashcardButton'
 
-export default function Transcript({ turns, onPractice }) {
+export default function Transcript({ turns, onPractice, onAddFlashcards }) {
   const [collapsed, setCollapsed] = useState(new Set())
 
   function toggle(i) {
@@ -37,6 +38,12 @@ export default function Transcript({ turns, onPractice }) {
                   Practice
                 </button>
               )}
+              {onAddFlashcards && (
+                <FlashcardButton
+                  label="Add to flashcards"
+                  onAdd={() => onAddFlashcards(text, 'turn')}
+                />
+              )}
             </div>
             <span className={`turn-text${isCollapsed ? ' turn-text--hidden' : ''}`}>
               {isCollapsed ? '···' : text}
@@ -44,6 +51,14 @@ export default function Transcript({ turns, onPractice }) {
           </div>
         )
       })}
+      {turns.length >= 2 && onAddFlashcards && (
+        <div className="transcript-footer">
+          <FlashcardButton
+            label="Add conversation"
+            onAdd={() => onAddFlashcards(null, 'conversation')}
+          />
+        </div>
+      )}
     </div>
   )
 }
