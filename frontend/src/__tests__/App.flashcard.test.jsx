@@ -27,12 +27,13 @@ beforeEach(() => {
   fetchMock = vi.fn().mockImplementation((url) => {
     if (url === '/flashcards/generate') {
       return Promise.resolve({
+        ok: true,
         json: () => Promise.resolve([
           { id: 'u-1', english: 'a table', spanish: 'una mesa', level: 2, topic: 'ordering_food' },
         ]),
       })
     }
-    return Promise.resolve({ json: () => Promise.resolve([]) })
+    return Promise.resolve({ ok: true, json: () => Promise.resolve([]) })
   })
   vi.stubGlobal('fetch', fetchMock)
 })
@@ -54,6 +55,10 @@ describe('App — handleAddFlashcards', () => {
       expect(body.source).toBe('turn')
       expect(Array.isArray(body.turns)).toBe(true)
       expect(body.turns).toHaveLength(2)
+    })
+
+    await waitFor(() => {
+      expect(screen.getAllByText('✓ 1 added').length).toBeGreaterThanOrEqual(1)
     })
   })
 
