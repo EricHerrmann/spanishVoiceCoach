@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 
-export default function TranslationView({ config, onResult, onPractice }) {
+export default function TranslationView({ config, onResult, onPractice, onAddFlashcards }) {
   const [recordingState, setRecordingState] = useState('idle')
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
