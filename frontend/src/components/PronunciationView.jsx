@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useAudioRecorder } from '../hooks/useAudioRecorder'
 
 const BANDS = [
   { id: 'beginner', label: 'Beginner', min: 1, max: 2 },
@@ -30,8 +31,16 @@ export default function PronunciationView({ pronunciationTarget, onClearTarget }
   const [scoringState, setScoringState] = useState('idle') // idle | recording | processing | done
   const [evalResult, setEvalResult] = useState(null)
   const [evalError, setEvalError] = useState(null)
-  const mediaRecorderRef = useRef(null)
-  const chunksRef = useRef([])
+
+  // Capture the current target at recording-start time so the onStop closure has the right value
+  const targetAtStartRef = useRef(null)
+
+  const { startRecording, stopRecording } = useAudioRecorder({
+    onStop: (blob) => {
+      setScoringState('processing')
+      submitAudio(blob, targetAtStartRef.current)
+    },
+  })
 
   useEffect(() => {
     fetch('/topics').then((r) => r.json()).then(setTopics).catch(() => {})
@@ -65,32 +74,11 @@ export default function PronunciationView({ pronunciationTarget, onClearTarget }
 
   const activeHint = tab === 'challenges' && !pronunciationTarget ? selectedChallenge?.hint : null
 
-  async function startRecording() {
+  async function handleStartRecording() {
     setEvalError(null)
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus'
-        : 'audio/wav'
-      const recorder = new MediaRecorder(stream, { mimeType })
-      chunksRef.current = []
-      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data) }
-      recorder.onstop = async () => {
-        stream.getTracks().forEach((t) => t.stop())
-        setScoringState('processing')
-        await submitAudio(new Blob(chunksRef.current, { type: recorder.mimeType }), target)
-      }
-      mediaRecorderRef.current = recorder
-      recorder.start()
-      setScoringState('recording')
-    } catch (err) {
-      setEvalError(err.message)
-      setScoringState('idle')
-    }
-  }
-
-  function stopRecording() {
-    if (mediaRecorderRef.current?.state === 'recording') mediaRecorderRef.current.stop()
+    targetAtStartRef.current = target
+    await startRecording()
+    setScoringState('recording')
   }
 
   async function submitAudio(blob, currentTarget) {
@@ -222,7 +210,7 @@ export default function PronunciationView({ pronunciationTarget, onClearTarget }
             )}
             <button
               className={`voice-btn voice-btn--${scoringState === 'done' ? 'idle' : scoringState}`}
-              onClick={isRecording ? stopRecording : startRecording}
+              onClick={isRecording ? stopRecording : handleStartRecording}
               disabled={disabled}
             >
               {isRecording ? 'Stop' : isProcessing ? 'Processing…' : 'Record'}
