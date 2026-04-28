@@ -159,6 +159,9 @@ class ClaudeProvider(AbstractAIProvider):
         if not api_key:
             raise RuntimeError("ANTHROPIC_API_KEY environment variable not set")
         self._client = anthropic.Anthropic(api_key=api_key)
+        self._model = os.environ.get("DVC_CLAUDE_MODEL", "claude-sonnet-4-6")
+        self._max_tokens = int(os.environ.get("DVC_CLAUDE_MAX_TOKENS", "1024"))
+        self._context_turns = int(os.environ.get("DVC_CONTEXT_TURNS", "10"))
 
     def _build_system_prompt(self, session: Session) -> str:
         mode_instruction = _MODE_INSTRUCTIONS.get(
@@ -175,20 +178,21 @@ class ClaudeProvider(AbstractAIProvider):
         )
 
     def _build_messages(self, session: Session, user_text: str) -> list:
-        messages = []
+        all_history = []
         for turn in session.turns:
             if turn.speaker == "user" and turn.transcript_norm:
-                messages.append({"role": "user", "content": turn.transcript_norm})
+                all_history.append({"role": "user", "content": turn.transcript_norm})
             elif turn.speaker == "coach" and turn.coach_text:
-                messages.append({"role": "assistant", "content": turn.coach_text})
-        messages.append({"role": "user", "content": user_text})
-        return messages
+                all_history.append({"role": "assistant", "content": turn.coach_text})
+        window_size = self._context_turns * 2
+        history = all_history[-window_size:] if window_size > 0 else []
+        return history + [{"role": "user", "content": user_text}]
 
     def chat(self, session: Session, user_text: str) -> Union[CoachResponse, TurnError]:
         try:
             response = self._client.messages.create(
-                model="claude-sonnet-4-6",
-                max_tokens=1024,
+                model=self._model,
+                max_tokens=self._max_tokens,
                 system=[{
                     "type": "text",
                     "text": self._build_system_prompt(session),
@@ -231,8 +235,8 @@ class ClaudeProvider(AbstractAIProvider):
     def translate(self, english_text: str) -> Union[str, TurnError]:
         try:
             response = self._client.messages.create(
-                model="claude-sonnet-4-6",
-                max_tokens=256,
+                model=self._model,
+                max_tokens=self._max_tokens,
                 messages=[{
                     "role": "user",
                     "content": (
@@ -253,8 +257,8 @@ class ClaudeProvider(AbstractAIProvider):
     def evaluate_pronunciation(self, target: str, transcript: str) -> Union[PronunciationEvaluation, TurnError]:
         try:
             response = self._client.messages.create(
-                model="claude-sonnet-4-6",
-                max_tokens=512,
+                model=self._model,
+                max_tokens=self._max_tokens,
                 tools=[_PRONUNCIATION_TOOL],
                 tool_choice={"type": "tool", "name": "evaluate_pronunciation"},
                 messages=[{
@@ -322,8 +326,8 @@ class ClaudeProvider(AbstractAIProvider):
 
         try:
             response = self._client.messages.create(
-                model="claude-haiku-4-5-20251001",
-                max_tokens=1024,
+                model=self._model,
+                max_tokens=self._max_tokens,
                 messages=[{"role": "user", "content": prompt}],
             )
             raw = response.content[0].text
