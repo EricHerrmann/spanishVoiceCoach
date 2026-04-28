@@ -5,7 +5,7 @@ import pytest
 os.environ.setdefault("ANTHROPIC_API_KEY", "test-key")
 os.environ.setdefault("DVC_DATA_DIR", "/tmp/duoVoiceCoach-test-data")
 
-from backend.main import load_user_deck, save_user_deck
+from backend.flashcards_store import load_user_deck, save_user_deck
 
 
 def _unique_card(spanish_suffix: str) -> dict:
