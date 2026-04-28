@@ -5,7 +5,8 @@ import pytest
 os.environ.setdefault("ANTHROPIC_API_KEY", "test-key")
 os.environ.setdefault("DVC_DATA_DIR", "/tmp/duoVoiceCoach-test-data")
 
-from backend.flashcards_store import load_user_deck, save_user_deck
+from unittest.mock import patch
+from backend.flashcards_store import load_user_deck, save_user_deck, load_filtered_deck
 
 
 def _unique_card(spanish_suffix: str) -> dict:
@@ -96,3 +97,36 @@ class TestSaveUserDeck:
         saved = save_user_deck([card])
         assert saved == []
         assert load_user_deck() == []
+
+
+class TestLoadFilteredDeck:
+    def test_returns_static_plus_user_cards(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("DVC_DATA_DIR", str(tmp_path))
+        user_card = _unique_card("filtered_user")
+        save_user_deck([user_card])
+        deck = load_filtered_deck()
+        spanish_values = [c["spanish"] for c in deck]
+        assert user_card["spanish"] in spanish_values
+        # static deck has entries too
+        assert len(deck) > 1
+
+    def test_topic_filter(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("DVC_DATA_DIR", str(tmp_path))
+        deck = load_filtered_deck(topic="general")
+        assert all(c["topic"] == "general" for c in deck)
+        assert len(deck) > 0
+
+    def test_level_min_filter(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("DVC_DATA_DIR", str(tmp_path))
+        deck = load_filtered_deck(level_min=5)
+        assert all(c["level"] >= 5 for c in deck)
+
+    def test_level_max_filter(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("DVC_DATA_DIR", str(tmp_path))
+        deck = load_filtered_deck(level_max=3)
+        assert all(c["level"] <= 3 for c in deck)
+
+    def test_oserror_propagates(self):
+        with patch("backend.flashcards_store.open", side_effect=OSError("file missing")):
+            with pytest.raises(OSError):
+                load_filtered_deck()

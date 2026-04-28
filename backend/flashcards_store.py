@@ -56,3 +56,21 @@ def save_user_deck(new_cards: list[dict]) -> list[dict]:
             json.dump(existing, f, indent=2)
 
     return saved
+
+
+def load_filtered_deck(
+    topic: str | None = None,
+    level_min: int | None = None,
+    level_max: int | None = None,
+) -> list[dict]:
+    """Load static + user deck and apply optional topic and level filters."""
+    with open(_FLASHCARD_DECK_PATH) as f:
+        deck = json.load(f)
+    deck = deck + load_user_deck()
+    if topic is not None:
+        deck = [c for c in deck if c["topic"] == topic]
+    if level_min is not None:
+        deck = [c for c in deck if c["level"] >= level_min]
+    if level_max is not None:
+        deck = [c for c in deck if c["level"] <= level_max]
+    return deck

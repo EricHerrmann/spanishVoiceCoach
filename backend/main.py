@@ -13,7 +13,7 @@ from backend.session import Session, TurnError, list_sessions, load_session, new
 from backend.tts import ELEVENLABS_VOICES
 from backend.stt import get_stt_provider
 from backend.ai.claude import ClaudeProvider
-from backend.flashcards_store import load_user_deck, save_user_deck, _FLASHCARD_DECK_PATH
+from backend.flashcards_store import load_user_deck, save_user_deck, load_filtered_deck
 from backend.turn_service import process_turn
 from backend.translation_service import process_translation
 from backend.pronunciation_service import load_challenges, process_pronunciation_eval
@@ -146,24 +146,18 @@ async def pronunciation_evaluate(audio: UploadFile = File(...), target: str = Fo
 
 @app.get("/pronunciation/challenges")
 def get_pronunciation_challenges():
-    return load_challenges()
+    try:
+        return load_challenges()
+    except (OSError, json.JSONDecodeError):
+        raise HTTPException(status_code=500, detail="Pronunciation challenges data not found")
 
 
 @app.get("/flashcards/deck")
 def get_flashcard_deck(level_min: int = None, level_max: int = None, topic: str = None):
     try:
-        with open(_FLASHCARD_DECK_PATH) as f:
-            deck = json.load(f)
+        return load_filtered_deck(topic=topic, level_min=level_min, level_max=level_max)
     except (OSError, json.JSONDecodeError):
         raise HTTPException(status_code=500, detail="Flashcard deck data not found")
-    deck = deck + load_user_deck()
-    if topic is not None:
-        deck = [c for c in deck if c["topic"] == topic]
-    if level_min is not None:
-        deck = [c for c in deck if c["level"] >= level_min]
-    if level_max is not None:
-        deck = [c for c in deck if c["level"] <= level_max]
-    return deck
 
 
 @app.post("/flashcards/generate")

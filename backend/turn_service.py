@@ -4,7 +4,7 @@ from backend.coach import CoachSession
 from backend.tts_helpers import synthesize_tts
 
 
-def save_audio_file(session_id: str, audio_bytes: bytes, turn_index: int) -> str | None:
+def _save_audio_file(session_id: str, audio_bytes: bytes, turn_index: int) -> str | None:
     """Persist user audio to disk if DVC_SAVE_AUDIO is enabled.
 
     Returns the file path on success, or None if audio saving is disabled.
@@ -31,7 +31,7 @@ def process_turn(
     Returns the full response dict in the same shape as the /turn endpoint response.
     Side effect: appends turns to session and persists via save_session().
     """
-    audio_file = save_audio_file(session.id, audio_bytes, len(session.turns) + 1)
+    audio_file = _save_audio_file(session.id, audio_bytes, len(session.turns) + 1)
 
     stt_result = stt_provider.transcribe(audio_bytes, filename)
 

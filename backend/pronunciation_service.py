@@ -2,8 +2,6 @@
 import json
 import pathlib
 
-from fastapi import HTTPException
-
 from backend.session import TurnError
 
 _PRONUNCIATION_CHALLENGES_PATH: pathlib.Path = (
@@ -12,17 +10,9 @@ _PRONUNCIATION_CHALLENGES_PATH: pathlib.Path = (
 
 
 def load_challenges() -> list[dict]:
-    """Return the pronunciation challenge list from the bundled data file.
-
-    Raises HTTPException(500) if the file is missing or corrupt.
-    """
-    try:
-        with open(_PRONUNCIATION_CHALLENGES_PATH) as f:
-            return json.load(f)
-    except (OSError, json.JSONDecodeError) as exc:
-        raise HTTPException(
-            status_code=500, detail="Pronunciation challenges data not found"
-        ) from exc
+    """Return the pronunciation challenge list from the bundled data file."""
+    with open(_PRONUNCIATION_CHALLENGES_PATH) as f:
+        return json.load(f)
 
 
 def process_pronunciation_eval(
