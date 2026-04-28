@@ -89,11 +89,12 @@ function App() {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    try { localStorage.setItem('dvc_config', JSON.stringify(config)) } catch {}
+    try { localStorage.setItem('dvc_config', JSON.stringify(config)) } catch { /* ignore quota errors */ }
   }, [config])
 
   useEffect(() => {
     const topic = topics.find((t) => t.id === config.topic)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setConversationHint(topic?.starter ? { text: topic.starter, source: 'topic' } : null)
   }, [config.topic, topics])
 

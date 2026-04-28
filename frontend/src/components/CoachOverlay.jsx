@@ -5,6 +5,7 @@ export default function CoachOverlay({ corrections }) {
 
   useEffect(() => {
     if (!corrections || corrections.length === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setVisible(false)
       return
     }

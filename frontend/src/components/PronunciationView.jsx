@@ -45,7 +45,7 @@ export default function PronunciationView({ pronunciationTarget, onClearTarget }
       .then((r) => r.json())
       .then((data) => { setVocabDeck(data); setVocabIndex(0); resetScoring() })
       .catch(() => {})
-  }, [selectedTopic, selectedBand, pronunciationTarget]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedTopic, selectedBand, pronunciationTarget])
 
   useEffect(() => {
     if (pronunciationTarget) resetScoring()

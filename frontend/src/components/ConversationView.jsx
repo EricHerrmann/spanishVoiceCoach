@@ -9,6 +9,7 @@ const HINT_SOURCE_LABELS = {
 
 export default function ConversationView({ state, turns, error, onRecord, onStop, onPractice, onAddFlashcards, coachingMode, hint }) {
   const [hintVisible, setHintVisible] = useState(true)
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setHintVisible(true) }, [hint])
 
   return (
