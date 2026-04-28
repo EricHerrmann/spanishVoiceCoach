@@ -1,5 +1,5 @@
-import { render, screen, fireEvent, act } from '@testing-library/react'
-import { vi, describe, it, expect, beforeEach } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
+import { vi, describe, it, expect } from 'vitest'
 import VoiceButton from '../components/VoiceButton'
 
 describe('VoiceButton', () => {

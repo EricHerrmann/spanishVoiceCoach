@@ -290,3 +290,91 @@ def test_abstract_provider_generate_flashcards_raises():
     """AbstractAIProvider cannot be instantiated directly."""
     with pytest.raises(TypeError):
         AbstractAIProvider()
+
+
+# ---------------------------------------------------------------------------
+# ClaudeProvider._build_messages — sliding-window context tests
+# ---------------------------------------------------------------------------
+
+from datetime import datetime, timezone
+from backend.session import Turn
+
+
+def _make_turn(speaker: str, content: str) -> Turn:
+    """Build a minimal Turn fixture with the given speaker and content."""
+    ts = datetime.now(timezone.utc)
+    if speaker == "user":
+        return Turn(speaker="user", timestamp=ts, transcript_norm=content)
+    else:
+        return Turn(speaker="coach", timestamp=ts, coach_text=content)
+
+
+class TestClaudeProviderBuildMessages:
+    """Unit tests for _build_messages() sliding-window context truncation."""
+
+    def _make_provider(self, context_turns: int | None = None) -> "ClaudeProvider":
+        with patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test-key"}):
+            with patch("backend.ai.claude.anthropic.Anthropic"):
+                provider = ClaudeProvider()
+        if context_turns is not None:
+            provider._context_turns = context_turns
+        return provider
+
+    def test_empty_session_returns_only_new_user_message(self):
+        """0 turns in session → only the new user message (length 1)."""
+        provider = self._make_provider()
+        session = _make_session()
+        # session.turns is empty by default
+        messages = provider._build_messages(session, "hola")
+        assert len(messages) == 1
+        assert messages[0] == {"role": "user", "content": "hola"}
+
+    def test_three_pairs_no_truncation(self):
+        """3 user/coach pairs + new message → 7 total (context_turns=10, no truncation)."""
+        provider = self._make_provider(context_turns=10)
+        session = _make_session()
+        for i in range(3):
+            session.turns.append(_make_turn("user", f"user message {i}"))
+            session.turns.append(_make_turn("coach", f"coach reply {i}"))
+        messages = provider._build_messages(session, "new message")
+        assert len(messages) == 7  # 6 historical + 1 new
+        assert messages[-1] == {"role": "user", "content": "new message"}
+
+    def test_fifteen_pairs_truncated_to_ten(self):
+        """15 user/coach pairs with context_turns=10 → last 10 pairs (20 msgs) + new = 21 total."""
+        provider = self._make_provider(context_turns=10)
+        session = _make_session()
+        for i in range(15):
+            session.turns.append(_make_turn("user", f"user message {i}"))
+            session.turns.append(_make_turn("coach", f"coach reply {i}"))
+        messages = provider._build_messages(session, "new message")
+        assert len(messages) == 21  # 20 historical + 1 new
+        assert messages[-1] == {"role": "user", "content": "new message"}
+
+    def test_context_turns_zero_returns_only_new_message(self):
+        """context_turns=0 → no historical messages, only the new user message."""
+        provider = self._make_provider(context_turns=0)
+        session = _make_session()
+        session.turns.append(_make_turn("user", "old message"))
+        session.turns.append(_make_turn("coach", "old reply"))
+        messages = provider._build_messages(session, "new message")
+        assert len(messages) == 1
+        assert messages[0] == {"role": "user", "content": "new message"}
+
+    def test_most_recent_turns_are_preserved(self):
+        """When truncation occurs, the MOST RECENT turns are kept (not the oldest)."""
+        provider = self._make_provider(context_turns=2)
+        session = _make_session()
+        # Add 5 pairs; with context_turns=2 only last 2 pairs should survive
+        for i in range(5):
+            session.turns.append(_make_turn("user", f"user message {i}"))
+            session.turns.append(_make_turn("coach", f"coach reply {i}"))
+        messages = provider._build_messages(session, "new message")
+        # Should have 4 historical + 1 new = 5
+        assert len(messages) == 5
+        # First historical message should be from pair 3 (0-indexed), not pair 0
+        assert messages[0] == {"role": "user", "content": "user message 3"}
+        assert messages[1] == {"role": "assistant", "content": "coach reply 3"}
+        assert messages[2] == {"role": "user", "content": "user message 4"}
+        assert messages[3] == {"role": "assistant", "content": "coach reply 4"}
+        assert messages[4] == {"role": "user", "content": "new message"}

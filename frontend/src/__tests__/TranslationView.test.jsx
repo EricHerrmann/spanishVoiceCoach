@@ -82,8 +82,13 @@ describe('TranslationView — flashcard button', () => {
       })
 
       // Mock speechSynthesis so speakText() doesn't throw
+      // Must use a regular function (not arrow) so `new SpeechSynthesisUtterance()` works
       global.speechSynthesis = { speak: vi.fn() }
-      global.SpeechSynthesisUtterance = vi.fn(() => ({}))
+      global.SpeechSynthesisUtterance = function FakeSpeechSynthesisUtterance() {
+        this.lang = ''
+        this.onend = null
+        this.onerror = null
+      }
 
       // Mock MediaRecorder with a real constructor function
       let recorderInstance

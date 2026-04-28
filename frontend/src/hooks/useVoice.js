@@ -1,20 +1,27 @@
 import { useState, useRef } from 'react'
+import { useAudioRecorder } from './useAudioRecorder'
+import { useSpeechPlayback } from './useSpeechPlayback'
 
 export function useVoice() {
   const [state, setState] = useState('idle')
   const [turns, setTurns] = useState([])
   const [corrections, setCorrections] = useState([])
   const [error, setError] = useState(null)
-  const mediaRecorderRef = useRef(null)
-  const chunksRef = useRef([])
   const sessionIdRef = useRef(null)
   const abortControllerRef = useRef(null)
-  const audioCtxRef = useRef(null)
+
+  const { play, resumeAudioCtx } = useSpeechPlayback({
+    onEnd: () => setState('idle'),
+  })
+
+  const { startRecording, stopRecording, recordingError } = useAudioRecorder({
+    onStop: (blob) => {
+      setState('processing')
+      submitAudio(blob)
+    },
+  })
 
   function newSession(config) {
-    if (mediaRecorderRef.current?.state === 'recording') {
-      mediaRecorderRef.current.stop()
-    }
     if (abortControllerRef.current) {
       abortControllerRef.current.abort()
     }
@@ -64,46 +71,20 @@ export function useVoice() {
     setState('idle')
   }
 
-  async function startRecording() {
+  async function handleStartRecording() {
     if (!sessionIdRef.current) {
       setError({ stage: 'mic', message: 'Session not ready, please try again.', recoverable: true })
       return
     }
     setError(null)
-    // Resume AudioContext synchronously inside the user gesture (Android Chrome autoplay policy)
-    getAudioCtx().resume()
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus'
-        : 'audio/wav'
-      const recorder = new MediaRecorder(stream, { mimeType })
-      chunksRef.current = []
-
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data)
-      }
-
-      recorder.onstop = async () => {
-        stream.getTracks().forEach((t) => t.stop())
-        setState('processing')
-        const blob = new Blob(chunksRef.current, { type: recorder.mimeType })
-        await submitAudio(blob)
-      }
-
-      mediaRecorderRef.current = recorder
-      recorder.start()
-      setState('recording')
-    } catch (err) {
-      setError({ stage: 'mic', message: err.message, recoverable: true })
-      setState('idle')
+    // Pass resumeAudioCtx so useAudioRecorder can call it synchronously inside the user gesture
+    // before the async getUserMedia call (Android Chrome autoplay policy)
+    const ok = await startRecording(resumeAudioCtx)
+    if (!ok) {
+      setError({ stage: 'mic', message: recordingError || 'Microphone unavailable', recoverable: true })
+      return
     }
-  }
-
-  function stopRecording() {
-    if (mediaRecorderRef.current?.state === 'recording') {
-      mediaRecorderRef.current.stop()
-    }
+    setState('recording')
   }
 
   async function submitAudio(blob) {
@@ -129,59 +110,21 @@ export function useVoice() {
       setError(null)
       setState('playing')
 
-      if (data.audio_b64) {
-        await playAudioB64(data.audio_b64)
-      } else {
-        speakCoachText(data.coach_text)
-      }
-    } catch (err) {
+      play(data.audio_b64, data.coach_text)
+    } catch {
       setError({ stage: 'network', message: 'Network error', recoverable: true })
       setState('idle')
     }
   }
 
-  function getAudioCtx() {
-    if (!audioCtxRef.current) {
-      audioCtxRef.current = new AudioContext()
-    }
-    return audioCtxRef.current
+  return {
+    state,
+    turns,
+    corrections,
+    error,
+    startRecording: handleStartRecording,
+    stopRecording,
+    newSession,
+    loadSession,
   }
-
-  async function playAudioB64(b64) {
-    const binary = atob(b64)
-    const bytes = new Uint8Array(binary.length)
-    for (let i = 0; i < binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i)
-    }
-    const audioCtx = getAudioCtx()
-    try {
-      await audioCtx.resume()
-      const buffer = await audioCtx.decodeAudioData(bytes.buffer)
-      const source = audioCtx.createBufferSource()
-      source.buffer = buffer
-      source.connect(audioCtx.destination)
-      await new Promise((resolve) => {
-        source.onended = resolve
-        source.start()
-      })
-    } catch {
-      // decodeAudioData failure — fall through to idle
-    } finally {
-      setState('idle')
-    }
-  }
-
-  function speakCoachText(text) {
-    if (!text || !window.speechSynthesis) {
-      setState('idle')
-      return
-    }
-    const utt = new SpeechSynthesisUtterance(text)
-    utt.lang = 'es-ES'
-    utt.onend = () => setState('idle')
-    utt.onerror = () => setState('idle')
-    speechSynthesis.speak(utt)
-  }
-
-  return { state, turns, corrections, error, startRecording, stopRecording, newSession, loadSession }
 }
