@@ -42,9 +42,11 @@ export function useAudioRecorder({ onStop }) {
       mediaRecorderRef.current = recorder
       recorder.start()
       setIsRecording(true)
+      return true
     } catch (err) {
       setRecordingError(err.message)
       setIsRecording(false)
+      return false
     }
   }
 

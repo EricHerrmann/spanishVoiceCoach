@@ -8,11 +8,11 @@ export default function TranslationView({ config, onResult, onPractice, onAddFla
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
 
-  const { play } = useSpeechPlayback({
+  const { play, resumeAudioCtx } = useSpeechPlayback({
     onEnd: () => setRecordingState('idle'),
   })
 
-  const { startRecording, stopRecording } = useAudioRecorder({
+  const { startRecording, stopRecording, recordingError } = useAudioRecorder({
     onStop: (blob) => {
       setRecordingState('processing')
       submitAudio(blob)
@@ -21,7 +21,12 @@ export default function TranslationView({ config, onResult, onPractice, onAddFla
 
   async function handleStartRecording() {
     setError(null)
-    await startRecording()
+    // Pass resumeAudioCtx synchronously inside the user gesture (Android Chrome autoplay policy)
+    const ok = await startRecording(resumeAudioCtx)
+    if (!ok) {
+      setError(recordingError || 'Microphone unavailable')
+      return
+    }
     setRecordingState('recording')
   }
 

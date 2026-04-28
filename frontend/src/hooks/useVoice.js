@@ -14,7 +14,7 @@ export function useVoice() {
     onEnd: () => setState('idle'),
   })
 
-  const { startRecording, stopRecording } = useAudioRecorder({
+  const { startRecording, stopRecording, recordingError } = useAudioRecorder({
     onStop: (blob) => {
       setState('processing')
       submitAudio(blob)
@@ -79,7 +79,11 @@ export function useVoice() {
     setError(null)
     // Pass resumeAudioCtx so useAudioRecorder can call it synchronously inside the user gesture
     // before the async getUserMedia call (Android Chrome autoplay policy)
-    await startRecording(resumeAudioCtx)
+    const ok = await startRecording(resumeAudioCtx)
+    if (!ok) {
+      setError({ stage: 'mic', message: recordingError || 'Microphone unavailable', recoverable: true })
+      return
+    }
     setState('recording')
   }
 

@@ -35,7 +35,7 @@ export default function PronunciationView({ pronunciationTarget, onClearTarget }
   // Capture the current target at recording-start time so the onStop closure has the right value
   const targetAtStartRef = useRef(null)
 
-  const { startRecording, stopRecording } = useAudioRecorder({
+  const { startRecording, stopRecording, recordingError } = useAudioRecorder({
     onStop: (blob) => {
       setScoringState('processing')
       submitAudio(blob, targetAtStartRef.current)
@@ -77,7 +77,11 @@ export default function PronunciationView({ pronunciationTarget, onClearTarget }
   async function handleStartRecording() {
     setEvalError(null)
     targetAtStartRef.current = target
-    await startRecording()
+    const ok = await startRecording()
+    if (!ok) {
+      setEvalError(recordingError || 'Microphone unavailable')
+      return
+    }
     setScoringState('recording')
   }
 

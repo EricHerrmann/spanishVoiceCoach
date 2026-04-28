@@ -134,6 +134,23 @@ describe('useSpeechPlayback', () => {
     })
   })
 
+  describe('resumeAudioCtx', () => {
+    let fakeAudioCtx
+
+    beforeEach(() => {
+      fakeAudioCtx = { resume: vi.fn(() => Promise.resolve()) }
+      global.AudioContext = function FakeAudioContext() { return fakeAudioCtx }
+    })
+
+    afterEach(() => { delete global.AudioContext })
+
+    it('resumeAudioCtx() calls AudioContext.resume()', () => {
+      const { result } = renderHook(() => useSpeechPlayback({ onEnd: vi.fn() }))
+      result.current.resumeAudioCtx()
+      expect(fakeAudioCtx.resume).toHaveBeenCalledOnce()
+    })
+  })
+
   describe('AudioContext path (audio_b64 is truthy)', () => {
     let fakeAudioCtx
     let fakeSource
