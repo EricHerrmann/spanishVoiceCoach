@@ -3,6 +3,7 @@ import json
 import os
 import pathlib
 import secrets
+from collections import OrderedDict
 from typing import Literal
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Body
 from fastapi.staticfiles import StaticFiles
@@ -30,8 +31,17 @@ _PROVIDERS = [{"id": "claude", "label": "Claude (Anthropic)"}]
 
 stt_provider = get_stt_provider()
 claude_provider = ClaudeProvider()
-sessions: dict[str, Session] = {}
+_SESSION_CACHE_MAX = 50
+sessions: OrderedDict[str, Session] = OrderedDict()
 app = FastAPI()
+
+
+def _cache_session(session_id: str, session: Session) -> None:
+    """Insert or refresh session in the LRU cache; evict oldest entry if over cap."""
+    sessions.pop(session_id, None)       # remove so reinsertion moves to end (most recent)
+    sessions[session_id] = session
+    while len(sessions) > _SESSION_CACHE_MAX:
+        sessions.popitem(last=False)     # evict least-recently-used (front of OrderedDict)
 
 
 class BasicAuthMiddleware(BaseHTTPMiddleware):
@@ -102,7 +112,7 @@ def session_start(body: SessionStartRequest | None = Body(default=None)):
         tts_provider=req.tts_provider,
         tts_voice_id=req.tts_voice_id,
     )
-    sessions[session.id] = session
+    _cache_session(session.id, session)
     save_session(session)
     return {"session_id": session.id}
 
@@ -125,7 +135,7 @@ def _get_session(session_id: str) -> Session:
         session = load_session(session_id)
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="Session not found")
-    sessions[session.id] = session
+    _cache_session(session.id, session)
     return session
 
 
