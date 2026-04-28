@@ -94,6 +94,7 @@ function App() {
 
   useEffect(() => {
     const topic = topics.find((t) => t.id === config.topic)
+    // conversationHint has multiple setters (topic change + translation result); can't derive with useMemo
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setConversationHint(topic?.starter ? { text: topic.starter, source: 'topic' } : null)
   }, [config.topic, topics])

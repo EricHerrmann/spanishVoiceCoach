@@ -5,6 +5,7 @@ export default function CoachOverlay({ corrections }) {
 
   useEffect(() => {
     if (!corrections || corrections.length === 0) {
+      // visible is set by both corrections arrival and an 8-second timer; cannot derive from props alone
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setVisible(false)
       return
