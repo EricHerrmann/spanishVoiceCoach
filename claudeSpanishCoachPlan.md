@@ -344,14 +344,14 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 - [x] Serve frontend build output (`frontend/dist`) as static files from FastAPI — single ngrok URL covers both app and API
 - [x] Evaluate hosting: local network + ngrok chosen for Phase 7; cloud deployment moved to Phase 10
 - [x] Document Android setup in `docs/android-setup.md`
-- [ ] Manual smoke test on Android device: full session — mic capture → Whisper → coach response → TTS playback
-- [ ] Add Phase 7 procedures to `docs/manualTestPlan.md`
+- [x] Manual smoke test on Android device: full session — mic capture → Whisper → coach response → TTS playback
+- [x] Add Phase 7 procedures to `docs/manualTestPlan.md`
 
 ### Phase 7 Gate
 
-- [ ] PWA installable on Android Chrome
-- [ ] Full voice session works on Android
-- [ ] Manual smoke test signed off in `docs/manualTestLog.md`
+- [x] PWA installable on Android Chrome
+- [x] Full voice session works on Android
+- [x] Manual smoke test signed off in `docs/manualTestLog.md`
 
 ---
 

@@ -118,6 +118,20 @@ Each phase gate requires a smoke-test sign-off entry before the next phase begin
 
 ---
 
+## Phase 7 — Android / PWA
+
+**Gate criteria:**
+- [x] PWA installable on Android Chrome
+- [x] Full voice session works on Android
+- [x] Manual smoke test signed off in `docs/manualTestLog.md`
+
+**Sign-off:**
+- Date: 2026-04-28
+- Tester: oldhat86@gmail.com
+- Notes: PASSED. Full voice session verified on Android device: mic capture → Whisper STT → Claude coach response → TTS playback. PWA installable in Chrome. All tests passing (175 backend, 6 skipped; 147 frontend; lint clean).
+
+---
+
 ## Phase 8 — Code Review & Refactor
 
 **Gate criteria:**

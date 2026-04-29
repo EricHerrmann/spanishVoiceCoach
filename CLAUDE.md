@@ -31,9 +31,12 @@ Full phase detail, data model, and gate criteria live in `claudeSpanishCoachPlan
 
 ## Current Repository State
 
-- Pre-implementation. Design approved. Phase 0 not yet started.
-- Planning artifacts present: `SpanishConversationCoachGoals.md`, `claudeSpanishCoachPlan.md`, `docs/`.
-- No backend, frontend, or test code exists yet.
+See `docs/projectStatus.md` for the current phase status, test counts, and open items. That file is the authoritative one-stop view of project state; this section intentionally stays brief.
+
+- Phases 0–9, A, B: complete and smoke-test signed off.
+- Phase 10 (Cloud Deployment): app live at `https://spanishcoach.fly.dev`; two manual gate checks still open (Android session end-to-end + persistence across redeploy).
+- R1–R6 (code review refactor): all complete and merged 2026-04-28.
+- Backend: 175 tests passing, 6 skipped. Frontend: 147 passing. Lint: clean.
 
 ## Recommended Technical Baseline
 
@@ -114,3 +117,31 @@ When adding implementation, also update:
 - `claudeSpanishCoachPlan.md` — check off completed tasks, record gate sign-offs
 - `docs/manualTestLog.md` — phase smoke-test results
 - `docs/` architecture or runbook notes as needed
+
+---
+
+## Project Process Rules
+
+### projectStatus.md
+
+`docs/projectStatus.md` is the single-page project dashboard. It is a **pointer document** — it summarizes and references source documents; it does not reproduce their content.
+
+**Update `docs/projectStatus.md` whenever:**
+- A phase gate is signed off (update the Phase Status table row and the Test Counts table)
+- A phase's status changes (e.g., "Not started" → "In progress", code complete but gate pending)
+- The open items list changes (a pending item closes, or a new blocker is identified)
+- Test counts change materially (after any phase that adds tests)
+- This CLAUDE.md "Current Repository State" section is updated (keep both in sync)
+
+**Rules for maintaining it as a pointer:**
+- Phase descriptions belong in `claudeSpanishCoachPlan.md`, not here. One-line status only per phase.
+- Smoke-test notes belong in `docs/manualTestLog.md`. Record only the gate outcome (signed off / partial / pending) in the status table.
+- Task checklists belong in `claudeSpanishCoachPlan.md` or `docs/claudeCodeImplementationPlan.md`. Do not copy tasks into `projectStatus.md`.
+- If you find yourself writing more than one sentence of explanation for a phase, move it to the source document and add a reference.
+
+### Source document sync
+
+- `claudeSpanishCoachPlan.md` is the single source of truth for phase definitions, task checklists, and gate criteria. Update it directly; never reproduce its content elsewhere.
+- `docs/manualTestLog.md` is the single source of truth for smoke-test results and sign-off dates. Every gate sign-off lives there.
+- `docs/claudeCodeImplementationPlan.md` tracks the R1–R6 refactor work. When a new code-review cycle produces findings, create a new plan document in `docs/` rather than modifying this file.
+- When a gate closes, update **both** the source document (`claudeSpanishCoachPlan.md` task checkboxes + gate criteria) **and** `docs/projectStatus.md` (phase row + test counts) in the same commit.
