@@ -6,9 +6,9 @@
 
 ## Executive Summary
 
-**Last updated:** 2026-04-25 (Phase A and Phase B signed off)
+**Last updated:** 2026-05-01 (Phase 11 implementation started)
 
-**Current state:** Phases 0–9, A, and B complete. Next: Phase 10 (Cloud Deployment) or Phase 7 Android/PWA gate sign-off.
+**Current state:** Phases 0–10, A, and B complete. Phase 11 (Windows 11 Packaging) is in progress and Phase 13 (feature expansion) remains queued. Phase 12 is obsolete.
 
 | Phase | Name | Status | Tests | Notes |
 |-------|------|--------|-------|-------|
@@ -19,14 +19,15 @@
 | 4 — Session Config UI | Topic/level picker, provider selector | ✅ Complete | 67 backend, 2 skipped; 33 frontend | Full session configuration in UI; signed off 2026-04-21 |
 | 5 — Persistence | Session history, transcript save | ✅ Complete | 74 backend, 2 skipped; 38 frontend | Session history and local persistence signed off 2026-04-21 |
 | 6 — ElevenLabs TTS | Swap browser TTS via tts.py | ✅ Complete | 92 backend, 2 skipped; 46 frontend | Voice quality upgrade; signed off 2026-04-22 |
-| 7 — Android / PWA | PWA packaging, mobile UX | ⏳ In progress | — | Local network + ngrok; Phase 10 = cloud |
+| 7 — Android / PWA | PWA packaging, mobile UX | ✅ Complete | — | Signed off 2026-04-28 |
 | 8 — Code Review & Refactor | Systematic review, complexity + efficiency | ✅ Complete | 93 backend; 47 frontend | Discipline checkpoint before cloud/packaging |
 | 9 — GUI Layout Redesign | Two-pane desktop layout, mobile drawer | ✅ Complete | 60 frontend | Chat+tools split; responsive at 768px; signed off 2026-04-23 |
 | A — Flashcards + Translation | Vocab flashcards, English→Spanish translation | ✅ Complete | 114 backend (4 skipped), 89 frontend | NavTabs, FlashcardsView, TranslationView, GET /flashcards/deck, POST /translate; signed off 2026-04-25 |
 | B — Pronunciation Practice | Vocab/phonetic scoring, cross-mode Practice button | ✅ Complete | 114 backend (4 skipped), 89 frontend | PronunciationView, evaluate_pronunciation(), Practice button; signed off 2026-04-25 |
-| 10 — Cloud Deployment | Cloud hosting, STT evaluation | ⏳ Not started | — | Decision doc required before implementation |
-| 11 — Windows 11 Packaging | Docker Compose packaging for Windows 11 | ⏳ Not started | — | Distribute to other laptops |
-| 12 — Feature Expansion | Progress tracking, structured lessons, open brainstorm | ⏳ Not started | — | Each workstream gets its own spec first |
+| 10 — Cloud Deployment | Cloud hosting, STT evaluation | ✅ Complete | 180 backend, 6 skipped; 149 frontend | Signed off 2026-05-01 |
+| 11 — Windows 11 Packaging | Docker Compose packaging for Windows 11 | ⏳ In progress | — | Dockerfile already present; Compose/doc/manual-test path added; Windows smoke test still pending |
+| 12 — Mobile Capability | Obsolete | — | Covered by Phases 7, 9, and 10; remaining mobile corrections issue moved into Phase 13 |
+| 13 — Feature Expansion | Progress tracking, structured lessons, mobile corrections UX, open brainstorm | ⏳ Not started | — | Each workstream gets its own spec first |
 
 **MVP = Phases 0–3.** Phase 4 adds full session configuration and Phase 5 adds local persistence and session history. Phase 6 is the voice quality upgrade. Phases 8–9 refactor and redesign before cloud deployment.
 
@@ -461,18 +462,18 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 
 ### Tasks
 
-- [ ] Explore API-based STT options (OpenAI Whisper API, Deepgram) — benchmark cost, latency, Spanish accuracy vs local Whisper `base`
-- [ ] Evaluate hosting options — document which platforms support the RAM and pricing requirements
-- [ ] Evaluate HTTPS and secrets management per candidate host
-- [ ] Run a test session to measure cloud latency vs local — document perceived usability delta
-- [ ] Write decision doc to `docs/superpowers/specs/YYYY-MM-DD-phase10-cloud-decision.md`
-- [ ] Implement chosen approach based on decision doc
+- [x] Explore API-based STT options (OpenAI Whisper API, Deepgram) — benchmark cost, latency, Spanish accuracy vs local Whisper `base`
+- [x] Evaluate hosting options — document which platforms support the RAM and pricing requirements
+- [x] Evaluate HTTPS and secrets management per candidate host
+- [x] Run a test session to measure cloud latency vs local — document perceived usability delta
+- [x] Write decision doc to `docs/superpowers/specs/YYYY-MM-DD-phase10-cloud-decision.md`
+- [x] Implement chosen approach based on decision doc
 
 ### Phase 10 Gate
 
-- [ ] Decision doc written and committed before implementation begins
-- [ ] App accessible on Android without ngrok
-- [ ] Manual smoke test signed off
+- [x] Decision doc written and committed before implementation begins
+- [x] App accessible on Android without ngrok
+- [x] Manual smoke test signed off
 
 ---
 
@@ -490,12 +491,12 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 
 ### Tasks
 
-- [ ] Write `Dockerfile` — Python 3.12 base, install uv, copy backend, install deps, copy built `frontend/dist/`, expose port 8001
-- [ ] Write `docker-compose.yml` — single service, mounts `.env` for secrets, persists `~/.duoVoiceCoach` session data via a named volume
-- [ ] Write `.env.example` additions for Docker context (if any new vars needed)
-- [ ] Write `docs/windows-setup.md` — install Docker Desktop, clone repo, `npm run build`, `docker compose up`, open `http://localhost:8001`
+- [x] Write `Dockerfile` — Python 3.12 base, install uv, copy backend, install deps, copy built `frontend/dist/`, expose port 8001
+- [x] Write `docker-compose.yml` — single service, loads `.env` into container env, persists app data via a named volume
+- [x] Write `.env.example` additions for Docker/provider context
+- [x] Write `docs/windows-setup.md` — install Docker Desktop, `docker compose build`, `docker compose up`, open `http://localhost:8001`
 - [ ] Manual smoke test: full session on Windows 11 via Docker — mic capture → Whisper → coach response → TTS playback
-- [ ] Add Phase 9 procedures to `docs/manualTestPlan.md`
+- [x] Add Phase 11 procedures to `docs/manualTestPlan.md`
 
 ### Phase 11 Gate
 
@@ -507,20 +508,17 @@ CoachResponse:                # typed return from AbstractAIProvider.chat(); add
 
 ## Phase 12 — Mobile Capability
 
-**Issues:**
-- `CoachOverlay` renders in the right pane (drawer). On mobile, if the drawer is closed when a correction arrives in Explicit or On-demand mode, the correction is invisible — it auto-dismisses after 8 seconds with the user never seeing it.
+**Status:** Obsolete.
 
-### Tasks
+**Reason:**
+- Broad mobile capability is already covered by earlier work:
+  - Phase 7 established Android/PWA installability and real-device voice-session support.
+  - Phase 9 added the mobile drawer layout.
+  - Phase 10 Fly.io deployment removed the earlier ngrok/local-network constraint and made the app reachable on mobile as deployed software.
+- The remaining unresolved mobile issue is feature-scoped rather than phase-scoped: corrections can be missed when the drawer is closed on mobile.
 
-- [ ] Write spec for chosen correction notification pattern on mobile
-- [ ] Implement chosen approach
-- [ ] Verify all three coaching modes (on_demand, explicit, shadowing) surface corrections correctly on mobile
-- [ ] Add Phase 12 procedures to `docs/manualTestPlan.md`
-
-### Phase 12 Gate
-
-- [ ] Corrections visible in all three coaching modes without requiring the drawer to be open
-- [ ] Manual smoke test on Android PWA signed off in `docs/manualTestLog.md`
+**Disposition:**
+- Remaining mobile correction visibility work moves to Phase 13 as the `Mobile Corrections UX` feature.
 
 ---
 
@@ -551,7 +549,28 @@ Guided topic exchanges before opening to freeform conversation.
 
 **New backend:** `backend/lessons/` directory; `GET /lessons/{topic}` route; `lesson_step` tracking in session state.
 
-### Workstream 3: Open Brainstorm (candidates, not commitments)
+### Workstream 3: Mobile Corrections UX
+
+Resolve the remaining mobile-specific coaching visibility issue without reintroducing a broad standalone mobile phase.
+
+**Problem:**
+- `CoachOverlay` renders in the right-pane drawer. On mobile, if the drawer is closed when a correction arrives in `explicit` or `on_demand` mode, the correction can auto-dismiss before the learner ever sees it.
+
+**Goal:**
+- Make corrections discoverable on mobile without requiring the drawer to already be open.
+
+**Candidate approaches:**
+- Auto-open the drawer when a correction arrives
+- Show a visible badge or attention state on the Tools button until the correction is viewed
+- Show an inline banner, toast, or chip that points the learner to the correction
+- Pin a compact correction summary in the conversation pane on mobile
+
+**Gate for this feature:**
+- Corrections are discoverable in `explicit` and `on_demand` modes on Android/mobile widths regardless of prior drawer state
+- `shadowing` mode remains correction-overlay-free
+- Manual smoke test on Android/mobile width signed off in `docs/manualTestLog.md`
+
+### Workstream 4: Open Brainstorm (candidates, not commitments)
 
 Each item requires its own mini-spec before any implementation:
 
@@ -564,6 +583,7 @@ Each item requires its own mini-spec before any implementation:
 - [ ] Write workstream specs before any workstream implementation begins
 - [ ] Progress tracking: add `category` field to `Correction`; update `ClaudeProvider` structured output; implement stats view
 - [ ] Structured lessons: create lesson JSON for at least 3 topics at 2 level bands; implement `GET /lessons/{topic}`; add step indicator to frontend
+- [ ] Mobile Corrections UX: choose and implement a correction visibility pattern for mobile drawer-closed states
 - [ ] Open brainstorm: spec and implement at least one candidate item
 - [ ] Add Phase 13 procedures to `docs/manualTestPlan.md`
 
@@ -572,6 +592,7 @@ Each item requires its own mini-spec before any implementation:
 - [ ] All workstream specs written and committed before implementation begins
 - [ ] Progress tracking: stats view renders with real session data
 - [ ] Structured lessons: end-to-end lesson session works for 3 topics; manual smoke test
+- [ ] Mobile Corrections UX: corrections are discoverable on mobile in `explicit` and `on_demand` modes regardless of drawer state
 - [ ] Open brainstorm: at least one item specced and implemented
 - [ ] Manual smoke test signed off in `docs/manualTestLog.md`
 

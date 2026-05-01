@@ -1,6 +1,6 @@
-# duoVoiceCoach — Manual Test Plan: Phases 0–7 + Phase A + Phase B
+# duoVoiceCoach — Manual Test Plan
 
-**Purpose:** Step-by-step test procedures for phase gate sign-offs. Phases 0–9 are complete and passed. Record results in `manualTestLog.md`.
+**Purpose:** Step-by-step test procedures for phase gate sign-offs. Record results in `manualTestLog.md`.
 
 **Prerequisites:**
 - `uv` installed, Python 3.12+ available
@@ -1379,3 +1379,90 @@ Open `http://localhost:5173`.
 17. Conversation tab: complete a full 3-turn voice session — confirm all existing functionality works
 18. Pronunciation tab: all sub-features work after returning from conversation
 
+---
+
+## Phase 11 — Windows 11 Packaging
+
+**Goal:** Verify the Docker Compose packaging path starts the full stack on Windows 11 with persistent session data and no local Python/Node toolchain required.
+
+### Prerequisites
+
+- Windows 11 machine
+- Docker Desktop installed and running with Linux containers enabled
+- Repo cloned locally
+- Root `.env` file populated with required keys
+
+### MT-11-1: Build and start the packaged app
+
+From the repo root in PowerShell or Windows Terminal:
+
+```bash
+docker compose build
+docker compose up
+```
+
+**Pass:**
+- Image builds successfully
+- `app` container starts without crash-looping
+- Logs show uvicorn listening on `0.0.0.0:8001`
+
+### MT-11-2: Browser load and health check
+
+1. Open `http://localhost:8001` in a desktop browser.
+2. In a separate terminal:
+
+```bash
+curl http://localhost:8001/health
+```
+
+**Pass:**
+- Browser loads the app shell successfully
+- Health endpoint returns `{"status":"ok"}`
+
+### MT-11-3: Full voice session through Docker
+
+1. Start a new conversation in the browser
+2. Record a Spanish utterance
+3. Stop recording and wait for the coach response
+
+**Pass:**
+- Mic capture works in browser
+- Transcript appears
+- Coach response appears
+- TTS playback works
+
+### MT-11-4: Persistence survives restart
+
+1. Complete at least one conversation turn
+2. Stop the stack:
+
+```bash
+docker compose down
+```
+
+3. Start it again:
+
+```bash
+docker compose up
+```
+
+4. Confirm session history still contains the earlier session
+
+**Pass:**
+- Session history remains after restart
+- Previously saved session can be opened
+
+### MT-11-5: Named volume exists
+
+Run:
+
+```bash
+docker volume ls
+```
+
+**Pass:**
+- `duo_data` appears in the volume list
+
+### Record Results
+
+Record sign-off or failures in `docs/manualTestLog.md`.

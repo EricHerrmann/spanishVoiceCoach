@@ -154,12 +154,12 @@ _MODE_INSTRUCTIONS = {
 class ClaudeProvider(AbstractAIProvider):
     """Anthropic Claude AI provider using tool use for structured output."""
 
-    def __init__(self):
+    def __init__(self, model: str | None = None):
         api_key = os.environ.get("ANTHROPIC_API_KEY")
         if not api_key:
             raise RuntimeError("ANTHROPIC_API_KEY environment variable not set")
         self._client = anthropic.Anthropic(api_key=api_key)
-        self._model = os.environ.get("DVC_CLAUDE_MODEL", "claude-sonnet-4-6")
+        self._model = model or os.environ.get("DVC_CLAUDE_MODEL", "claude-sonnet-4-6")
         self._max_tokens = int(os.environ.get("DVC_CLAUDE_MAX_TOKENS", "1024"))
         self._context_turns = int(os.environ.get("DVC_CONTEXT_TURNS", "10"))
 

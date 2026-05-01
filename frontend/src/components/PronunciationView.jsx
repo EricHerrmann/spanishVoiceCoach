@@ -13,7 +13,7 @@ const SOURCE_LABELS = {
   translation: 'From translation',
 }
 
-export default function PronunciationView({ pronunciationTarget, onClearTarget }) {
+export default function PronunciationView({ config, pronunciationTarget, onClearTarget }) {
   const [tab, setTab] = useState('vocabulary')
 
   // Vocabulary tab state
@@ -89,6 +89,8 @@ export default function PronunciationView({ pronunciationTarget, onClearTarget }
     const form = new FormData()
     form.append('audio', blob, `recording.${blob.type.split('/')[1]?.split(';')[0] || 'wav'}`)
     form.append('target', currentTarget)
+    form.append('ai_provider', config?.ai_provider || 'claude')
+    if (config?.ai_model) form.append('ai_model', config.ai_model)
     try {
       const res = await fetch('/pronunciation/evaluate', { method: 'POST', body: form })
       const data = await res.json()

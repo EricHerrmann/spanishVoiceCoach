@@ -10,10 +10,10 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
+from backend.ai.registry import get_ai_provider, list_ai_providers, validate_ai_selection
 from backend.session import Session, TurnError, list_sessions, load_session, new_session, save_session
 from backend.tts import ELEVENLABS_VOICES
 from backend.stt import get_stt_provider
-from backend.ai.claude import ClaudeProvider
 from backend.flashcards_store import load_user_deck, save_user_deck, load_filtered_deck
 from backend.turn_service import process_turn
 from backend.translation_service import process_translation
@@ -27,10 +27,8 @@ _TOPICS = [
     {"id": "work_daily_routine", "label": "Work & daily routine", "starter": "¿Cómo fue tu día en el trabajo?"},
     {"id": "travel_tourism", "label": "Travel & tourism", "starter": "¿Qué lugares me recomiendas visitar aquí?"},
 ]
-_PROVIDERS = [{"id": "claude", "label": "Claude (Anthropic)"}]
 
 stt_provider = get_stt_provider()
-claude_provider = ClaudeProvider()
 _SESSION_CACHE_MAX = 50
 sessions: OrderedDict[str, Session] = OrderedDict()
 app = FastAPI()
@@ -69,7 +67,8 @@ app.add_middleware(BasicAuthMiddleware)
 class SessionStartRequest(BaseModel):
     topic: str = "general"
     level: int = Field(default=5, ge=1, le=10)
-    ai_provider: Literal["claude"] = "claude"
+    ai_provider: str = "claude"
+    ai_model: str | None = None
     coaching_mode: Literal["on_demand", "explicit", "shadowing"] = "on_demand"
     tts_provider: Literal["browser", "elevenlabs"] = "browser"
     tts_voice_id: str | None = None
@@ -79,6 +78,15 @@ class FlashcardGenerateRequest(BaseModel):
     text: str | None = None
     turns: list[dict] = []
     source: Literal["turn", "conversation", "translation"] = "turn"
+    ai_provider: str = "claude"
+    ai_model: str | None = None
+
+
+def _resolve_ai_selection(ai_provider: str, ai_model: str | None = None) -> tuple[str, str]:
+    try:
+        return validate_ai_selection(ai_provider, ai_model)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
 
 
 @app.get("/health")
@@ -93,7 +101,7 @@ def get_topics():
 
 @app.get("/providers")
 def get_providers():
-    return _PROVIDERS
+    return list_ai_providers()
 
 
 @app.get("/tts-voices")
@@ -104,10 +112,12 @@ def get_tts_voices():
 @app.post("/session/start")
 def session_start(body: SessionStartRequest | None = Body(default=None)):
     req = body or SessionStartRequest()
+    ai_provider, ai_model = _resolve_ai_selection(req.ai_provider, req.ai_model)
     session = new_session(
         topic=req.topic,
         level=req.level,
-        ai_provider=req.ai_provider,
+        ai_provider=ai_provider,
+        ai_model=ai_model,
         coaching_mode=req.coaching_mode,
         tts_provider=req.tts_provider,
         tts_voice_id=req.tts_voice_id,
@@ -143,14 +153,22 @@ def _get_session(session_id: str) -> Session:
 async def post_turn(audio: UploadFile = File(...), session_id: str = Form(...)):
     session = _get_session(session_id)
     audio_bytes = await audio.read()
-    return process_turn(session, audio_bytes, audio.filename or "audio.wav", stt_provider, claude_provider)
+    ai_provider = get_ai_provider(session.ai_provider, session.ai_model)
+    return process_turn(session, audio_bytes, audio.filename or "audio.wav", stt_provider, ai_provider)
 
 
 @app.post("/pronunciation/evaluate")
-async def pronunciation_evaluate(audio: UploadFile = File(...), target: str = Form(...)):
+async def pronunciation_evaluate(
+    audio: UploadFile = File(...),
+    target: str = Form(...),
+    ai_provider: str = Form("claude"),
+    ai_model: str | None = Form(None),
+):
     audio_bytes = await audio.read()
+    provider_id, model_id = _resolve_ai_selection(ai_provider, ai_model)
+    provider = get_ai_provider(provider_id, model_id)
     return process_pronunciation_eval(
-        audio_bytes, audio.filename or "audio.wav", target, stt_provider, claude_provider
+        audio_bytes, audio.filename or "audio.wav", target, stt_provider, provider
     )
 
 
@@ -172,7 +190,8 @@ def get_flashcard_deck(level_min: int = None, level_max: int = None, topic: str 
 
 @app.post("/flashcards/generate")
 def post_flashcard_generate(body: FlashcardGenerateRequest):
-    result = claude_provider.generate_flashcards(body.text or "", body.turns, body.source)
+    provider_id, model_id = _resolve_ai_selection(body.ai_provider, body.ai_model)
+    result = get_ai_provider(provider_id, model_id).generate_flashcards(body.text or "", body.turns, body.source)
     if isinstance(result, TurnError):
         raise HTTPException(status_code=500, detail=result.message)
     return save_user_deck(result)
@@ -183,10 +202,14 @@ async def translate(
     audio: UploadFile = File(...),
     tts_provider: str = Form("browser"),
     tts_voice_id: str = Form(None),
+    ai_provider: str = Form("claude"),
+    ai_model: str | None = Form(None),
 ):
     audio_bytes = await audio.read()
+    provider_id, model_id = _resolve_ai_selection(ai_provider, ai_model)
+    provider = get_ai_provider(provider_id, model_id)
     return process_translation(
-        audio_bytes, audio.filename or "audio.wav", tts_provider, tts_voice_id, stt_provider, claude_provider
+        audio_bytes, audio.filename or "audio.wav", tts_provider, tts_voice_id, stt_provider, provider
     )
 
 

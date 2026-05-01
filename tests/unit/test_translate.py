@@ -34,7 +34,8 @@ class TestTranslateEndpoint:
         assert data["audio_b64"] is None
 
     def test_response_shape_with_mocked_translate(self):
-        with patch("backend.main.claude_provider") as mock_provider:
+        with patch("backend.main.get_ai_provider") as mock_get_provider:
+            mock_provider = mock_get_provider.return_value
             mock_provider.translate.return_value = "hola"
             with open(FIXTURE_WAV, "rb") as f:
                 response = client.post(
@@ -52,7 +53,8 @@ class TestTranslateEndpoint:
         assert data["spanish"] == "hola"
 
     def test_translate_error_returns_structured_error(self):
-        with patch("backend.main.claude_provider") as mock_provider:
+        with patch("backend.main.get_ai_provider") as mock_get_provider:
+            mock_provider = mock_get_provider.return_value
             mock_provider.translate.return_value = TurnError(
                 stage="ai", message="API down", recoverable=True
             )

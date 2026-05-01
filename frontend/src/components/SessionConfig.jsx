@@ -11,6 +11,7 @@ export default function SessionConfig({ config, onConfigChange, topics, provider
   const [customSelected, setCustomSelected] = useState(false)
   const showCustomInput = customSelected || (topics.length > 0 && !isKnownTopic && config.topic !== '')
   const selectedTopic = topics.find((t) => t.id === config.topic)
+  const selectedProvider = providers.find((p) => p.id === config.ai_provider) ?? providers[0]
 
   const topicSelectValue = showCustomInput ? 'custom' : config.topic
 
@@ -29,6 +30,14 @@ export default function SessionConfig({ config, onConfigChange, topics, provider
     onConfigChange({
       tts_provider: newProvider,
       tts_voice_id: newProvider === 'elevenlabs' ? (ttsVoices[0]?.id || null) : null,
+    })
+  }
+
+  function handleAiProviderChange(e) {
+    const nextProvider = providers.find((p) => p.id === e.target.value)
+    onConfigChange({
+      ai_provider: e.target.value,
+      ai_model: nextProvider?.default_model ?? nextProvider?.models?.[0]?.id ?? null,
     })
   }
 
@@ -111,13 +120,28 @@ export default function SessionConfig({ config, onConfigChange, topics, provider
             <select
               id="ai-provider"
               value={config.ai_provider}
-              onChange={(e) => onConfigChange({ ai_provider: e.target.value })}
+              onChange={handleAiProviderChange}
             >
               {providers.map((p) => (
                 <option key={p.id} value={p.id}>{p.label}</option>
               ))}
             </select>
           </div>
+
+          {selectedProvider?.models?.length > 0 && (
+            <div className="session-config-field">
+              <label htmlFor="ai-model">AI model</label>
+              <select
+                id="ai-model"
+                value={config.ai_model || selectedProvider.default_model || selectedProvider.models[0].id}
+                onChange={(e) => onConfigChange({ ai_model: e.target.value })}
+              >
+                {selectedProvider.models.map((model) => (
+                  <option key={model.id} value={model.id}>{model.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="session-config-field">
             <label htmlFor="tts-provider">Voice</label>

@@ -11,6 +11,7 @@ const MOCK_CHALLENGES = [
   { id: 'pc001', target: 'perro', sound_focus: 'rr', hint: 'Roll the rr sound.' },
   { id: 'pc002', target: 'España', sound_focus: 'ñ', hint: 'Nasal palatal sound.' },
 ]
+const DEFAULT_CONFIG = { ai_provider: 'claude', ai_model: 'claude-sonnet-4-6' }
 
 beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn().mockImplementation((url) => {
@@ -31,24 +32,24 @@ afterEach(() => { vi.unstubAllGlobals() })
 
 describe('PronunciationView — vocabulary tab (default)', () => {
   it('shows Vocabulary tab as active by default', async () => {
-    render(<PronunciationView />)
+    render(<PronunciationView config={DEFAULT_CONFIG} />)
     await waitFor(() => expect(screen.getByText('Vocabulary')).toBeInTheDocument())
     expect(screen.getByText('Vocabulary').className).toContain('pronunciation-tab--active')
   })
 
   it('shows Spanish target text from vocab deck', async () => {
-    render(<PronunciationView />)
+    render(<PronunciationView config={DEFAULT_CONFIG} />)
     await waitFor(() => expect(screen.getByText('hola')).toBeInTheDocument())
   })
 
   it('Record button is present when a target is shown', async () => {
-    render(<PronunciationView />)
+    render(<PronunciationView config={DEFAULT_CONFIG} />)
     await waitFor(() => screen.getByText('hola'))
     expect(screen.getByText('Record')).toBeInTheDocument()
   })
 
   it('Next card advances to second card', async () => {
-    render(<PronunciationView />)
+    render(<PronunciationView config={DEFAULT_CONFIG} />)
     await waitFor(() => screen.getByText('hola'))
     fireEvent.click(screen.getByText('Next card'))
     expect(screen.getByText('adiós')).toBeInTheDocument()
@@ -57,14 +58,14 @@ describe('PronunciationView — vocabulary tab (default)', () => {
 
 describe('PronunciationView — challenges tab', () => {
   it('switching to Challenges tab shows challenge list', async () => {
-    render(<PronunciationView />)
+    render(<PronunciationView config={DEFAULT_CONFIG} />)
     await waitFor(() => screen.getByText('Challenges'))
     fireEvent.click(screen.getByText('Challenges'))
     await waitFor(() => expect(screen.getByText('perro')).toBeInTheDocument())
   })
 
   it('clicking a challenge sets it as the target', async () => {
-    render(<PronunciationView />)
+    render(<PronunciationView config={DEFAULT_CONFIG} />)
     await waitFor(() => screen.getByText('Challenges'))
     fireEvent.click(screen.getByText('Challenges'))
     await waitFor(() => screen.getByText('perro'))
@@ -75,31 +76,31 @@ describe('PronunciationView — challenges tab', () => {
 
 describe('PronunciationView — single-phrase mode', () => {
   it('when pronunciationTarget is set, shows that phrase without tabs', () => {
-    render(<PronunciationView pronunciationTarget={{ text: 'Muy bien, gracias.', source: 'conversation' }} onClearTarget={vi.fn()} />)
+    render(<PronunciationView config={DEFAULT_CONFIG} pronunciationTarget={{ text: 'Muy bien, gracias.', source: 'conversation' }} onClearTarget={vi.fn()} />)
     expect(screen.getByText('Muy bien, gracias.')).toBeInTheDocument()
     expect(screen.queryByText('Vocabulary')).not.toBeInTheDocument()
     expect(screen.queryByText('Challenges')).not.toBeInTheDocument()
   })
 
   it('shows a back button in single-phrase mode', () => {
-    render(<PronunciationView pronunciationTarget={{ text: 'Muy bien.', source: 'conversation' }} onClearTarget={vi.fn()} />)
+    render(<PronunciationView config={DEFAULT_CONFIG} pronunciationTarget={{ text: 'Muy bien.', source: 'conversation' }} onClearTarget={vi.fn()} />)
     expect(screen.getByText('← Back')).toBeInTheDocument()
   })
 
   it('back button calls onClearTarget', () => {
     const onClearTarget = vi.fn()
-    render(<PronunciationView pronunciationTarget={{ text: 'Muy bien.', source: 'conversation' }} onClearTarget={onClearTarget} />)
+    render(<PronunciationView config={DEFAULT_CONFIG} pronunciationTarget={{ text: 'Muy bien.', source: 'conversation' }} onClearTarget={onClearTarget} />)
     fireEvent.click(screen.getByText('← Back'))
     expect(onClearTarget).toHaveBeenCalled()
   })
 
   it('shows "From conversation" source label when source is conversation', () => {
-    render(<PronunciationView pronunciationTarget={{ text: 'Muy bien.', source: 'conversation' }} onClearTarget={vi.fn()} />)
+    render(<PronunciationView config={DEFAULT_CONFIG} pronunciationTarget={{ text: 'Muy bien.', source: 'conversation' }} onClearTarget={vi.fn()} />)
     expect(screen.getByText('From conversation')).toBeInTheDocument()
   })
 
   it('shows "From translation" source label when source is translation', () => {
-    render(<PronunciationView pronunciationTarget={{ text: 'El gato es bonito.', source: 'translation' }} onClearTarget={vi.fn()} />)
+    render(<PronunciationView config={DEFAULT_CONFIG} pronunciationTarget={{ text: 'El gato es bonito.', source: 'translation' }} onClearTarget={vi.fn()} />)
     expect(screen.getByText('From translation')).toBeInTheDocument()
   })
 })

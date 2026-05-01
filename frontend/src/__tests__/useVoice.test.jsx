@@ -50,6 +50,7 @@ describe('useVoice — submitAudio error handling', () => {
         topic: 'general',
         level: 5,
         ai_provider: 'claude',
+        ai_model: 'claude-sonnet-4-6',
         coaching_mode: 'on_demand',
         tts_provider: 'browser',
         tts_voice_id: null,

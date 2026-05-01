@@ -1,7 +1,7 @@
 import os
 from typing import Union
 
-from openai import OpenAI
+import httpx
 
 from backend.ai.base import AbstractAIProvider
 from backend.ai.claude import _LEVEL_SCALE, _MODE_INSTRUCTIONS, parse_flashcard_response
@@ -16,25 +16,15 @@ from backend.session import (
 )
 
 
-class OpenAICompatibleProvider(AbstractAIProvider):
-    """JSON-prompt provider for OpenAI-compatible chat completion APIs."""
+class GoogleProvider(AbstractAIProvider):
+    """Gemini provider using the Google Generative Language REST API."""
 
-    def __init__(
-        self,
-        *,
-        api_key_env: str,
-        default_model_env: str,
-        default_model: str,
-        provider_name: str,
-        base_url: str | None = None,
-        model: str | None = None,
-    ):
-        api_key = os.environ.get(api_key_env)
+    def __init__(self, model: str | None = None):
+        api_key = os.environ.get("GOOGLE_API_KEY")
         if not api_key:
-            raise RuntimeError(f"{api_key_env} environment variable not set")
-        self._client = OpenAI(api_key=api_key, base_url=base_url)
-        self._provider_name = provider_name
-        self._model = model or os.environ.get(default_model_env, default_model)
+            raise RuntimeError("GOOGLE_API_KEY environment variable not set")
+        self._api_key = api_key
+        self._model = model or os.environ.get("DVC_GOOGLE_MODEL", "gemini-2.5-flash")
         self._context_turns = int(os.environ.get("DVC_CONTEXT_TURNS", "10"))
 
     def _build_system_prompt(self, session: Session) -> str:
@@ -51,51 +41,48 @@ class OpenAICompatibleProvider(AbstractAIProvider):
             f"{_LEVEL_SCALE}"
         )
 
-    def _build_messages(self, session: Session, user_text: str) -> list[dict]:
+    def _build_contents(self, session: Session, user_text: str) -> list[dict]:
         all_history = []
         for turn in session.turns:
             if turn.speaker == "user" and turn.transcript_norm:
-                all_history.append({"role": "user", "content": turn.transcript_norm})
+                all_history.append({"role": "user", "parts": [{"text": turn.transcript_norm}]})
             elif turn.speaker == "coach" and turn.coach_text:
-                all_history.append({"role": "assistant", "content": turn.coach_text})
+                all_history.append({"role": "model", "parts": [{"text": turn.coach_text}]})
         window_size = self._context_turns * 2
         history = all_history[-window_size:] if window_size > 0 else []
-        return history + [{"role": "user", "content": user_text}]
+        return history + [{"role": "user", "parts": [{"text": user_text}]}]
 
-    def _create_text_completion(self, messages: list[dict]) -> str:
-        response = self._client.chat.completions.create(
-            model=self._model,
-            messages=messages,
-            temperature=0.2,
+    def _generate(self, *, system_instruction: str, contents: list[dict], expect_json: bool = True) -> str:
+        response = httpx.post(
+            f"https://generativelanguage.googleapis.com/v1beta/models/{self._model}:generateContent",
+            params={"key": self._api_key},
+            json={
+                "system_instruction": {"parts": [{"text": system_instruction}]},
+                "contents": contents,
+                "generationConfig": {
+                    "temperature": 0.2,
+                    "responseMimeType": "application/json" if expect_json else "text/plain",
+                },
+            },
+            timeout=60.0,
         )
-        content = response.choices[0].message.content
-        if isinstance(content, str):
-            return content
-        if isinstance(content, list):
-            parts = []
-            for part in content:
-                text = getattr(part, "text", None)
-                if text:
-                    parts.append(text)
-                elif isinstance(part, dict) and part.get("text"):
-                    parts.append(part["text"])
-            return "".join(parts)
-        return ""
+        response.raise_for_status()
+        data = response.json()
+        return data["candidates"][0]["content"]["parts"][0]["text"]
 
     def chat(self, session: Session, user_text: str) -> Union[CoachResponse, TurnError]:
         try:
-            messages = [
-                {
-                    "role": "system",
-                    "content": (
-                        f"{self._build_system_prompt(session)}\n\n"
-                        "Return only a JSON object with these exact keys:\n"
-                        '{"coach_text": "string", "corrections": [{"original": "string", "corrected": "string", "explanation": "string", "triggered_by": "auto|user_request"}]}'
-                    ),
-                },
-                *self._build_messages(session, user_text),
-            ]
-            data = extract_json_object(self._create_text_completion(messages))
+            system_instruction = (
+                f"{self._build_system_prompt(session)}\n\n"
+                "Return only a JSON object with these exact keys:\n"
+                '{"coach_text": "string", "corrections": [{"original": "string", "corrected": "string", "explanation": "string", "triggered_by": "auto|user_request"}]}'
+            )
+            data = extract_json_object(
+                self._generate(
+                    system_instruction=system_instruction,
+                    contents=self._build_contents(session, user_text),
+                )
+            )
             corrections = [
                 Correction(
                     original=str(c["original"]),
@@ -111,23 +98,21 @@ class OpenAICompatibleProvider(AbstractAIProvider):
         except Exception as exc:
             return TurnError(
                 stage="ai",
-                message=f"{self._provider_name} request failed: {exc}",
+                message=f"Google request failed: {exc}",
                 recoverable=True,
             )
 
     def translate(self, english_text: str) -> Union[str, TurnError]:
         try:
-            messages = [
-                {
-                    "role": "system",
-                    "content": (
+            data = extract_json_object(
+                self._generate(
+                    system_instruction=(
                         "Translate English to natural Spanish. "
                         'Return only JSON in the form {"translation": "..."}'
                     ),
-                },
-                {"role": "user", "content": english_text},
-            ]
-            data = extract_json_object(self._create_text_completion(messages))
+                    contents=[{"role": "user", "parts": [{"text": english_text}]}],
+                )
+            )
             return str(data["translation"]).strip()
         except Exception as exc:
             return TurnError(
@@ -138,26 +123,26 @@ class OpenAICompatibleProvider(AbstractAIProvider):
 
     def evaluate_pronunciation(self, target: str, transcript: str) -> Union[PronunciationEvaluation, TurnError]:
         try:
-            messages = [
-                {
-                    "role": "system",
-                    "content": (
+            data = extract_json_object(
+                self._generate(
+                    system_instruction=(
                         "Evaluate a Spanish pronunciation attempt. "
                         'Return only JSON in the form {"score": 0-100, "feedback": "string", "issues": [{"sound": "string", "said": "string", "expected": "string"}]}'
                     ),
-                },
-                {
-                    "role": "user",
-                    "content": (
-                        "A Spanish learner attempted to say this phrase:\n\n"
-                        f"Target: {target}\n"
-                        f"Whisper transcript of their attempt: {transcript}\n\n"
-                        "Give a score of 100 if the transcript matches the target exactly or very closely. "
-                        "Identify any specific sounds that differ. Be encouraging."
-                    ),
-                },
-            ]
-            data = extract_json_object(self._create_text_completion(messages))
+                    contents=[{
+                        "role": "user",
+                        "parts": [{
+                            "text": (
+                                "A Spanish learner attempted to say this phrase:\n\n"
+                                f"Target: {target}\n"
+                                f"Whisper transcript of their attempt: {transcript}\n\n"
+                                "Give a score of 100 if the transcript matches the target exactly or very closely. "
+                                "Identify any specific sounds that differ. Be encouraging."
+                            )
+                        }],
+                    }],
+                )
+            )
             issues = [
                 PronunciationIssue(
                     sound=str(issue["sound"]),
@@ -207,7 +192,10 @@ class OpenAICompatibleProvider(AbstractAIProvider):
         )
 
         try:
-            raw = self._create_text_completion([{"role": "user", "content": prompt}])
+            raw = self._generate(
+                system_instruction="Return only JSON arrays for flashcard extraction tasks.",
+                contents=[{"role": "user", "parts": [{"text": prompt}]}],
+            )
             return parse_flashcard_response(raw)
         except Exception as exc:
             return TurnError(
@@ -215,38 +203,3 @@ class OpenAICompatibleProvider(AbstractAIProvider):
                 message=f"Flashcard generation failed: {exc}",
                 recoverable=True,
             )
-
-
-class OpenAIProvider(OpenAICompatibleProvider):
-    def __init__(self, model: str | None = None):
-        super().__init__(
-            api_key_env="OPENAI_API_KEY",
-            default_model_env="DVC_OPENAI_MODEL",
-            default_model="gpt-4.1-mini",
-            provider_name="OpenAI",
-            model=model,
-        )
-
-
-class GroqProvider(OpenAICompatibleProvider):
-    def __init__(self, model: str | None = None):
-        super().__init__(
-            api_key_env="GROQ_API_KEY",
-            default_model_env="DVC_GROQ_MODEL",
-            default_model="llama-3.3-70b-versatile",
-            provider_name="Groq",
-            base_url="https://api.groq.com/openai/v1",
-            model=model,
-        )
-
-
-class DeepSeekProvider(OpenAICompatibleProvider):
-    def __init__(self, model: str | None = None):
-        super().__init__(
-            api_key_env="DEEPSEEK_API_KEY",
-            default_model_env="DVC_DEEPSEEK_MODEL",
-            default_model="deepseek-chat",
-            provider_name="DeepSeek",
-            base_url="https://api.deepseek.com/v1",
-            model=model,
-        )

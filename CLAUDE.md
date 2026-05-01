@@ -34,9 +34,9 @@ Full phase detail, data model, and gate criteria live in `claudeSpanishCoachPlan
 See `docs/projectStatus.md` for the current phase status, test counts, and open items. That file is the authoritative one-stop view of project state; this section intentionally stays brief.
 
 - Phases 0–9, A, B: complete and smoke-test signed off.
-- Phase 10 (Cloud Deployment): app live at `https://spanishcoach.fly.dev`; two manual gate checks still open (Android session end-to-end + persistence across redeploy).
+- Phase 10 (Cloud Deployment): complete and signed off 2026-05-01; app live at `https://spanishcoach.fly.dev`.
 - R1–R6 (code review refactor): all complete and merged 2026-04-28.
-- Backend: 175 tests passing, 6 skipped. Frontend: 147 passing. Lint: clean.
+- Backend: 180 tests passing, 6 skipped. Frontend: 149 passing. Lint: clean.
 
 ## Recommended Technical Baseline
 
@@ -62,6 +62,18 @@ Clear separation of concerns:
 
 ## Development Process
 
+Use a layered MVP approach:
+
+- Work at the smallest active layer being matured: project, epoch, or feature.
+- At that layer, prefer the simplest implementation that satisfies the current goal, while keeping extension seams where future growth is already expected.
+- Treat MVP as the default treatment for the active layer until the supported surface of that layer widens.
+
+When a capability grows from one primary path into a broader supported surface, treat that as a shift in rigor for that capability:
+
+- Design review, testing depth, and rollout confidence should follow the current supported surface rather than the earlier narrow path.
+- If a change appears to widen the supported surface, surface that transition explicitly, identify the affected design points, and propose the appropriate increase in validation.
+- If the intended support level is unclear from repo context, ask before assuming narrow MVP validation is still sufficient.
+
 Follow this order within each phase:
 
 1. Define data contracts and abstract interfaces before writing implementation code.
@@ -74,10 +86,17 @@ Provider abstractions (`AbstractAIProvider`, `AbstractTTSProvider`) must be wire
 
 ## Testing Requirements
 
+Testing should track the support level of the active capability.
+
+- A narrow MVP path may rely mainly on unit and mocked integration coverage.
+- When a capability expands into a broader supported or user-selectable surface, strengthen end-to-end validation accordingly, especially when external providers or production-facing paths are involved.
+- Distinguish between implemented, exposed, and intended-for-active-use paths; the validation bar should rise as a path moves through those states.
+- If support level is ambiguous, surface the transition and ask before assuming lighter MVP validation remains appropriate.
+
 Minimum expectations for all changes:
 
 - Unit tests for all transform, normalization, and session-model logic
-- Unit tests for every provider stub asserting `NotImplementedError` on the abstract base
+- Unit tests for the abstract base plus each concrete AI provider selection path
 - Integration test for the full turn pipeline: WAV fixture → `/turn` → structured JSON response
 - Idempotency: re-running an ingest or session-restore must not create duplicate records
 - Fixture audio (`tests/fixtures/hola_sample.wav`) used for all STT tests — deterministic, checked in
@@ -96,12 +115,16 @@ Document in test files or `docs/manualTestLog.md`:
 
 ## Environment Variables
 
-All required keys are documented in `.env.example`. The active keys for MVP are:
+All required keys are documented in `.env.example`. The active keys for the current app are:
 
 - `ANTHROPIC_API_KEY` — required for Phase 2+ (Claude coaching)
+- `OPENAI_API_KEY` — required for OpenAI STT mode and OpenAI chat selection
+- `GOOGLE_API_KEY` — required when Google Gemini is selected
+- `DEEPSEEK_API_KEY` — required when DeepSeek is selected
+- `GROQ_API_KEY` — required when Groq is selected
 - `DVC_SESSION_SECRET` — required; session cookie signing key
 
-Whisper runs locally in MVP — no `OPENAI_API_KEY` needed for STT.
+Whisper can still run locally; `OPENAI_API_KEY` is only needed when `STT_PROVIDER=openai` or the OpenAI AI provider is selected.
 
 Full env var reference: `.env.example`.
 
@@ -131,6 +154,7 @@ When adding implementation, also update:
 - A phase's status changes (e.g., "Not started" → "In progress", code complete but gate pending)
 - The open items list changes (a pending item closes, or a new blocker is identified)
 - Test counts change materially (after any phase that adds tests)
+- The active layer of work or support-state context changes in a way a later model should not have to rediscover
 - This CLAUDE.md "Current Repository State" section is updated (keep both in sync)
 
 **Rules for maintaining it as a pointer:**
@@ -138,6 +162,10 @@ When adding implementation, also update:
 - Smoke-test notes belong in `docs/manualTestLog.md`. Record only the gate outcome (signed off / partial / pending) in the status table.
 - Task checklists belong in `claudeSpanishCoachPlan.md` or `docs/claudeCodeImplementationPlan.md`. Do not copy tasks into `projectStatus.md`.
 - If you find yourself writing more than one sentence of explanation for a phase, move it to the source document and add a reference.
+- In addition to phase status, preserve concise support-state context for the active layer of work so a later model can understand project state without re-discovery.
+- Keep that context summary-level only: note the active layer (`project`, `epoch`, or `feature`), whether a capability is still in narrow MVP treatment or has widened into a broader supported surface, and any exposed paths whose support level is intentionally limited or still evolving.
+- If a capability has shifted from narrow MVP treatment to broader support treatment, note that shift briefly in `Current Focus`, `Phase Status`, or `Open Items`, whichever is clearest.
+- If raw test counts could mislead a later model about actual support level, add a short clarifying note rather than expanding the tables.
 
 ### Source document sync
 

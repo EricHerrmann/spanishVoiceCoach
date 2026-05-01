@@ -206,13 +206,13 @@ Each phase gate requires a smoke-test sign-off entry before the next phase begin
 ## Phase 10 — Cloud Deployment
 
 **Gate criteria:**
-- [x] All tests pass (124 backend, 4 skipped; 89 frontend — verified 2026-04-25)
-- [x] App accessible at `https://duo-voice-coach.fly.dev` with HTTP Basic Auth
+- [x] All tests pass (180 backend, 6 skipped; 149 frontend; lint clean — verified 2026-05-01)
+- [x] App accessible at `https://spanishcoach.fly.dev` with HTTP Basic Auth
 - [x] Health endpoint returns 200 with valid credentials (`/health` verified via curl)
-- [ ] Full voice session works on Android Chrome end-to-end (manual smoke test pending)
-- [ ] Session history persists across redeploy (manual smoke test pending)
+- [x] Full voice session works on Android Chrome end-to-end
+- [x] Session history persists across redeploy
 
 **Sign-off:**
-- Date: 2026-04-25
+- Date: 2026-05-01
 - Tester: oldhat86@gmail.com
-- Notes: PARTIAL. App live at https://spanishcoach.fly.dev (renamed from duo-voice-coach) — Basic Auth, OpenAI Whisper API (STT_PROVIDER=openai), ElevenLabs TTS, persistent volume at /data all configured. Health endpoint verified 200. Android recording bug fixed (commit e107c0f): hardcoded 'recording.wav' filename caused OpenAI Whisper API to reject WebM audio from Android Chrome — now derives extension from blob.type. Deployed 2026-04-25. Full Android voice session smoke test and session persistence check across redeploy still pending manual verification.
+- Notes: PASSED. App live at https://spanishcoach.fly.dev with Basic Auth, OpenAI Whisper API (STT_PROVIDER=openai), ElevenLabs TTS, and persistent volume mounted at `/data`. Health endpoint verified 200. Android Chrome voice session completed end-to-end and persisted session history survived redeploy verification. Post-sign-off regression run on 2026-05-01 also passed: `uv run pytest`, `npm test -- --run`, and `npm run lint`.

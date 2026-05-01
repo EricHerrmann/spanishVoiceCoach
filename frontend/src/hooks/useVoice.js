@@ -39,6 +39,7 @@ export function useVoice() {
         topic: config.topic,
         level: config.level,
         ai_provider: config.ai_provider,
+        ai_model: config.ai_model,
         coaching_mode: config.coaching_mode,
         tts_provider: config.tts_provider || 'browser',
         tts_voice_id: config.tts_voice_id || null,

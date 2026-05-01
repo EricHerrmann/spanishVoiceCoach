@@ -35,6 +35,8 @@ export default function TranslationView({ config, onResult, onPractice, onAddFla
     form.append('audio', blob, `recording.${blob.type.split('/')[1]?.split(';')[0] || 'wav'}`)
     form.append('tts_provider', config?.tts_provider || 'browser')
     if (config?.tts_voice_id) form.append('tts_voice_id', config.tts_voice_id)
+    form.append('ai_provider', config?.ai_provider || 'claude')
+    if (config?.ai_model) form.append('ai_model', config.ai_model)
     try {
       const res = await fetch('/translate', { method: 'POST', body: form })
       const data = await res.json()

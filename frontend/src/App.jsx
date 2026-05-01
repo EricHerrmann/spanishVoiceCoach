@@ -14,6 +14,7 @@ const DEFAULT_CONFIG = {
   topic: 'general',
   level: 5,
   ai_provider: 'claude',
+  ai_model: null,
   coaching_mode: 'on_demand',
   tts_provider: 'browser',
   tts_voice_id: null,
@@ -45,6 +46,18 @@ function App() {
     setMode('pronunciation')
   }
 
+  function normalizeAiConfig(nextConfig, availableProviders) {
+    if (availableProviders.length === 0) return nextConfig
+    const selectedProvider = availableProviders.find((p) => p.id === nextConfig.ai_provider) ?? availableProviders[0]
+    const validModel = selectedProvider.models?.some((m) => m.id === nextConfig.ai_model)
+    if (nextConfig.ai_provider === selectedProvider.id && validModel) return nextConfig
+    return {
+      ...nextConfig,
+      ai_provider: selectedProvider.id,
+      ai_model: selectedProvider.default_model ?? selectedProvider.models?.[0]?.id ?? null,
+    }
+  }
+
   function clearPronunciationTarget() {
     setPronunciationTarget(null)
     setMode('conversation')
@@ -64,6 +77,8 @@ function App() {
     } else {
       body = { text, turns, source }
     }
+    body.ai_provider = config.ai_provider
+    body.ai_model = config.ai_model
     const res = await fetch('/flashcards/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -80,7 +95,13 @@ function App() {
 
   useEffect(() => {
     fetch('/topics').then((r) => r.json()).then(setTopics).catch(() => {})
-    fetch('/providers').then((r) => r.json()).then(setProviders).catch(() => {})
+    fetch('/providers')
+      .then((r) => r.json())
+      .then((data) => {
+        setProviders(data)
+        setConfig((prev) => normalizeAiConfig(prev, data))
+      })
+      .catch(() => {})
     fetch('/tts-voices').then((r) => r.json()).then(setTtsVoices).catch(() => {})
     newSession(DEFAULT_CONFIG).then((sessionId) => {
       setSelectedSessionId(sessionId)
@@ -118,14 +139,15 @@ function App() {
       .then((r) => r.json())
       .then((session) => {
         setSelectedSessionId(session.id)
-        setConfig({
+        setConfig(normalizeAiConfig({
           topic: session.topic,
           level: session.level,
           ai_provider: session.ai_provider,
+          ai_model: session.ai_model || null,
           coaching_mode: session.coaching_mode,
           tts_provider: session.tts_provider || 'browser',
           tts_voice_id: session.tts_voice_id || null,
-        })
+        }, providers))
         loadSession(session)
       })
       .catch(() => {})
@@ -162,6 +184,7 @@ function App() {
         )}
         {mode === 'pronunciation' && (
           <PronunciationView
+            config={config}
             pronunciationTarget={pronunciationTarget}
             onClearTarget={clearPronunciationTarget}
           />

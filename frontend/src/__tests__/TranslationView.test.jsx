@@ -2,7 +2,12 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import TranslationView from '../components/TranslationView'
 
-const DEFAULT_CONFIG = { tts_provider: 'browser', tts_voice_id: null }
+const DEFAULT_CONFIG = {
+  ai_provider: 'claude',
+  ai_model: 'claude-sonnet-4-6',
+  tts_provider: 'browser',
+  tts_voice_id: null,
+}
 
 describe('TranslationView', () => {
   it('renders record button in idle state', () => {

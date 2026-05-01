@@ -2,9 +2,13 @@
 from __future__ import annotations
 
 import pytest
+from unittest.mock import MagicMock, patch
 
 from backend.ai.base import AbstractAIProvider
+from backend.ai.registry import list_ai_providers, validate_ai_selection
+from backend.ai.openai import OpenAIProvider
 from backend.session import CoachResponse, Correction, PronunciationEvaluation
+from backend.session import TurnError, new_session
 
 
 def test_abstract_ai_provider_raises_not_implemented():
@@ -35,40 +39,65 @@ def test_abstract_ai_provider_raises_not_implemented():
     with pytest.raises(NotImplementedError):
         provider.generate_flashcards(text="hello", turns=[], source="turn")
 
+from backend.ai.claude import ClaudeProvider
 
-from backend.session import new_session
-from backend.ai.openai import OpenAIProvider
+
+class TestAIRegistry:
+    def test_lists_requested_providers(self):
+        ids = {provider["id"] for provider in list_ai_providers()}
+        assert {"claude", "openai", "google", "deepseek", "groq"} <= ids
+
+    def test_validate_ai_selection_returns_default_model(self):
+        provider_id, model_id = validate_ai_selection("openai")
+        assert provider_id == "openai"
+        assert isinstance(model_id, str)
+        assert len(model_id) > 0
+
+    def test_validate_ai_selection_rejects_unknown_model(self):
+        with pytest.raises(ValueError):
+            validate_ai_selection("groq", "not-a-real-model")
 
 
 class TestOpenAIProvider:
-    def test_chat_raises_not_implemented(self):
-        provider = OpenAIProvider()
-        session = new_session(
-            topic="ordering food", level=5,
-            ai_provider="openai", coaching_mode="on_demand"
-        )
-        with pytest.raises(NotImplementedError):
-            provider.chat(session, "hola")
+    def test_chat_returns_coach_response_from_json(self):
+        with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}):
+            with patch("backend.ai.openai.OpenAI") as MockClient:
+                mock_client = MagicMock()
+                MockClient.return_value = mock_client
+                mock_response = MagicMock()
+                mock_response.choices = [MagicMock(message=MagicMock(content='{"coach_text":"Hola","corrections":[]}'))]
+                mock_client.chat.completions.create.return_value = mock_response
 
-    def test_evaluate_pronunciation_raises_not_implemented(self):
-        provider = OpenAIProvider()
-        with pytest.raises(NotImplementedError):
-            provider.evaluate_pronunciation(target="hola", transcript="hola")
+                provider = OpenAIProvider()
+                session = new_session(
+                    topic="ordering food",
+                    level=5,
+                    ai_provider="openai",
+                    ai_model="gpt-4.1-mini",
+                    coaching_mode="on_demand",
+                )
+                result = provider.chat(session, "hola")
 
-    def test_translate_raises_not_implemented(self):
-        provider = OpenAIProvider()
-        with pytest.raises(NotImplementedError):
-            provider.translate(english_text="hello")
+                assert isinstance(result, CoachResponse)
+                assert result.coach_text == "Hola"
+                assert result.corrections == []
 
-    def test_generate_flashcards_raises_not_implemented(self):
-        provider = OpenAIProvider()
-        with pytest.raises(NotImplementedError):
-            provider.generate_flashcards(text="hello", turns=[], source="turn")
+    def test_translate_returns_string_from_json(self):
+        with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}):
+            with patch("backend.ai.openai.OpenAI") as MockClient:
+                mock_client = MagicMock()
+                MockClient.return_value = mock_client
+                mock_response = MagicMock()
+                mock_response.choices = [MagicMock(message=MagicMock(content='{"translation":"hola"}'))]
+                mock_client.chat.completions.create.return_value = mock_response
 
+                provider = OpenAIProvider()
+                assert provider.translate("hello") == "hola"
 
-from unittest.mock import MagicMock, patch
-from backend.ai.claude import ClaudeProvider
-from backend.session import TurnError
+    def test_missing_api_key_raises_runtime_error(self):
+        with patch.dict("os.environ", {}, clear=True):
+            with pytest.raises(RuntimeError, match="OPENAI_API_KEY"):
+                OpenAIProvider()
 
 
 def _make_session():

@@ -73,8 +73,9 @@ class Session:
     started_at: datetime
     topic: str               # e.g. "ordering food"
     level: int               # 1–10
-    ai_provider: str         # "claude" | "openai"
+    ai_provider: str         # e.g. "claude" | "openai" | "google" | "deepseek" | "groq"
     coaching_mode: str       # "on_demand" | "explicit" | "shadowing"
+    ai_model: Optional[str] = None
     tts_provider: str = "browser"        # "browser" | "elevenlabs"
     tts_voice_id: Optional[str] = None   # voice ID when tts_provider == "elevenlabs"
     turns: list[Turn] = field(default_factory=list)
@@ -195,6 +196,7 @@ def session_summary(session: Session) -> dict:
         "topic": session.topic,
         "level": session.level,
         "ai_provider": session.ai_provider,
+        "ai_model": session.ai_model,
         "coaching_mode": session.coaching_mode,
         "turn_count": len(session.turns),
         "correction_count": correction_count,
@@ -206,6 +208,7 @@ def new_session(
     level: int,
     ai_provider: str,
     coaching_mode: str,
+    ai_model: Optional[str] = None,
     tts_provider: str = "browser",
     tts_voice_id: Optional[str] = None,
 ) -> Session:
@@ -216,6 +219,7 @@ def new_session(
         topic=topic,
         level=level,
         ai_provider=ai_provider,
+        ai_model=ai_model,
         coaching_mode=coaching_mode,
         tts_provider=tts_provider,
         tts_voice_id=tts_voice_id,

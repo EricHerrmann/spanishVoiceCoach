@@ -74,9 +74,19 @@ class TestSessionStart:
         response = client.post("/session/start", json={"level": 11})
         assert response.status_code == 422
 
-    def test_invalid_ai_provider_returns_422(self):
+    def test_accepts_openai_provider(self):
         client = make_client()
         response = client.post("/session/start", json={"ai_provider": "openai"})
+        assert response.status_code == 200
+
+    def test_invalid_ai_provider_returns_422(self):
+        client = make_client()
+        response = client.post("/session/start", json={"ai_provider": "invalid-provider"})
+        assert response.status_code == 422
+
+    def test_invalid_ai_model_returns_422(self):
+        client = make_client()
+        response = client.post("/session/start", json={"ai_provider": "openai", "ai_model": "not-a-model"})
         assert response.status_code == 422
 
 
@@ -187,18 +197,21 @@ class TestGetProviders:
         ids = [p["id"] for p in body]
         assert "claude" in ids
 
-    def test_openai_not_present(self):
+    def test_all_requested_providers_present(self):
         client = make_client()
         body = client.get("/providers").json()
         ids = [p["id"] for p in body]
-        assert "openai" not in ids
+        assert {"claude", "openai", "google", "deepseek", "groq"} <= set(ids)
 
-    def test_each_provider_has_id_and_label(self):
+    def test_each_provider_has_id_label_and_models(self):
         client = make_client()
         body = client.get("/providers").json()
         for provider in body:
             assert "id" in provider
             assert "label" in provider
+            assert "default_model" in provider
+            assert isinstance(provider.get("models"), list)
+            assert len(provider["models"]) > 0
 
 
 class TestSessionPersistence:
@@ -265,7 +278,7 @@ class TestSessionPersistence:
 
         main.sessions.clear()
         monkeypatch.setattr(main, "stt_provider", FakeSTT())
-        monkeypatch.setattr(main, "claude_provider", FakeAIProvider())
+        monkeypatch.setattr(main, "get_ai_provider", lambda *_args, **_kwargs: FakeAIProvider())
         client = TestClient(main.app)
         session_id = client.post("/session/start").json()["session_id"]
 
@@ -304,7 +317,7 @@ class TestSessionPersistence:
 
         main.sessions.clear()
         monkeypatch.setattr(main, "stt_provider", FakeSTT())
-        monkeypatch.setattr(main, "claude_provider", FakeAIProvider())
+        monkeypatch.setattr(main, "get_ai_provider", lambda *_args, **_kwargs: FakeAIProvider())
         client = TestClient(main.app)
         session_id = client.post("/session/start").json()["session_id"]
 
@@ -382,7 +395,7 @@ class TestTurnTtsIntegration:
 
         main.sessions.clear()
         monkeypatch.setattr(main, "stt_provider", FakeSTT())
-        monkeypatch.setattr(main, "claude_provider", FakeAIProvider())
+        monkeypatch.setattr(main, "get_ai_provider", lambda *_args, **_kwargs: FakeAIProvider())
         client = TestClient(main.app)
         session_id = client.post("/session/start", json={"tts_provider": "browser"}).json()["session_id"]
 
@@ -420,7 +433,7 @@ class TestTurnTtsIntegration:
 
         main.sessions.clear()
         monkeypatch.setattr(main, "stt_provider", FakeSTT())
-        monkeypatch.setattr(main, "claude_provider", FakeAIProvider())
+        monkeypatch.setattr(main, "get_ai_provider", lambda *_args, **_kwargs: FakeAIProvider())
         client = TestClient(main.app)
         session_id = client.post(
             "/session/start",
@@ -459,7 +472,7 @@ class TestTurnTtsIntegration:
 
         main.sessions.clear()
         monkeypatch.setattr(main, "stt_provider", FakeSTT())
-        monkeypatch.setattr(main, "claude_provider", FakeAIProvider())
+        monkeypatch.setattr(main, "get_ai_provider", lambda *_args, **_kwargs: FakeAIProvider())
         client = TestClient(main.app)
         session_id = client.post(
             "/session/start",

@@ -1,13 +1,17 @@
 # duoVoiceCoach — Project Status
 
-**Last updated:** 2026-04-28  
+**Last updated:** 2026-05-01  
 **Branch:** main
 
 ---
 
 ## Current Focus
 
-Phase 10 cloud deployment is partially live (app at `https://spanishcoach.fly.dev`); two manual gate checks remain (Android session end-to-end + persistence across redeploy). Phase 11 (Windows Docker packaging) and Phase 12 (mobile corrections visibility) are next in queue after Phase 10 gate closes.
+Project layer: desktop app stable, cloud deployment signed off, and Phase 11 (Windows Docker packaging) is the active epoch-level focus.
+
+Feature layer: AI model/provider selection has shifted from a narrow single-provider path to a broader selectable surface. The app now exposes `claude`, `openai`, `google`, `deepseek`, and `groq` with provider-specific model choices. Routing, persistence, UI flow, and mocked/provider-path integration coverage were expanded to match that wider surface.
+
+Support-state note: the widened provider surface should no longer be treated as a narrow MVP-only path. Validation expectations have increased accordingly. Live provider-matrix turn validation is still the main remaining confidence gap before treating the newly selectable providers as fully supported at the same level as the original Claude path.
 
 ---
 
@@ -27,10 +31,10 @@ Phase 10 cloud deployment is partially live (app at `https://spanishcoach.fly.de
 | 9 | GUI Layout Redesign | Complete | Signed off 2026-04-23 |
 | A | Flashcards + Translation | Complete | Signed off 2026-04-25 |
 | B | Pronunciation Practice | Complete | Signed off 2026-04-25 |
-| 10 | Cloud Deployment | Partial | App live; Android session + persistence checks pending |
-| 11 | Windows 11 Packaging | Not started | Blocked on Phase 7 gate |
-| 12 | Mobile Capability | Not started | Queued |
-| 13 | Feature Expansion | Not started | Queued |
+| 10 | Cloud Deployment | Complete | Signed off 2026-05-01 |
+| 11 | Windows 11 Packaging | In progress | Compose/doc/manual-test path added; Windows smoke test pending |
+| 12 | Mobile Capability | Obsolete | Covered by Fly.io deployment and earlier mobile phases; remaining issue moved to Phase 13 |
+| 13 | Feature Expansion | Not started | Provider/model selection broadened at feature layer; support-level validation still evolving |
 
 ### Code Review Plan (R1–R6)
 
@@ -40,21 +44,23 @@ All six findings from `docs/codexCodeReview.md` implemented and merged 2026-04-2
 
 ## Test Counts
 
-As of 2026-04-28 (post R1–R6 merge):
+As of 2026-05-01:
 
 | Suite | Passed | Skipped |
 |-------|--------|---------|
-| Backend (`uv run pytest`) | 175 | 6 |
-| Frontend (`npm test -- --run`) | 147 | 0 |
+| Backend (`uv run pytest`) | 180 | 6 |
+| Frontend (`npm test -- --run`) | 149 | 0 |
 | Lint (`npm run lint`) | clean | — |
+
+Clarifying note: current counts cover the expanded multi-provider selection flow through unit, mocked integration, and routing/persistence/UI tests. They do not yet prove live full-turn behavior across the full newly selectable provider matrix.
 
 ---
 
 ## Open Items
 
-- Phase 10: Android voice session end-to-end + session persistence across redeploy
-- Phase 11: Docker Compose packaging for Windows 11
-- Phase 12: CoachOverlay visibility in mobile drawer when drawer is closed
+- Phase 11: Windows 11 Docker smoke test and gate sign-off
+- Phase 13 feature: Mobile Corrections UX so corrections remain discoverable when the mobile drawer is closed
+- AI provider matrix: live full-turn validation still needed for the newly selectable non-Claude providers before they should be treated as fully supported production-equivalent paths
 
 ---
 

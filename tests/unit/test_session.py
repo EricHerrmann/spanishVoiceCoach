@@ -30,6 +30,7 @@ def test_session_roundtrip_empty_turns():
     assert restored.topic == original.topic
     assert restored.level == original.level
     assert restored.ai_provider == original.ai_provider
+    assert restored.ai_model == original.ai_model
     assert restored.coaching_mode == original.coaching_mode
     assert restored.started_at == original.started_at
     assert restored.turns == []
@@ -202,8 +203,21 @@ def test_session_summary_counts_turns_and_corrections():
 
 def test_new_session_defaults_to_browser_tts():
     session = new_session(topic="food", level=5, ai_provider="claude", coaching_mode="on_demand")
+    assert session.ai_model is None
     assert session.tts_provider == "browser"
     assert session.tts_voice_id is None
+
+
+def test_new_session_accepts_ai_model():
+    session = new_session(
+        topic="food",
+        level=5,
+        ai_provider="openai",
+        coaching_mode="on_demand",
+        ai_model="gpt-4.1-mini",
+    )
+    assert session.ai_provider == "openai"
+    assert session.ai_model == "gpt-4.1-mini"
 
 
 def test_new_session_accepts_elevenlabs_tts():

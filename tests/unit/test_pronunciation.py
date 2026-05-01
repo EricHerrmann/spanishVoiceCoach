@@ -55,7 +55,8 @@ class TestPronunciationEvaluate:
 
     def test_response_shape_with_mocked_evaluate(self):
         mock_eval = PronunciationEvaluation(score=85, feedback="Good effort!", issues=[])
-        with patch("backend.main.claude_provider") as mock_provider:
+        with patch("backend.main.get_ai_provider") as mock_get_provider:
+            mock_provider = mock_get_provider.return_value
             mock_provider.evaluate_pronunciation.return_value = mock_eval
             with open(FIXTURE_WAV, "rb") as f:
                 response = client.post(
@@ -77,7 +78,8 @@ class TestPronunciationEvaluate:
             feedback="Work on the rr sound.",
             issues=[PronunciationIssue(sound="rr", said="r", expected="rr")],
         )
-        with patch("backend.main.claude_provider") as mock_provider:
+        with patch("backend.main.get_ai_provider") as mock_get_provider:
+            mock_provider = mock_get_provider.return_value
             mock_provider.evaluate_pronunciation.return_value = mock_eval
             with open(FIXTURE_WAV, "rb") as f:
                 response = client.post(
@@ -92,7 +94,8 @@ class TestPronunciationEvaluate:
 
     def test_evaluate_error_returns_structured_error(self):
         from backend.session import TurnError
-        with patch("backend.main.claude_provider") as mock_provider:
+        with patch("backend.main.get_ai_provider") as mock_get_provider:
+            mock_provider = mock_get_provider.return_value
             mock_provider.evaluate_pronunciation.return_value = TurnError(
                 stage="ai", message="API down", recoverable=True
             )

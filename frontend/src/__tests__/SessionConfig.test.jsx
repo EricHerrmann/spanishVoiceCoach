@@ -6,7 +6,26 @@ const TOPICS = [
   { id: 'general', label: 'General conversation', starter: 'Hola' },
   { id: 'ordering_food', label: 'Ordering food', starter: 'Hola menú' },
 ]
-const PROVIDERS = [{ id: 'claude', label: 'Claude (Anthropic)' }]
+const PROVIDERS = [
+  {
+    id: 'claude',
+    label: 'Claude (Anthropic)',
+    default_model: 'claude-sonnet-4-6',
+    models: [
+      { id: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6' },
+      { id: 'claude-3-5-haiku-latest', label: 'Claude 3.5 Haiku' },
+    ],
+  },
+  {
+    id: 'openai',
+    label: 'OpenAI',
+    default_model: 'gpt-4.1-mini',
+    models: [
+      { id: 'gpt-4.1-mini', label: 'GPT-4.1 Mini' },
+      { id: 'gpt-4.1', label: 'GPT-4.1' },
+    ],
+  },
+]
 const TTS_VOICES = [
   { id: '21m00Tcm4TlvDq8ikWAM', label: 'Rachel — Female, clear (multilingual)' },
   { id: 'ErXwobaYiN019PkySvjV', label: 'Antoni — Male, natural (multilingual)' },
@@ -15,6 +34,7 @@ const DEFAULT_CONFIG = {
   topic: 'general',
   level: 5,
   ai_provider: 'claude',
+  ai_model: 'claude-sonnet-4-6',
   coaching_mode: 'on_demand',
   tts_provider: 'browser',
   tts_voice_id: null,
@@ -122,10 +142,25 @@ describe('SessionConfig — provider select', () => {
     expect(screen.getByRole('option', { name: /claude \(anthropic\)/i })).toBeInTheDocument()
   })
 
-  it('calls onConfigChange when provider changes', () => {
+  it('renders model select for the selected provider', () => {
+    renderConfig()
+    expect(screen.getByLabelText(/ai model/i).value).toBe('claude-sonnet-4-6')
+    expect(screen.getByRole('option', { name: /claude sonnet 4.6/i })).toBeInTheDocument()
+  })
+
+  it('calls onConfigChange with provider and default model when provider changes', () => {
     const { onConfigChange } = renderConfig()
-    fireEvent.change(screen.getByLabelText(/ai provider/i), { target: { value: 'claude' } })
-    expect(onConfigChange).toHaveBeenCalledWith({ ai_provider: 'claude' })
+    fireEvent.change(screen.getByLabelText(/ai provider/i), { target: { value: 'openai' } })
+    expect(onConfigChange).toHaveBeenCalledWith({
+      ai_provider: 'openai',
+      ai_model: 'gpt-4.1-mini',
+    })
+  })
+
+  it('calls onConfigChange when model changes', () => {
+    const { onConfigChange } = renderConfig()
+    fireEvent.change(screen.getByLabelText(/ai model/i), { target: { value: 'claude-3-5-haiku-latest' } })
+    expect(onConfigChange).toHaveBeenCalledWith({ ai_model: 'claude-3-5-haiku-latest' })
   })
 })
 

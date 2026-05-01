@@ -116,8 +116,8 @@ class TestPostFlashcardGenerate:
     def test_returns_200_with_list(self, tmp_path, monkeypatch):
         monkeypatch.setenv("DVC_DATA_DIR", str(tmp_path))
         monkeypatch.setattr(
-            "backend.main.claude_provider",
-            type("MockProvider", (), {
+            "backend.main.get_ai_provider",
+            lambda *_args, **_kwargs: type("MockProvider", (), {
                 "generate_flashcards": lambda self, text, turns, source: [
                     {"english": "to ask for", "spanish": "__test_pedir__", "level": 3, "topic": "ordering_food"}
                 ],
@@ -134,8 +134,8 @@ class TestPostFlashcardGenerate:
     def test_returns_empty_list_for_all_duplicates(self, tmp_path, monkeypatch):
         monkeypatch.setenv("DVC_DATA_DIR", str(tmp_path))
         monkeypatch.setattr(
-            "backend.main.claude_provider",
-            type("MockProvider", (), {
+            "backend.main.get_ai_provider",
+            lambda *_args, **_kwargs: type("MockProvider", (), {
                 "generate_flashcards": lambda self, text, turns, source: [
                     {"english": "yes", "spanish": "__test_si_dup__", "level": 1, "topic": "general"}
                 ],
@@ -151,8 +151,8 @@ class TestPostFlashcardGenerate:
     def test_provider_error_returns_500(self, monkeypatch):
         from backend.session import TurnError
         monkeypatch.setattr(
-            "backend.main.claude_provider",
-            type("MockProvider", (), {
+            "backend.main.get_ai_provider",
+            lambda *_args, **_kwargs: type("MockProvider", (), {
                 "generate_flashcards": lambda self, text, turns, source: TurnError(
                     stage="ai", message="Claude failed", recoverable=True
                 ),
